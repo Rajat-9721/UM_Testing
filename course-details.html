@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Course Details | Utkarsh Minds</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .details-container {
+      margin: 80px auto;
+      max-width: 800px;
+      padding: 40px;
+      background: var(--bg-card);
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+    .course-header {
+      border-bottom: 1px solid #334155;
+      padding-bottom: 20px;
+      margin-bottom: 20px;
+    }
+    .course-meta {
+      display: flex;
+      gap: 20px;
+      color: var(--text-gray);
+      margin-top: 15px;
+      flex-wrap: wrap;
+    }
+    .course-meta span {
+      background: #0f172a;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.875rem;
+    }
+    .course-price {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-top: 20px;
+    }
+    .course-description {
+      line-height: 1.8;
+      color: #cbd5e1;
+      margin-top: 30px;
+    }
+    .loading {
+      text-align: center;
+      padding: 50px;
+      color: var(--text-gray);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sticky Header -->
+  <header class="header" id="main-header" style="position: static; background: var(--bg-dark);">
+    <div class="container">
+      <a href="/" class="logo">
+        Utkarsh <span>Minds</span>
+      </a>
+      <div class="header-actions">
+        <a href="login.html" class="btn btn-outline">Login</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="details-container" id="courseDetails">
+      <div class="loading">Loading course details...</div>
+    </div>
+  </div>
+
+  <script src="supabaseClient.js"></script>
+  <script>
+    async function loadCourseDetails() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const courseId = urlParams.get('id');
+
+      if (!courseId) {
+        document.getElementById('courseDetails').innerHTML = '<div class="loading">Course not found.</div>';
+        return;
+      }
+
+      const { data: course, error } = await supabase
+        .from('courses')
+        .select('*')
+        .eq('id', courseId)
+        .single();
+
+      if (error || !course) {
+        document.getElementById('courseDetails').innerHTML = '<div class="loading">Error loading course details.</div>';
+        return;
+      }
+
+      const priceHtml = course.price ? `<div class="course-price">₹${course.price}</div>` : '';
+
+      document.getElementById('courseDetails').innerHTML = `
+        <div class="course-header">
+          <h2>${course.title}</h2>
+          <div class="course-meta">
+            <span><strong>Faculty:</strong> ${course.faculty || 'Expert Panel'}</span>
+            <span><strong>Mode:</strong> ${course.mode || 'Online'}</span>
+            ${course.badge ? `<span style="background: var(--accent); color: white;">${course.badge}</span>` : ''}
+          </div>
+          ${priceHtml}
+        </div>
+        <div class="course-description">
+          <h3>About this Course</h3>
+          <p>${course.description || 'No description available for this course.'}</p>
+        </div>
+        <div style="margin-top: 40px;">
+          <a href="#" class="btn btn-accent">Enroll Now</a>
+        </div>
+      `;
+    }
+
+    loadCourseDetails();
+  </script>
+</body>
+</html>
