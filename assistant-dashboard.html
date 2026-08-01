@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assistant Dashboard | Utkarsh Minds</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      background-color: var(--bg-light);
+      display: flex;
+    }
+    .sidebar {
+      width: 250px;
+      background: var(--bg-white);
+      height: 100vh;
+      position: fixed;
+      box-shadow: var(--shadow-sm);
+      padding: 20px 0;
+    }
+    .sidebar-header {
+      padding: 0 20px 20px;
+      border-bottom: 1px solid #edf2f7;
+      margin-bottom: 20px;
+    }
+    .sidebar-menu {
+      list-style: none;
+    }
+    .sidebar-menu li {
+      padding: 10px 20px;
+    }
+    .sidebar-menu a {
+      color: var(--text-gray);
+      font-weight: 500;
+      display: block;
+      padding: 10px;
+      border-radius: 8px;
+      transition: var(--transition);
+    }
+    .sidebar-menu a:hover, .sidebar-menu a.active {
+      background: var(--primary);
+      color: white;
+    }
+    .main-content {
+      margin-left: 250px;
+      padding: 40px;
+      width: calc(100% - 250px);
+    }
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+    .card {
+      background: var(--bg-white);
+      padding: 30px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 30px;
+      display: none;
+    }
+    .card.active {
+      display: block;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--text-gray);
+      font-weight: 500;
+    }
+    .form-group input, .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-family: inherit;
+    }
+    .course-select {
+      width: 100%;
+      min-height: 52px;
+      padding: 12px 14px;
+      border: 2px solid var(--primary);
+      border-radius: 8px;
+      background: white;
+      color: var(--text-dark);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .alert {
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .alert-success {
+      background: #dcfce7;
+      color: #166534;
+    }
+    .alert-error {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .generated-content {
+      margin-top: 20px;
+      padding: 20px;
+      background: var(--bg-light);
+      border-radius: 8px;
+      white-space: pre-wrap;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="/" class="logo" style="font-size: 1.2rem;">Utkarsh <span>Minds</span></a>
+      <p style="color: var(--text-gray); font-size: 0.8rem; margin-top: 5px;">Assistant Portal</p>
+    </div>
+    <ul class="sidebar-menu">
+      <li><a href="#" class="active" data-target="create-student">Create Student</a></li>
+      <li><a href="#" data-target="fee-receipt">Generate Fee Receipt</a></li>
+      <li><a href="#" data-target="linkedin-post">LinkedIn Post Gen</a></li>
+      <li><a href="#" id="logoutBtn" style="color: #ef4444;">Logout</a></li>
+    </ul>
+  </aside>
+
+  <main class="main-content">
+    <div class="dashboard-header">
+      <h2>Assistant Dashboard</h2>
+    </div>
+
+    <!-- Create Student Section -->
+    <div class="card active" id="create-student">
+      <h3>Register New Student</h3>
+      <p style="color: var(--text-gray); margin-bottom: 20px;">Create an account for an enrolled student.</p>
+      
+      <div id="student-alert" class="alert"></div>
+
+      <form id="createStudentForm">
+        <div class="form-group">
+          <label for="studentEmail">Student Email</label>
+          <input type="email" id="studentEmail" required>
+        </div>
+        <div class="form-group">
+          <label for="studentPassword">Temporary Password</label>
+          <input type="password" id="studentPassword" required minlength="6">
+        </div>
+        <div class="form-group">
+          <label for="studentCourse">Purchased Courses</label>
+          <select id="studentCourse" class="course-select" required>
+            <option value="">Data Science Certification</option>
+            <option value="">Professional Certification in Artificial Intelligence</option>
+          </select>
+          <small style="color: var(--text-gray);">Choose the purchased course.</small>
+        </div>
+        <button type="submit" class="btn btn-primary" id="createStudentBtn">Create Account</button>
+      </form>
+    </div>
+
+    <!-- Fee Receipt Section -->
+    <div class="card" id="fee-receipt">
+      <h3>Generate Fee Receipt</h3>
+      <p style="color: var(--text-gray); margin-bottom: 20px;">Create a fee receipt for a student.</p>
+      
+      <form id="feeReceiptForm">
+        <div class="form-group">
+          <label for="receiptStudentName">Student Name</label>
+          <input type="text" id="receiptStudentName" required>
+        </div>
+        <div class="form-group">
+          <label for="receiptAmount">Amount Paid (₹)</label>
+          <input type="number" id="receiptAmount" required>
+        </div>
+        <div class="form-group">
+          <label for="receiptCourse">Course Name</label>
+          <input type="text" id="receiptCourse" required>
+        </div>
+        <button type="submit" class="btn btn-accent">Generate Receipt</button>
+      </form>
+      <div id="generatedReceipt" class="generated-content"></div>
+    </div>
+
+    <!-- LinkedIn Post Section -->
+    <div class="card" id="linkedin-post">
+      <h3>LinkedIn Post Generator</h3>
+      <p style="color: var(--text-gray); margin-bottom: 20px;">Draft announcements for Utkarsh Minds.</p>
+      
+      <form id="linkedinPostForm">
+        <div class="form-group">
+          <label for="postTopic">Topic / Key Points</label>
+          <textarea id="postTopic" rows="4" required placeholder="e.g., New course launch for Python programming..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Generate Post</button>
+      </form>
+      <div id="generatedPost" class="generated-content"></div>
+    </div>
+
+  </main>
+
+  <script src="supabaseClient.js?v=2"></script>
+  <script>
+    // Tab switching logic
+    document.querySelectorAll('.sidebar-menu a[data-target]').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelectorAll('.sidebar-menu a').forEach(l => l.classList.remove('active'));
+        document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+        
+        e.target.classList.add('active');
+        document.getElementById(e.target.dataset.target).classList.add('active');
+      });
+    });
+
+    // Check Auth Status & Role
+    async function checkAuth() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) {
+        window.location.href = './login.html';
+        return;
+      }
+      const role = session.user.user_metadata.role;
+      if (role !== 'assistant') {
+        window.location.href = './login.html'; // Or student dashboard
+      }
+    }
+    checkAuth();
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+      e.preventDefault();
+      await supabaseClient.auth.signOut();
+      window.location.href = './login.html';
+    });
+
+    // Create Student Logic
+    // We create a secondary supabase client that does not persist session so the assistant is not logged out
+    const supabaseSignup = window.supabaseSdk.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        storageKey: 'utkarshminds-student-signup'
+      }
+    });
+
+    async function loadCourses() {
+      const courseSelect = document.getElementById('studentCourse');
+      const { data, error } = await supabaseClient.from('courses').select('id, title, category').in('category', ['datascience', 'ai']).order('category').order('title');
+      if (error || !data || data.length === 0) {
+        courseSelect.innerHTML = '<option value="">No courses available</option>';
+        return;
+      }
+      courseSelect.innerHTML = '';
+      const categoryLabels = { datascience: 'Data Science', ai: 'AI/ML' };
+      const categories = ['datascience', 'ai'];
+      categories.forEach(category => {
+        const course = data.find(item => item.category === category);
+        if (!course) return;
+        const option = document.createElement('option');
+        option.value = course.id;
+        option.textContent = categoryLabels[category];
+        courseSelect.appendChild(option);
+      });
+    }
+    loadCourses();
+
+    document.getElementById('createStudentForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('studentEmail').value;
+      const password = document.getElementById('studentPassword').value;
+      const courseIds = [document.getElementById('studentCourse').value].filter(Boolean);
+      const btn = document.getElementById('createStudentBtn');
+      const alertBox = document.getElementById('student-alert');
+
+      btn.disabled = true;
+      btn.textContent = 'Creating...';
+      alertBox.style.display = 'none';
+
+      const { data, error } = await supabaseSignup.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+          data: { role: 'student' }
+        }
+      });
+
+      if (error || !data || !data.user) {
+        alertBox.className = 'alert alert-error';
+        alertBox.textContent = error ? error.message : 'Supabase did not return a student account.';
+      } else {
+        const { error: profileError } = await supabaseClient.rpc('register_student_courses', {
+          p_student_id: data.user.id,
+          p_student_email: email,
+          p_purchased_course_ids: courseIds
+        });
+        if (profileError) {
+          alertBox.className = 'alert alert-error';
+          alertBox.textContent = `Account created, but student setup failed: ${profileError.message}`;
+          alertBox.style.display = 'block';
+          btn.disabled = false;
+          btn.textContent = 'Create Account';
+          return;
+        }
+        alertBox.className = 'alert alert-success';
+        alertBox.textContent = 'Student created successfully. They can log in with the temporary password and change it from the dashboard.';
+        e.target.reset();
+      }
+      alertBox.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Create Account';
+    });
+
+    // Fee Receipt Generator Mock
+    document.getElementById('feeReceiptForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('receiptStudentName').value;
+      const amount = document.getElementById('receiptAmount').value;
+      const course = document.getElementById('receiptCourse').value;
+      const date = new Date().toLocaleDateString();
+      
+      const receiptText = `UTKARSH MINDS - FEE RECEIPT\n\nDate: ${date}\nReceipt No: UM-${Math.floor(Math.random() * 10000)}\n\nReceived with thanks from: ${name}\nThe sum of: ₹${amount}\nFor Course: ${course}\n\nAuthorized Signatory\nUtkarsh Minds`;
+      
+      const output = document.getElementById('generatedReceipt');
+      output.textContent = receiptText;
+      output.style.display = 'block';
+    });
+
+    // LinkedIn Post Generator Mock
+    document.getElementById('linkedinPostForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const topic = document.getElementById('postTopic').value;
+      
+      const postText = `🚀 Exciting Update from Utkarsh Minds! 🚀\n\n${topic}\n\nWe are always striving to bring the best educational content to our students. Join us on this learning journey!\n\n#UtkarshMinds #Education #Learning #Growth #StudentSuccess`;
+      
+      const output = document.getElementById('generatedPost');
+      output.textContent = postText;
+      output.style.display = 'block';
+    });
+
+  </script>
+</body>
+</html>

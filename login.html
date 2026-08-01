@@ -87,6 +87,20 @@
 
   <script src="supabaseClient.js"></script>
   <script>
+    // Check if already logged in
+    async function checkAuth() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session) {
+        const role = session.user.user_metadata.role || 'student';
+        if (role === 'assistant') {
+          window.location.href = './assistant-dashboard.html';
+        } else {
+          window.location.href = './student-dashboard.html';
+        }
+      }
+    }
+    checkAuth();
+
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('email').value;
@@ -94,28 +108,45 @@
       const errorMsg = document.getElementById('errorMsg');
       const loginBtn = document.getElementById('loginBtn');
 
+      console.log('Attempting login for:', email);
       loginBtn.textContent = 'Logging in...';
       loginBtn.disabled = true;
       errorMsg.style.display = 'none';
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password,
-      });
+      try {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+          email: email,
+          password: password,
+        });
 
-      if (error) {
-        errorMsg.textContent = error.message;
+        console.log('Supabase Auth Response:', { data, error });
+
+        if (error) {
+          console.error('Login error:', error);
+          errorMsg.textContent = error.message === 'Email not confirmed'
+            ? 'Email not confirmed. Ask the assistant to confirm this account in Supabase Auth, or disable email confirmation for temporary student accounts.'
+            : error.message;
+          errorMsg.style.display = 'block';
+          loginBtn.textContent = 'Login';
+          loginBtn.disabled = false;
+        } else {
+          // Check role
+          const role = (data.user && data.user.user_metadata && data.user.user_metadata.role) || 'student';
+          console.log('Login successful. Role:', role);
+          if (role === 'assistant') {
+            console.log('Redirecting to assistant dashboard...');
+            window.location.href = './assistant-dashboard.html';
+          } else {
+            console.log('Redirecting to student dashboard...');
+            window.location.href = './student-dashboard.html';
+          }
+        }
+      } catch (err) {
+        console.error('Unexpected Javascript Error during login:', err);
+        errorMsg.textContent = 'An unexpected error occurred: ' + err.message;
         errorMsg.style.display = 'block';
         loginBtn.textContent = 'Login';
         loginBtn.disabled = false;
-      } else {
-        // Check role
-        const role = data.user.user_metadata.role || 'student';
-        if (role === 'assistant') {
-          window.location.href = '/assistant-dashboard.html';
-        } else {
-          window.location.href = '/student-dashboard.html';
-        }
       }
     });
   </script>

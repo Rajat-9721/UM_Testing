@@ -1,7 +1,7 @@
 -- Supabase Database Initialization Script
 
 -- 1. Create the Courses Table
-CREATE TABLE public.courses (
+CREATE TABLE IF NOT EXISTS public.courses (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     category VARCHAR(100) NOT NULL, -- e.g., 'datascience', 'ai', 'foundation', 'popular'
@@ -18,7 +18,10 @@ CREATE TABLE public.courses (
 ALTER TABLE public.courses ENABLE ROW LEVEL SECURITY;
 
 -- Allow public read access to courses
+DROP POLICY IF EXISTS "Courses are viewable by everyone" ON public.courses;
 CREATE POLICY "Courses are viewable by everyone" ON public.courses FOR SELECT USING (true);
+
+CREATE UNIQUE INDEX IF NOT EXISTS courses_title_unique ON public.courses (title);
 
 -- 3. Insert Initial Scraped Data from Utkarsh Minds
 INSERT INTO public.courses (title, category, faculty, mode, badge, price, description) VALUES
@@ -75,7 +78,94 @@ INSERT INTO public.courses (title, category, faculty, mode, badge, price, descri
     'New Batch',
     NULL,
     'Start your coding journey with foundational Python programming.'
-);
+)
+ON CONFLICT (title) DO NOTHING;
 
 -- 4. User Roles (Assuming Supabase Auth is used)
 -- We will use the 'raw_user_meta_data' in auth.users to store { "role": "student" } or { "role": "assistant" }
+
+-- 5. Student profiles and purchased courses
+CREATE TABLE IF NOT EXISTS public.profiles (
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    email TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'student' CHECK (role IN ('student', 'assistant')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS public.enrollments (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    student_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    course_id UUID NOT NULL REFERENCES public.courses(id) ON DELETE CASCADE,
+    progress INTEGER NOT NULL DEFAULT 0 CHECK (progress BETWEEN 0 AND 100),
+    purchased_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    UNIQUE (student_id, course_id)
+);
+
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.enrollments ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Students can view their profile" ON public.profiles;
+CREATE POLICY "Students can view their profile" ON public.profiles
+    FOR SELECT USING (id = auth.uid());
+DROP POLICY IF EXISTS "Students can view their enrollments" ON public.enrollments;
+CREATE POLICY "Students can view their enrollments" ON public.enrollments
+    FOR SELECT USING (student_id = auth.uid());
+
+CREATE OR REPLACE FUNCTION public.register_student(
+    student_id UUID,
+    student_email TEXT,
+    purchased_course_id UUID DEFAULT NULL
+)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+    IF COALESCE((auth.jwt() -> 'user_metadata' ->> 'role'), '') <> 'assistant' THEN
+        RAISE EXCEPTION 'Only assistants can register students';
+    END IF;
+
+    INSERT INTO public.profiles (id, email, role)
+    VALUES (student_id, lower(student_email), 'student')
+    ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email;
+
+    IF purchased_course_id IS NOT NULL THEN
+        INSERT INTO public.enrollments (student_id, course_id)
+        VALUES (student_id, purchased_course_id)
+        ON CONFLICT (student_id, course_id) DO NOTHING;
+    END IF;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.register_student(UUID, TEXT, UUID) TO authenticated;
+
+-- Supports assigning both Data Science and AI/ML courses at registration time.
+DROP FUNCTION IF EXISTS public.register_student_courses(UUID, TEXT, UUID[]);
+CREATE OR REPLACE FUNCTION public.register_student_courses(
+    p_student_id UUID,
+    p_student_email TEXT,
+    p_purchased_course_ids UUID[] DEFAULT '{}'
+)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+    IF COALESCE((auth.jwt() -> 'user_metadata' ->> 'role'), '') <> 'assistant' THEN
+        RAISE EXCEPTION 'Only assistants can register students';
+    END IF;
+
+    INSERT INTO public.profiles (id, email, role)
+    VALUES (p_student_id, lower(p_student_email), 'student')
+    ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email;
+
+    INSERT INTO public.enrollments (student_id, course_id)
+    SELECT p_student_id, selected_courses.course_id
+    FROM unnest(p_purchased_course_ids) AS selected_courses(course_id)
+    ON CONFLICT (student_id, course_id) DO NOTHING;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.register_student_courses(UUID, TEXT, UUID[]) TO authenticated;

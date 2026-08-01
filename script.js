@@ -63,25 +63,20 @@ startInterval();
 // Course Data (Fallback if Supabase is not configured yet)
 const fallbackCoursesData = {
   popular: [
-    { title: "Data Science Certification", faculty: "Pranav Nerurkar", mode: "Online/Offline", badge: "Bestseller", img: "assets/course.jpg" },
-    { title: "Professional AI Certification", faculty: "Dr. Bhalchandra Chaudhari", mode: "Online · Weekend", badge: "Top Rated", img: "assets/course.jpg" },
-    { title: "Machine Learning Masterclass", faculty: "Palash Ingle", mode: "Online/Offline", badge: "Trending", img: "assets/course.jpg" },
-    { title: "Python Programming Basics", faculty: "Sanjeev Singh", mode: "Online/Offline", badge: "New Batch", img: "assets/course.jpg" }
+    { title: "Tier-I AI & ML Engineer Course", faculty: "Dr. Pranav Nerurkar", mode: "Online/Offline | 120 Hours", badge: "Popular", img: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=600&q=80", price: "₹20,000" },
+    { title: "Tier-II Applied ML & CV Engineer Course", faculty: "Dr. Pranav Nerurkar", mode: "Online/Offline | 120 Hours", badge: "Best Seller", img: "https://images.unsplash.com/photo-1527474305487-b87b222841cc?auto=format&fit=crop&w=600&q=80", price: "₹20,000" },
+    { title: "Tier-III Advanced Deep Learning & AI scaling", faculty: "Dr. Pranav Nerurkar", mode: "Online/Offline | 240 Hours", badge: "Advanced", img: "https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&w=600&q=80", price: "₹40,000" }
   ],
   datascience: [
-    { title: "Data Science Certification", faculty: "Pranav Nerurkar", mode: "Online/Offline", badge: "Bestseller", img: "assets/course.jpg" },
-    { title: "Machine Learning Masterclass", faculty: "Palash Ingle", mode: "Online/Offline", badge: "Trending", img: "assets/course.jpg" },
-    { title: "Deep Learning Specialization", faculty: "Utkarsh Minds Team", mode: "Online/Offline", badge: "", img: "assets/course.jpg" }
+    { title: "Data Science & Data Analytics Certification", faculty: "Dr. Pranav Nerurkar", mode: "Online/Offline | 120 Hours", badge: "Trending", img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&q=80", price: "₹20,000", detailUrl: "data-science-course.html" },
+    { title: "Tier-I AI & ML Engineer Course", faculty: "Dr. Pranav Nerurkar", mode: "Online/Offline | 120 Hours", badge: "Popular", img: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=600&q=80", price: "₹20,000", detailUrl: "data-science-course.html" }
   ],
   ai: [
-    { title: "Professional AI Certification", faculty: "Dr. Bhalchandra Chaudhari", mode: "Online · Weekend", badge: "Top Rated", img: "assets/course.jpg" },
-    { title: "Generative AI Bootcamp", faculty: "Expert Panel", mode: "Online", badge: "Trending", img: "assets/course.jpg" },
-    { title: "NLP & Computer Vision", faculty: "Utkarsh Minds Team", mode: "Online/Offline", badge: "", img: "assets/course.jpg" }
+    { title: "Tier-II Applied ML & CV Engineer Course", faculty: "Dr. Pranav Nerurkar", mode: "Online/Offline | 120 Hours", badge: "Best Seller", img: "https://images.unsplash.com/photo-1527474305487-b87b222841cc?auto=format&fit=crop&w=600&q=80", price: "₹20,000", detailUrl: "ai-course.html" },
+    { title: "Tier-III Advanced Deep Learning & AI scaling", faculty: "Dr. Pranav Nerurkar", mode: "Online/Offline | 240 Hours", badge: "Advanced", img: "https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&w=600&q=80", price: "₹40,000", detailUrl: "ai-course.html" }
   ],
   foundation: [
-    { title: "Python Programming Basics", faculty: "Sanjeev Singh", mode: "Online/Offline", badge: "", img: "assets/course.jpg" },
-    { title: "Statistics for Python", faculty: "Expert Panel", mode: "Online", badge: "Starts Soon", img: "assets/course.jpg" },
-    { title: "Foundation in Data Analytics", faculty: "Utkarsh Minds Team", mode: "Online/Offline", badge: "New Batch", img: "assets/course.jpg" }
+    { title: "Python Programming Basics & Math", faculty: "Dr. Pranav Nerurkar", mode: "Online/Offline | 60 Hours", badge: "New Batch", img: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=600&q=80", price: "₹10,000" }
   ]
 };
 
@@ -136,8 +131,13 @@ async function renderCourses(category) {
       badgeHTML = `<div class="badge">${course.badge}</div>`;
     }
     
-    // Determine the ID to pass to course-details.html (fallback data has no ID)
-    const detailUrl = course.id ? `course-details.html?id=${course.id}` : '#';
+    let priceHTML = '';
+    if (course.price) {
+      priceHTML = `<span class="course-price" style="font-weight: 700; color: var(--primary); font-size: 1.15rem;">${course.price}</span>`;
+    }
+    
+    // Determine the URL for the detail page
+    const detailUrl = course.detailUrl || (course.id ? `course-details.html?id=${course.id}` : '#');
     
     card.innerHTML = `
       <div class="course-img">
@@ -145,13 +145,14 @@ async function renderCourses(category) {
         <img src="${course.img || 'assets/course.jpg'}" alt="${course.title}">
       </div>
       <div class="course-content">
-        <h3 class="course-title">${course.title}</h3>
-        <div class="course-meta">
+        <h3 class="course-title" style="min-height: 56px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${course.title}</h3>
+        <div class="course-meta" style="margin-bottom: 12px;">
           <span><strong>Faculty:</strong> ${course.faculty || 'Expert Panel'}</span>
           <span><strong>Mode:</strong> ${course.mode || 'Online'}</span>
         </div>
         <div class="course-price-row">
-          <a href="${detailUrl}" class="btn btn-accent" style="width: 100%;">View Details</a>
+          ${priceHTML}
+          <a href="${detailUrl}" class="btn btn-accent" style="padding: 8px 16px; font-size: 0.9rem;">View Details</a>
         </div>
       </div>
     `;
@@ -172,3 +173,15 @@ tabBtns.forEach(btn => {
 
 // Initial Render
 renderCourses('popular');
+
+// Mobile menu toggle
+const menuToggle = document.getElementById('menuToggle');
+const navMenu = document.querySelector('.nav-menu');
+const headerActions = document.querySelector('.header-actions');
+
+if (menuToggle) {
+  menuToggle.addEventListener('click', () => {
+    navMenu.classList.toggle('active');
+    headerActions.classList.toggle('active');
+  });
+}
