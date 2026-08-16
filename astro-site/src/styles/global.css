@@ -1,0 +1,187 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&display=swap');
+@import './tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  line-height: var(--leading-normal);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+img,
+picture,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul,
+ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: var(--leading-tight);
+  margin: 0;
+}
+
+h1 {
+  font-size: var(--text-5xl);
+}
+h2 {
+  font-size: var(--text-4xl);
+}
+h3 {
+  font-size: var(--text-2xl);
+}
+h4 {
+  font-size: var(--text-xl);
+}
+
+p {
+  margin: 0;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* Keyboard-accessible focus state, hidden for pointer users */
+:focus-visible {
+  outline: 3px solid var(--color-secondary);
+  outline-offset: 2px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Skip-to-content link for keyboard/screen-reader users */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: var(--space-4);
+  z-index: var(--z-modal);
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-fast);
+}
+
+.skip-link:focus {
+  top: var(--space-4);
+}
+
+.container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding-inline: var(--container-padding);
+}
+
+/* Floating WhatsApp button — fixed to viewport, above header/modal layers */
+.whatsapp-fab {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 1300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: #25d366;
+  color: #fff;
+  box-shadow: var(--shadow-lg);
+  transition: transform 280ms ease, box-shadow 280ms ease;
+}
+
+.whatsapp-fab:hover,
+.whatsapp-fab:focus-visible {
+  transform: scale(1.1);
+  box-shadow: 0 12px 28px rgba(37, 211, 102, 0.45);
+}
+
+@media (max-width: 768px) {
+  .whatsapp-fab {
+    right: 16px;
+    bottom: 16px;
+    width: 48px;
+    height: 48px;
+  }
+}
+
+@media (max-width: 768px) {
+  h1 {
+    font-size: var(--text-4xl);
+  }
+  h2 {
+    font-size: var(--text-3xl);
+  }
+}
+
+/*
+  Scroll-reveal utility. Opt in with `data-reveal` on an element.
+  Content is visible by default — it only becomes hidden-then-revealed
+  once JS confirms `.reveal-ready` on <html> (IntersectionObserver
+  supported and reduced-motion not requested). This means a JS
+  failure, slow script, or reduced-motion preference always falls
+  back to fully visible static content, never a hidden one.
+*/
+.reveal-ready [data-reveal] {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity var(--reveal-duration) var(--reveal-easing),
+    transform var(--reveal-duration) var(--reveal-easing);
+}
+
+.reveal-ready [data-reveal].is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.reveal-ready [data-reveal-group] > [data-reveal] {
+  transition-delay: calc(var(--reveal-index, 0) * 90ms);
+}

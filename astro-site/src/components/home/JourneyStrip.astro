@@ -1,0 +1,106 @@
+---
+import Container from '../Container.astro';
+import Section from '../Section.astro';
+
+const stages = [
+  {
+    label: 'Data',
+    detail: 'Statistics, Python and real datasets — the raw material of every model.',
+  },
+  {
+    label: 'Intelligence',
+    detail: 'Machine Learning, Deep Learning, Computer Vision and NLP techniques applied to it.',
+  },
+  {
+    label: 'Real-world Skills',
+    detail: 'Generative AI, Power BI and Big Data tooling, practiced through live projects.',
+  },
+  {
+    label: 'Career & Research',
+    detail: 'Internship & placement assistance, plus a path into applied AI research.',
+  },
+];
+---
+
+<Section theme="light">
+  <Container>
+    <p class="kicker" data-reveal>How the training is structured</p>
+    <div class="journey" data-reveal-group>
+      {
+        stages.map((s, i) => (
+          <div class="stage" data-reveal>
+            <span class="stage-index">{String(i + 1).padStart(2, '0')}</span>
+            <h3>{s.label}</h3>
+            <p>{s.detail}</p>
+          </div>
+        ))
+      }
+    </div>
+  </Container>
+</Section>
+
+<style>
+  .kicker {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-secondary);
+    margin-bottom: var(--space-10);
+  }
+
+  .journey {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    position: relative;
+  }
+
+  .stage {
+    padding-inline-end: var(--space-8);
+    border-inline-start: 2px solid var(--color-border);
+    padding-inline-start: var(--space-6);
+    position: relative;
+  }
+
+  .stage::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--color-accent);
+  }
+
+  .stage-index {
+    display: block;
+    font-family: var(--font-display);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-3);
+  }
+
+  .stage h3 {
+    font-size: var(--text-xl);
+    margin-bottom: var(--space-3);
+    color: var(--color-primary);
+  }
+
+  .stage p {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+
+  @media (max-width: 900px) {
+    .journey {
+      grid-template-columns: 1fr;
+      gap: var(--space-8);
+    }
+
+    .stage {
+      padding-inline-end: 0;
+    }
+  }
+</style>

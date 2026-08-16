@@ -1,0 +1,65 @@
+---
+import Container from '../Container.astro';
+
+const partners = [
+  'Sardar Patel Institute of Technology (SPIT), Mumbai',
+  "Authorized Training Partner — BYJU'S",
+];
+---
+
+<div class="trust-bar">
+  <Container class="trust-bar__inner">
+    <p class="trust-label">Delivered in partnership with</p>
+    <ul class="partner-list">
+      {partners.map((p) => <li>{p}</li>)}
+    </ul>
+  </Container>
+</div>
+
+<style>
+  .trust-bar {
+    background: var(--color-bg-subtle);
+    border-bottom: 1px solid var(--color-border);
+    padding-block: var(--space-6);
+  }
+
+  :global(.trust-bar__inner) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-4) var(--space-8);
+  }
+
+  .trust-label {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+  }
+
+  .partner-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-8);
+  }
+
+  .partner-list li {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-primary);
+    padding-inline-start: var(--space-4);
+    position: relative;
+  }
+
+  .partner-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-accent);
+  }
+</style>

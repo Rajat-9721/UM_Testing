@@ -1,0 +1,424 @@
+---
+import { Image } from 'astro:assets';
+import Container from '../Container.astro';
+import Section from '../Section.astro';
+
+import aaditHire from '../../assets/achievements/aadit-hire.png';
+import virenNagrani from '../../assets/achievements/viren-nagrani.png';
+import parthGandhi from '../../assets/achievements/parth-gandhi.png';
+
+/**
+ * Source of truth: "Website details (1).pdf", pages 10-11 — Student
+ * Achievements. Only the three entries with an explicit, unambiguous
+ * one-line fact in the PDF are included here (per client direction);
+ * name-only certificate photos and company/faculty recognitions were
+ * deliberately left out rather than inferred.
+ */
+const achievements = [
+  {
+    name: 'Aadit Hire',
+    tag: 'Startup Founder',
+    caption: 'Aadit Hire, one of our students, has started his own startup — a proud milestone in his journey.',
+    image: aaditHire,
+  },
+  {
+    name: 'Viren Nagrani',
+    tag: 'Placed at OneInsure',
+    caption: 'Viren Nagrani, our student, has successfully cleared the interview with OneInsure — a proud placement milestone.',
+    image: virenNagrani,
+  },
+  {
+    name: 'Parth Gandhi',
+    tag: 'Placed at Delhivery',
+    caption: 'Parth Gandhi, our student, has successfully cleared the interview with Delhivery — another great placement success.',
+    image: parthGandhi,
+  },
+];
+---
+
+<Section theme="light" id="achievements" class="achv-tight-top">
+  <Container>
+    <p class="kicker" data-reveal>Achievements</p>
+    <h2 data-reveal>Where our students are today</h2>
+
+    <div class="achv-widget" data-achv-widget data-reveal>
+      <div class="featured">
+        {
+          achievements.map((a, i) => (
+            <article class="featured-panel" data-panel aria-hidden={i === 0 ? 'false' : 'true'}>
+              <div class="panel-copy">
+                <p class="panel-tag">{a.tag}</p>
+                <h3>{a.name}</h3>
+                <span class="panel-rule" aria-hidden="true" />
+                <p class="panel-caption">{a.caption}</p>
+              </div>
+              <div class="panel-photo">
+                <div class="panel-photo-frame">
+                  <Image src={a.image} alt={`${a.name} — ${a.caption}`} width={480} loading={i === 0 ? 'eager' : 'lazy'} />
+                </div>
+              </div>
+            </article>
+          ))
+        }
+      </div>
+
+      <div class="nav-row">
+        <button type="button" class="nav-arrow" data-prev aria-label="Previous achievement">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M15 5L8 12L15 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+
+        <button type="button" class="progress-line" data-progress-line aria-label="Achievement position indicator — click to jump">
+          <span class="progress-track" aria-hidden="true" />
+          <span class="progress-dot" data-progress-dot aria-hidden="true" />
+        </button>
+
+        <button type="button" class="nav-arrow" data-next aria-label="Next achievement">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M9 5L16 12L9 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </Container>
+</Section>
+
+<style>
+  /* Trims only the excessive gap above this section (previous section's own
+     bottom spacing + this section's top padding stacked up). Bottom padding
+     is left untouched so spacing before the next section is unaffected —
+     this is a positioning fix only, the card/content below is unchanged. */
+  :global(.section.achv-tight-top) {
+    padding-top: var(--space-8);
+  }
+
+  .kicker {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-secondary);
+    margin-bottom: var(--space-2);
+  }
+
+  h2 {
+    max-width: 24ch;
+    margin-bottom: var(--space-10);
+  }
+
+  .featured {
+    position: relative;
+    max-width: 980px;
+    margin-inline: auto;
+    min-height: 440px;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg);
+    box-shadow: var(--shadow-md);
+    transition: transform 0.35s ease, box-shadow 0.35s ease;
+  }
+
+  .featured:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .featured-panel {
+    position: absolute;
+    inset: 0;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 55% 45%;
+    grid-template-rows: 1fr;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.45s ease;
+  }
+
+  .featured-panel[aria-hidden='false'] {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .panel-copy {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: var(--space-10) var(--space-12);
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .panel-tag {
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-accent-dark);
+    margin-bottom: var(--space-4);
+  }
+
+  .panel-copy h3 {
+    font-size: var(--text-5xl);
+    color: var(--color-primary-dark);
+  }
+
+  .panel-rule {
+    display: block;
+    width: 48px;
+    height: 2px;
+    background: var(--color-golden-subtle);
+    margin-block: var(--space-5);
+  }
+
+  .panel-caption {
+    font-size: var(--text-xl);
+    color: var(--color-text-muted);
+    max-width: 34ch;
+    font-family: var(--font-display);
+    line-height: 1.7;
+  }
+
+  .panel-photo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-8);
+    background: var(--color-bg-subtle);
+    min-width: 0;
+    min-height: 0;
+  }
+
+  /*
+    Sized by height first (100% of the available column height, inside the
+    panel's own padding), with width derived from the aspect ratio and
+    capped at 340px. This is the fix for the frame overflowing the card:
+    previously it sized from `width: 100%` alone, so its aspect-ratio
+    height (340px * 5/4 = 425px, plus panel padding) could exceed the
+    card's fixed height and spill out the bottom regardless of how tall
+    the card actually was.
+  */
+  .panel-photo-frame {
+    height: 100%;
+    width: auto;
+    max-width: 100%;
+    max-height: 340px;
+    aspect-ratio: 4 / 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+  }
+
+  .panel-photo-frame :global(img) {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    transition: transform 0.35s ease, box-shadow 0.35s ease;
+  }
+
+  .panel-photo-frame:hover :global(img) {
+    transform: scale(1.04);
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* Nav row: arrows + thin progress line.
+     All three children share an explicit 40px height reference (matching
+     .nav-arrow) so the row's cross-axis centering can't drift depending on
+     each element's own intrinsic/UA-default sizing (buttons in particular
+     carry browser-default padding that made the progress-line taller/
+     shorter than the arrows, throwing off `align-items: center`). */
+  .nav-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    max-width: 980px;
+    margin-inline: auto;
+    margin-top: var(--space-6);
+  }
+
+  .nav-arrow {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    align-self: center;
+    border-radius: var(--radius-full);
+    border: 1.5px solid var(--color-primary);
+    background: transparent;
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0.8;
+    transition: var(--transition-fast);
+  }
+
+  .nav-arrow:hover {
+    background: var(--color-primary);
+    color: #fff;
+    opacity: 1;
+  }
+
+  .progress-line {
+    position: relative;
+    flex: 1;
+    align-self: center;
+    height: 40px;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .progress-track {
+    display: block;
+    width: 100%;
+    height: 1px;
+    background: var(--color-border);
+  }
+
+  .progress-dot {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-full);
+    background: var(--color-accent);
+    transform: translate(-50%, -50%);
+    transition: left 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @media (max-width: 720px) {
+    .featured {
+      min-height: 0;
+    }
+
+    .featured-panel {
+      position: relative;
+      height: auto;
+      grid-template-columns: 1fr;
+      grid-template-rows: none;
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      display: none;
+    }
+
+    .featured-panel[aria-hidden='false'] {
+      display: grid;
+    }
+
+    .panel-photo {
+      order: -1;
+      padding: var(--space-6);
+    }
+
+    .panel-photo-frame {
+      max-width: 240px;
+    }
+
+    .panel-copy {
+      padding: var(--space-8) var(--space-6);
+    }
+
+    .panel-copy h3 {
+      font-size: var(--text-3xl);
+    }
+
+    .panel-caption {
+      font-size: var(--text-base);
+      line-height: var(--leading-normal);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .featured,
+    .featured-panel,
+    .progress-dot,
+    .panel-photo-frame :global(img) {
+      transition: none;
+    }
+
+    .featured:hover {
+      transform: none;
+    }
+  }
+</style>
+
+<script>
+  const widgets = document.querySelectorAll<HTMLElement>('[data-achv-widget]');
+
+  widgets.forEach((root) => {
+    const panels = Array.from(root.querySelectorAll<HTMLElement>('[data-panel]'));
+    const prevBtn = root.querySelector<HTMLButtonElement>('[data-prev]');
+    const nextBtn = root.querySelector<HTMLButtonElement>('[data-next]');
+    const progressLine = root.querySelector<HTMLButtonElement>('[data-progress-line]');
+    const progressDot = root.querySelector<HTMLElement>('[data-progress-dot]');
+    if (panels.length === 0) return;
+
+    const count = panels.length;
+    let index = 0;
+    let autoplayTimer: ReturnType<typeof setInterval> | null = null;
+    const AUTOPLAY_DELAY = 6000;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function render() {
+      panels.forEach((panel, i) => panel.setAttribute('aria-hidden', i === index ? 'false' : 'true'));
+      if (progressDot) progressDot.style.left = `${(index / Math.max(count - 1, 1)) * 100}%`;
+    }
+
+    function goTo(next: number) {
+      index = ((next % count) + count) % count;
+      render();
+    }
+
+    function stopAutoplay() {
+      if (autoplayTimer) {
+        clearInterval(autoplayTimer);
+        autoplayTimer = null;
+      }
+    }
+
+    function startAutoplay() {
+      if (prefersReducedMotion || count <= 1) return;
+      stopAutoplay();
+      autoplayTimer = setInterval(() => goTo(index + 1), AUTOPLAY_DELAY);
+    }
+
+    prevBtn?.addEventListener('click', () => {
+      goTo(index - 1);
+      startAutoplay();
+    });
+
+    nextBtn?.addEventListener('click', () => {
+      goTo(index + 1);
+      startAutoplay();
+    });
+
+    progressLine?.addEventListener('click', (e) => {
+      const rect = progressLine.getBoundingClientRect();
+      const ratio = (e.clientX - rect.left) / rect.width;
+      goTo(Math.round(ratio * (count - 1)));
+      startAutoplay();
+    });
+
+    root.addEventListener('mouseenter', stopAutoplay);
+    root.addEventListener('mouseleave', startAutoplay);
+    root.addEventListener('focusin', stopAutoplay);
+    root.addEventListener('focusout', startAutoplay);
+
+    render();
+    startAutoplay();
+  });
+</script>

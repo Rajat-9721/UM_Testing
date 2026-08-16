@@ -1,0 +1,55 @@
+---
+/**
+ * Vertical rhythm wrapper for page sections.
+ * `theme="dark"` switches to the dark navy surface used for
+ * hero / CTA / footer bands per the light-first hybrid design direction.
+ * `theme="gradient"` is the signature deep-green -> cream arrival band
+ * (see --gradient-signature in tokens.css) for top-of-page/section moments.
+ */
+interface Props {
+  theme?: 'light' | 'subtle' | 'dark' | 'gradient';
+  id?: string;
+  class?: string;
+}
+const { theme = 'light', id, class: className = '' } = Astro.props;
+---
+
+<section id={id} class:list={['section', `section-${theme}`, className]}>
+  <slot />
+</section>
+
+<style>
+  .section {
+    padding-block: var(--space-20);
+  }
+
+  .section-light {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+  }
+
+  .section-subtle {
+    background-color: var(--color-bg-subtle);
+    color: var(--color-text);
+  }
+
+  .section-dark {
+    background-color: var(--color-dark-bg);
+    color: var(--color-dark-text);
+  }
+
+  .section-gradient {
+    background: var(--gradient-signature);
+    color: var(--color-dark-text);
+  }
+
+  @media (max-width: 768px) {
+    .section {
+      padding-block: var(--space-12);
+    }
+
+    .section-gradient {
+      background: var(--gradient-signature-vertical);
+    }
+  }
+</style>

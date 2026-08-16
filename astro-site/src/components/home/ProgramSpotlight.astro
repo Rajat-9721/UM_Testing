@@ -1,0 +1,170 @@
+---
+import Container from '../Container.astro';
+import Section from '../Section.astro';
+import StickyProgramPanel from './StickyProgramPanel.astro';
+
+const modules = [
+  { name: 'Python Programming', hours: 30 },
+  { name: 'Statistics for Python', hours: 30 },
+  { name: 'Machine Learning', hours: 30 },
+  { name: 'Deep Learning, Computer Vision & NLP', hours: 60 },
+  { name: 'Generative AI, Power BI & Big Data', hours: 60 },
+];
+
+const highlights = [
+  'Live online certification course, weekend batches',
+  'Hands-on teaching with recorded sessions',
+  'Industry-oriented syllabus and interview preparation',
+  '100% internship and placement assistance',
+];
+
+const panelFacts = [
+  { label: 'Delivery', value: 'Live online, weekend batches' },
+  { label: 'Offline center', value: 'Borivali (East), Mumbai' },
+  { label: 'Eligibility', value: 'Diploma / Graduation / PG / PhD' },
+  { label: 'Academic partner', value: 'SPIT, Mumbai' },
+];
+---
+
+<Section theme="light" id="programs">
+  <Container>
+    <p class="kicker" data-reveal>Flagship Program</p>
+    <h2 class="spotlight-title" data-reveal>Professional Certification in Artificial Intelligence</h2>
+    <p class="partner-line" data-reveal>
+      In academic partnership with <strong>Sardar Patel Institute of Technology (SPIT)</strong>,
+      Bhavan's Campus, Mumbai.
+    </p>
+
+    <div class="spotlight">
+      <div class="spotlight-main">
+        <ul class="highlight-list" data-reveal>
+          {highlights.map((h) => <li>{h}</li>)}
+        </ul>
+
+        <div class="curriculum" data-reveal>
+          <div class="curriculum-header">
+            <h3>Curriculum</h3>
+            <p class="curriculum-note">
+              Individual module hours below are as stated in the official program brochure. The
+              brochure's own summary figure differs from the sum of these modules — we're
+              confirming the correct total with the institute before publishing one.
+            </p>
+          </div>
+          <ul class="module-list" data-reveal-group>
+            {
+              modules.map((m) => (
+                <li data-reveal>
+                  <span class="module-name">{m.name}</span>
+                  <span class="module-hours">{m.hours} hrs</span>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </div>
+
+      <StickyProgramPanel
+        name="Professional Certification in AI"
+        facts={panelFacts}
+      />
+    </div>
+  </Container>
+</Section>
+
+<style>
+  .kicker {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-secondary);
+    margin-bottom: var(--space-3);
+  }
+
+  .spotlight-title {
+    max-width: 26ch;
+    margin-bottom: var(--space-4);
+  }
+
+  .partner-line {
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-12);
+  }
+
+  .spotlight {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: var(--space-16);
+    align-items: start;
+  }
+
+  .highlight-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-bottom: var(--space-12);
+  }
+
+  .highlight-list li {
+    position: relative;
+    padding-inline-start: var(--space-6);
+    color: var(--color-text);
+  }
+
+  .highlight-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.55em;
+    width: 8px;
+    height: 8px;
+    background: var(--color-accent);
+  }
+
+  .curriculum-header h3 {
+    font-size: var(--text-lg);
+    margin-bottom: var(--space-3);
+  }
+
+  .curriculum-note {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    max-width: 60ch;
+    margin-bottom: var(--space-6);
+  }
+
+  .module-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .module-list li {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding-block: var(--space-4);
+    border-bottom: 1px solid var(--color-border);
+    font-size: var(--text-sm);
+  }
+
+  .module-list li:first-child {
+    border-top: 1px solid var(--color-border);
+  }
+
+  .module-name {
+    color: var(--color-text);
+    font-weight: 600;
+  }
+
+  .module-hours {
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    font-family: var(--font-display);
+  }
+
+  @media (max-width: 900px) {
+    .spotlight {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

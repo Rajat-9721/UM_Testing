@@ -1,0 +1,61 @@
+---
+import Container from '../Container.astro';
+import Section from '../Section.astro';
+import Button from '../Button.astro';
+---
+
+<Section theme="dark" id="enquire">
+  <Container>
+    <div class="cta" data-reveal>
+      <div>
+        <h2>Ready to start? Talk to us.</h2>
+        <p>
+          Reach out about the AI Certification program or any of our other courses — we'll get
+          back to you directly.
+        </p>
+      </div>
+
+      <div class="cta-actions">
+        <Button href="https://wa.me/919619997797" variant="accent">WhatsApp Us</Button>
+        <Button href="tel:+919832296107" variant="outline-white">Call +91 98322 96107</Button>
+        <Button href="mailto:pranav.nerurkar@utkarshminds.com" variant="outline-white">
+          Email Us
+        </Button>
+      </div>
+
+      <address class="cta-address">
+        Nirmala Sadan, Kasturba Cross Road (Carter Road), Borivali (East), Mumbai – 400066, India
+      </address>
+    </div>
+  </Container>
+</Section>
+
+<style>
+  h2 {
+    color: #fff;
+    margin-bottom: var(--space-4);
+  }
+
+  .cta p {
+    color: var(--color-dark-text-muted);
+    max-width: 56ch;
+    font-size: var(--text-lg);
+    margin-bottom: var(--space-10);
+  }
+
+  .cta-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin-bottom: var(--space-8);
+  }
+
+  .cta-address {
+    font-style: normal;
+    color: var(--color-dark-text-muted);
+    font-size: var(--text-sm);
+    border-top: 1px solid var(--color-dark-border);
+    padding-top: var(--space-6);
+    max-width: 56ch;
+  }
+</style>

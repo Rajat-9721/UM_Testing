@@ -1,0 +1,169 @@
+---
+import { Image } from 'astro:assets';
+import Container from './Container.astro';
+import Nav from './Nav.astro';
+import Button from './Button.astro';
+import logo from '../assets/brand/logo-transparent.png';
+---
+
+<header class="header" id="main-header">
+  <Container class="header__inner">
+    <a href="/" class="logo" aria-label="Utkarsh Minds — home">
+      <Image
+        src={logo}
+        alt="Utkarsh Minds"
+        height={60}
+        densities={[1, 2]}
+        loading="eager"
+        fetchpriority="high"
+      />
+    </a>
+
+    <Nav />
+
+    <div class="header-actions" id="header-actions">
+      <div class="social-icons">
+        <a href="https://facebook.com/profile.php?id=61555480462542" target="_blank" rel="noopener" aria-label="Utkarsh Minds on Facebook">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+        </a>
+        <a href="https://twitter.com/UtkarshMinds" target="_blank" rel="noopener" aria-label="Utkarsh Minds on Twitter">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path></svg>
+        </a>
+        <a href="https://www.linkedin.com/company/101439252" target="_blank" rel="noopener" aria-label="Utkarsh Minds on LinkedIn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+        </a>
+      </div>
+      <Button href="/login" variant="outline">Login</Button>
+      <Button href="/#programs" variant="accent">Enroll Now</Button>
+    </div>
+
+    <button class="menu-toggle" id="menu-toggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="nav-menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+  </Container>
+</header>
+
+<style>
+  .header {
+    position: sticky;
+    top: 0;
+    background-color: var(--color-bg);
+    z-index: var(--z-header);
+    transition: var(--transition-base);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .header.scrolled {
+    box-shadow: var(--shadow-md);
+  }
+
+  :global(.header__inner) {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 80px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .logo :global(img) {
+    height: 60px;
+    width: auto;
+    display: block;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  .social-icons {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding-right: var(--space-2);
+    border-right: 1px solid var(--color-border);
+  }
+
+  .social-icons a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius-full);
+    color: var(--color-text-muted);
+    transition: transform 250ms ease, color 250ms ease;
+  }
+
+  .social-icons a:hover,
+  .social-icons a:focus-visible {
+    color: var(--color-accent);
+    transform: scale(1.09);
+  }
+
+  .menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    padding: var(--space-2);
+    color: var(--color-primary);
+    cursor: pointer;
+  }
+
+  @media (max-width: 768px) {
+    .header-actions {
+      display: none;
+      flex-direction: column;
+      flex-basis: 100%;
+      order: 4;
+      gap: var(--space-3);
+      padding: 0 var(--space-6) var(--space-6);
+      background: var(--color-bg);
+    }
+
+    .header-actions.active {
+      display: flex;
+    }
+
+    .menu-toggle {
+      display: block;
+      order: 2;
+    }
+
+    .social-icons {
+      justify-content: center;
+      padding-right: 0;
+      padding-bottom: var(--space-3);
+      border-right: none;
+      border-bottom: 1px solid var(--color-border);
+    }
+  }
+</style>
+
+<script>
+  const header = document.getElementById('main-header');
+  const menuToggle = document.getElementById('menu-toggle');
+  const navMenu = document.getElementById('nav-menu');
+  const headerActions = document.getElementById('header-actions');
+
+  window.addEventListener('scroll', () => {
+    header?.classList.toggle('scrolled', window.scrollY > 10);
+  });
+
+  menuToggle?.addEventListener('click', () => {
+    const isOpen = navMenu?.classList.toggle('active');
+    headerActions?.classList.toggle('active');
+    menuToggle.setAttribute('aria-expanded', String(Boolean(isOpen)));
+  });
+</script>

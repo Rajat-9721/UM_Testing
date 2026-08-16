@@ -1,0 +1,83 @@
+---
+/**
+ * Reusable button/link primitive.
+ * Renders an <a> when `href` is passed, otherwise a <button>,
+ * so the correct semantics are used automatically.
+ */
+interface Props {
+  href?: string;
+  variant?: 'primary' | 'accent' | 'outline' | 'outline-white';
+  type?: 'button' | 'submit' | 'reset';
+  class?: string;
+}
+
+const { href, variant = 'primary', type = 'button', class: className = '' } = Astro.props;
+const Tag = href ? 'a' : 'button';
+const extraAttrs = href
+  ? {}
+  : { type };
+---
+
+<Tag class={`btn btn-${variant} ${className}`} href={href} {...extraAttrs}>
+  <slot />
+</Tag>
+
+<style>
+  .btn {
+    display: inline-block;
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: var(--text-base);
+    text-align: center;
+    border: none;
+    cursor: pointer;
+    transition: var(--transition-base);
+  }
+
+  .btn-primary {
+    background-color: var(--color-primary);
+    color: #fff;
+  }
+  .btn-primary:hover {
+    background-color: var(--color-primary-dark);
+    transform: translateY(-2px);
+  }
+
+  .btn-accent {
+    background-color: var(--color-accent);
+    color: var(--color-text);
+  }
+  .btn-accent:hover {
+    background-color: var(--color-accent-dark);
+    transform: translateY(-2px);
+  }
+
+  .btn-outline {
+    background-color: transparent;
+    color: var(--color-primary);
+    border: 2px solid var(--color-primary);
+    padding: calc(var(--space-3) - 2px) calc(var(--space-6) - 2px);
+  }
+  .btn-outline:hover {
+    background-color: var(--color-primary);
+    color: #fff;
+  }
+
+  .btn-outline-white {
+    background-color: transparent;
+    color: #fff;
+    border: 2px solid #fff;
+    padding: calc(var(--space-3) - 2px) calc(var(--space-6) - 2px);
+  }
+  .btn-outline-white:hover {
+    background-color: #fff;
+    color: var(--color-primary);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .btn:hover {
+      transform: none;
+    }
+  }
+</style>

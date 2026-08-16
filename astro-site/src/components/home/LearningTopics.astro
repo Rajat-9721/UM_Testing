@@ -1,0 +1,75 @@
+---
+import Container from '../Container.astro';
+import Section from '../Section.astro';
+
+const topics = [
+  'Python Programming',
+  'Statistics',
+  'SQL (PostgreSQL)',
+  'Machine Learning',
+  'Deep Learning',
+  'Computer Vision',
+  'Natural Language Processing',
+  'Generative AI',
+  'Power BI',
+  'Big Data',
+];
+---
+
+<Section theme="subtle">
+  <Container>
+    <div class="topics-header" data-reveal>
+      <p class="kicker">What You'll Learn</p>
+      <h2>A curriculum built around the tools the industry actually uses</h2>
+    </div>
+
+    <ul class="topic-grid" data-reveal-group>
+      {topics.map((t) => <li class="topic-item" data-reveal>{t}</li>)}
+    </ul>
+  </Container>
+</Section>
+
+<style>
+  .topics-header {
+    max-width: 640px;
+    margin-bottom: var(--space-10);
+  }
+
+  .kicker {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-secondary);
+    margin-bottom: var(--space-3);
+  }
+
+  .topic-grid {
+    display: grid;
+    grid-template-columns: repeat(5, auto);
+    gap: 0;
+    border-top: 1px solid var(--color-border);
+    border-left: 1px solid var(--color-border);
+  }
+
+  .topic-item {
+    padding: var(--space-4) var(--space-5);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-primary);
+    border-right: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  @media (max-width: 900px) {
+    .topic-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 560px) {
+    .topic-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,128 @@
+/*
+  Design tokens for Utkarsh Minds.
+  Palette is derived from the real logo (deep forest green, sampled
+  directly from the provided brand asset) paired with warm ivory
+  surfaces, charcoal ink text and a restrained brass/gold accent —
+  a deliberate move away from generic navy-SaaS blue.
+*/
+:root {
+  /* Brand colors */
+  --color-primary: #1b3d34; /* deep forest green, sampled from logo */
+  --color-primary-dark: #12281f;
+  --color-primary-light: #3e6b5c; /* sage tint, for subtle accents/borders */
+  --color-secondary: #4c7d69; /* muted sage-green, used for kickers/labels */
+  --color-accent: #be8a3d; /* warm brass/gold */
+  --color-accent-dark: #9c7130;
+  --color-success: #3e6b4f;
+  --color-danger: #a8452f;
+
+  /* Light surfaces (default site theme) — warm ivory, not clinical white */
+  --color-bg: #faf6ee;
+  --color-bg-subtle: #f1ead9;
+  --color-border: #e2d9c4;
+  --color-text: #211f1b;
+  --color-text-muted: #5b564c;
+
+  /* Dark surfaces (hero / CTA bands / footer) — deep charcoal-ink, green-tinted */
+  --color-dark-bg: #16221c;
+  --color-dark-bg-alt: #1e2d25;
+  --color-dark-border: rgba(248, 244, 234, 0.14);
+  --color-dark-text: #f8f4ea;
+  --color-dark-text-muted: #c9c2b2;
+
+  /*
+    Signature gradient surface — deep forest green easing into warm cream.
+    Used for the top-of-page "arrival" band (hero), per the TalentSprint-style
+    premium background rhythm: gradient band -> content -> plain white section
+    -> light golden accents. The final stop matches --color-bg exactly so the
+    band dissolves seamlessly into the light section that follows it.
+  */
+  --color-cream: #efe0bf; /* deeper warm cream, mid/late gradient stop */
+  --color-sage-deep: #2b5246; /* early transition — deep green just starting to soften toward sage */
+  --color-sage-warm: #9fab92; /* late transition — sage warming toward cream */
+  --color-golden-subtle: #d9c48f; /* muted light gold — hairlines/separators only, never a fill */
+  --gradient-signature: linear-gradient(
+    100deg,
+    var(--color-dark-bg) 0%,
+    var(--color-primary) 12%,
+    var(--color-sage-deep) 30%,
+    var(--color-primary-light) 48%,
+    var(--color-sage-warm) 64%,
+    var(--color-cream) 80%,
+    var(--color-bg) 100%
+  );
+  --gradient-signature-vertical: linear-gradient(
+    180deg,
+    var(--color-dark-bg) 0%,
+    var(--color-primary) 38%,
+    var(--color-sage-deep) 58%,
+    var(--color-primary-light) 74%,
+    var(--color-cream) 92%,
+    var(--color-bg) 100%
+  );
+
+  /* Typography */
+  --font-display: 'Fraunces', 'Georgia', serif;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+  --text-4xl: 2.5rem;
+  --text-5xl: 3rem;
+  --text-6xl: 3.5rem;
+  --leading-tight: 1.15;
+  --leading-normal: 1.6;
+
+  /* Spacing scale (4px base) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* Radii — kept modest; the design leans on rules/borders over rounded cards */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 16px;
+  --radius-full: 999px;
+
+  /* Shadows */
+  --shadow-sm: 0 4px 6px rgba(27, 61, 52, 0.06);
+  --shadow-md: 0 10px 20px rgba(27, 61, 52, 0.1);
+  --shadow-lg: 0 24px 40px rgba(27, 61, 52, 0.16);
+
+  /* Motion */
+  --transition-fast: all 0.15s ease;
+  --transition-base: all 0.3s ease;
+  --reveal-duration: 0.7s;
+  --reveal-easing: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Layout */
+  --container-max: 1280px;
+  --container-padding: 1.5rem;
+
+  /* Z-index scale */
+  --z-header: 1000;
+  --z-dropdown: 1100;
+  --z-modal: 1200;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-fast: none;
+    --transition-base: none;
+    --reveal-duration: 0s;
+  }
+}

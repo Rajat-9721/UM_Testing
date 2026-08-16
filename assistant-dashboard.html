@@ -18,6 +18,7 @@
       position: fixed;
       box-shadow: var(--shadow-sm);
       padding: 20px 0;
+      overflow-y: auto;
     }
     .sidebar-header {
       padding: 0 20px 20px;
@@ -28,7 +29,7 @@
       list-style: none;
     }
     .sidebar-menu li {
-      padding: 10px 20px;
+      padding: 4px 20px;
     }
     .sidebar-menu a {
       color: var(--text-gray);
@@ -42,6 +43,29 @@
       background: var(--primary);
       color: white;
     }
+    .sidebar-section-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #a0aec0;
+      padding: 16px 20px 6px;
+    }
+    .sidebar-menu a.coming-soon {
+      color: #cbd5e1;
+      cursor: default;
+    }
+    .sidebar-menu a.coming-soon:hover {
+      background: none;
+      color: #cbd5e1;
+    }
+    .badge-soon {
+      font-size: 0.65rem;
+      background: #e2e8f0;
+      color: var(--text-gray);
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-left: 6px;
+    }
     .main-content {
       margin-left: 250px;
       padding: 40px;
@@ -52,6 +76,8 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 30px;
+      flex-wrap: wrap;
+      gap: 16px;
     }
     .card {
       background: var(--bg-white);
@@ -73,24 +99,18 @@
       color: var(--text-gray);
       font-weight: 500;
     }
-    .form-group input, .form-group textarea {
+    .form-group input, .form-group select, .form-group textarea {
       width: 100%;
       padding: 12px;
       border: 1px solid #cbd5e1;
       border-radius: 6px;
       font-family: inherit;
-    }
-    .course-select {
-      width: 100%;
-      min-height: 52px;
-      padding: 12px 14px;
-      border: 2px solid var(--primary);
-      border-radius: 8px;
-      background: white;
-      color: var(--text-dark);
       font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
     }
     .alert {
       padding: 12px;
@@ -106,13 +126,137 @@
       background: #fee2e2;
       color: #991b1b;
     }
-    .generated-content {
-      margin-top: 20px;
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .search-input {
+      flex: 1;
+      min-width: 220px;
+      padding: 10px 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+    }
+    table.students-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    .students-table th, .students-table td {
+      text-align: left;
+      padding: 12px;
+      border-bottom: 1px solid #edf2f7;
+      white-space: nowrap;
+    }
+    .students-table th {
+      color: var(--text-gray);
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+    }
+    .status-pill {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .status-UNPAID { background: #fee2e2; color: #991b1b; }
+    .status-PARTIALLY_PAID { background: #fef3c7; color: #92400e; }
+    .status-PAID { background: #dcfce7; color: #166534; }
+    .row-actions button {
+      font-size: 0.8rem;
+      padding: 6px 10px;
+      margin-right: 4px;
+      border: 1px solid #cbd5e1;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .row-actions button:hover {
+      background: var(--bg-light);
+    }
+    .empty-state {
+      text-align: center;
+      color: var(--text-gray);
+      padding: 40px;
+    }
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.5);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
       padding: 20px;
+    }
+    .modal-backdrop.active {
+      display: flex;
+    }
+    .modal {
+      background: white;
+      border-radius: var(--border-radius);
+      padding: 30px;
+      width: 100%;
+      max-width: 560px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.4rem;
+      cursor: pointer;
+      color: var(--text-gray);
+    }
+    .method-fields {
+      display: none;
+    }
+    .method-fields.active {
+      display: block;
+    }
+    .payment-history-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      margin-top: 12px;
+    }
+    .payment-history-table th, .payment-history-table td {
+      text-align: left;
+      padding: 8px;
+      border-bottom: 1px solid #edf2f7;
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .summary-tile {
       background: var(--bg-light);
       border-radius: 8px;
-      white-space: pre-wrap;
-      display: none;
+      padding: 12px;
+      text-align: center;
+    }
+    .summary-tile .value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .summary-tile .label {
+      font-size: 0.7rem;
+      color: var(--text-gray);
+      text-transform: uppercase;
     }
   </style>
 </head>
@@ -124,9 +268,16 @@
       <p style="color: var(--text-gray); font-size: 0.8rem; margin-top: 5px;">Assistant Portal</p>
     </div>
     <ul class="sidebar-menu">
-      <li><a href="#" class="active" data-target="create-student">Create Student</a></li>
-      <li><a href="#" data-target="fee-receipt">Generate Fee Receipt</a></li>
-      <li><a href="#" data-target="linkedin-post">LinkedIn Post Gen</a></li>
+      <li><a href="#" class="active" data-target="student-management">Student Management</a></li>
+      <li><a href="#" data-target="linkedin-post">LinkedIn Post Generator</a></li>
+    </ul>
+    <p class="sidebar-section-label">Coming Soon</p>
+    <ul class="sidebar-menu">
+      <li><a href="#" class="coming-soon">Leads <span class="badge-soon">Soon</span></a></li>
+      <li><a href="#" class="coming-soon">Communication Tools <span class="badge-soon">Soon</span></a></li>
+      <li><a href="#" class="coming-soon">Analytics <span class="badge-soon">Soon</span></a></li>
+    </ul>
+    <ul class="sidebar-menu" style="margin-top: 20px; border-top: 1px solid #edf2f7; padding-top: 10px;">
       <li><a href="#" id="logoutBtn" style="color: #ef4444;">Logout</a></li>
     </ul>
   </aside>
@@ -136,14 +287,71 @@
       <h2>Assistant Dashboard</h2>
     </div>
 
-    <!-- Create Student Section -->
-    <div class="card active" id="create-student">
-      <h3>Register New Student</h3>
-      <p style="color: var(--text-gray); margin-bottom: 20px;">Create an account for an enrolled student.</p>
-      
-      <div id="student-alert" class="alert"></div>
+    <!-- Student Management -->
+    <div class="card active" id="student-management">
+      <div class="toolbar">
+        <input type="text" id="studentSearch" class="search-input" placeholder="Search by name, student ID or email...">
+        <button class="btn btn-primary" id="openAddStudentBtn">+ Add Student</button>
+      </div>
 
+      <div id="studentsTableWrap">
+        <table class="students-table" id="studentsTable">
+          <thead>
+            <tr>
+              <th>Student ID</th>
+              <th>Name</th>
+              <th>Program</th>
+              <th>Total Fee</th>
+              <th>Paid</th>
+              <th>Balance</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="studentsTableBody">
+            <tr><td colspan="8" class="empty-state">Loading students...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- LinkedIn Post Section (mocked, unchanged from before, clearly labeled) -->
+    <div class="card" id="linkedin-post">
+      <h3>LinkedIn Post Generator</h3>
+      <p style="color: var(--text-gray); margin-bottom: 20px;">
+        This is a placeholder tool for drafting announcement text. It is not connected to LinkedIn
+        and does not use AI generation — a real content-generation module is a future module.
+      </p>
+      <form id="linkedinPostForm">
+        <div class="form-group">
+          <label for="postTopic">Topic / Key Points</label>
+          <textarea id="postTopic" rows="4" required placeholder="e.g., New course launch for Python programming..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Generate Draft Text</button>
+      </form>
+      <div id="generatedPost" style="margin-top: 20px; padding: 20px; background: var(--bg-light); border-radius: 8px; white-space: pre-wrap; display: none;"></div>
+    </div>
+  </main>
+
+  <!-- Add Student Modal -->
+  <div class="modal-backdrop" id="addStudentModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Register New Student</h3>
+        <button class="modal-close" data-close="addStudentModal">&times;</button>
+      </div>
+      <div id="student-alert" class="alert"></div>
       <form id="createStudentForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="studentFullName">Full Name</label>
+            <input type="text" id="studentFullName" required>
+          </div>
+          <div class="form-group">
+            <label for="studentPhone">Registered Mobile Number</label>
+            <input type="tel" id="studentPhone" required placeholder="+91 XXXXX XXXXX">
+          </div>
+        </div>
         <div class="form-group">
           <label for="studentEmail">Student Email</label>
           <input type="email" id="studentEmail" required>
@@ -152,129 +360,266 @@
           <label for="studentPassword">Temporary Password</label>
           <input type="password" id="studentPassword" required minlength="6">
         </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="studentCourse">Program / Course</label>
+            <select id="studentCourse" required></select>
+          </div>
+          <div class="form-group">
+            <label for="studentTotalFee">Total Program Fee (₹)</label>
+            <input type="number" id="studentTotalFee" min="0" step="0.01" required>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" id="createStudentBtn">Create Student</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- View Student Modal -->
+  <div class="modal-backdrop" id="viewStudentModal">
+    <div class="modal" style="max-width: 720px;">
+      <div class="modal-header">
+        <h3 id="viewStudentName">Student Details</h3>
+        <button class="modal-close" data-close="viewStudentModal">&times;</button>
+      </div>
+      <div id="viewStudentBody">Loading...</div>
+    </div>
+  </div>
+
+  <!-- Record Payment Modal -->
+  <div class="modal-backdrop" id="recordPaymentModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Record Payment</h3>
+        <button class="modal-close" data-close="recordPaymentModal">&times;</button>
+      </div>
+      <div id="payment-alert" class="alert"></div>
+      <form id="recordPaymentForm">
+        <input type="hidden" id="paymentEnrollmentId">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="paymentAmount">Amount (₹)</label>
+            <input type="number" id="paymentAmount" min="0.01" step="0.01" required>
+          </div>
+          <div class="form-group">
+            <label for="paymentDate">Payment Date</label>
+            <input type="date" id="paymentDate" required>
+          </div>
+        </div>
         <div class="form-group">
-          <label for="studentCourse">Purchased Courses</label>
-          <select id="studentCourse" class="course-select" required>
-            <option value="">Data Science Certification</option>
-            <option value="">Professional Certification in Artificial Intelligence</option>
+          <label for="paymentMethod">Payment Method</label>
+          <select id="paymentMethod" required>
+            <option value="cash">Cash</option>
+            <option value="upi">UPI</option>
+            <option value="netbanking">Net Banking</option>
+            <option value="bank_transfer">Bank Transfer</option>
+            <option value="cheque">Cheque</option>
           </select>
-          <small style="color: var(--text-gray);">Choose the purchased course.</small>
         </div>
-        <button type="submit" class="btn btn-primary" id="createStudentBtn">Create Account</button>
+
+        <div class="method-fields" data-method="upi,netbanking,bank_transfer">
+          <div class="form-group">
+            <label for="paymentReference">Transaction / UTR / Reference ID</label>
+            <input type="text" id="paymentReference">
+          </div>
+        </div>
+
+        <div class="method-fields" data-method="cheque">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="chequeNumber">Cheque Number</label>
+              <input type="text" id="chequeNumber">
+            </div>
+            <div class="form-group">
+              <label for="chequeBank">Bank Name</label>
+              <input type="text" id="chequeBank">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="chequeDate">Cheque Date</label>
+            <input type="date" id="chequeDate">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="paymentNote">Internal Note (optional)</label>
+          <textarea id="paymentNote" rows="2"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="recordPaymentBtn">Record Payment</button>
       </form>
     </div>
+  </div>
 
-    <!-- Fee Receipt Section -->
-    <div class="card" id="fee-receipt">
-      <h3>Generate Fee Receipt</h3>
-      <p style="color: var(--text-gray); margin-bottom: 20px;">Create a fee receipt for a student.</p>
-      
-      <form id="feeReceiptForm">
+  <!-- Manage Enrollment Modal -->
+  <div class="modal-backdrop" id="manageEnrollmentModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Manage Enrollment</h3>
+        <button class="modal-close" data-close="manageEnrollmentModal">&times;</button>
+      </div>
+      <div id="enrollment-alert" class="alert"></div>
+      <form id="manageEnrollmentForm">
+        <input type="hidden" id="enrollmentId">
         <div class="form-group">
-          <label for="receiptStudentName">Student Name</label>
-          <input type="text" id="receiptStudentName" required>
+          <label for="enrollmentCourse">Program / Course</label>
+          <select id="enrollmentCourse" required></select>
         </div>
         <div class="form-group">
-          <label for="receiptAmount">Amount Paid (₹)</label>
-          <input type="number" id="receiptAmount" required>
+          <label for="enrollmentTotalFee">Total Program Fee (₹)</label>
+          <input type="number" id="enrollmentTotalFee" min="0" step="0.01" required>
         </div>
-        <div class="form-group">
-          <label for="receiptCourse">Course Name</label>
-          <input type="text" id="receiptCourse" required>
-        </div>
-        <button type="submit" class="btn btn-accent">Generate Receipt</button>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
       </form>
-      <div id="generatedReceipt" class="generated-content"></div>
     </div>
+  </div>
 
-    <!-- LinkedIn Post Section -->
-    <div class="card" id="linkedin-post">
-      <h3>LinkedIn Post Generator</h3>
-      <p style="color: var(--text-gray); margin-bottom: 20px;">Draft announcements for Utkarsh Minds.</p>
-      
-      <form id="linkedinPostForm">
-        <div class="form-group">
-          <label for="postTopic">Topic / Key Points</label>
-          <textarea id="postTopic" rows="4" required placeholder="e.g., New course launch for Python programming..."></textarea>
-        </div>
-        <button type="submit" class="btn btn-primary">Generate Post</button>
-      </form>
-      <div id="generatedPost" class="generated-content"></div>
-    </div>
-
-  </main>
-
-  <script src="supabaseClient.js?v=2"></script>
+  <script src="supabaseClient.js"></script>
+  <script src="auth-helpers.js"></script>
   <script>
-    // Tab switching logic
+    // ---- Auth guard (trusted, profiles.role-based) ----
+    let currentAssistant = null;
+    async function init() {
+      const result = await requireRole(supabaseClient, 'assistant');
+      if (!result) return;
+      currentAssistant = result.session.user;
+      await loadCourseOptions();
+      await loadStudents();
+    }
+
+    // ---- Tab switching ----
     document.querySelectorAll('.sidebar-menu a[data-target]').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
         document.querySelectorAll('.sidebar-menu a').forEach(l => l.classList.remove('active'));
         document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
-        
         e.target.classList.add('active');
         document.getElementById(e.target.dataset.target).classList.add('active');
       });
     });
 
-    // Check Auth Status & Role
-    async function checkAuth() {
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      if (!session) {
-        window.location.href = './login.html';
-        return;
-      }
-      const role = session.user.user_metadata.role;
-      if (role !== 'assistant') {
-        window.location.href = './login.html'; // Or student dashboard
-      }
-    }
-    checkAuth();
-
-    // Logout
+    // ---- Logout ----
     document.getElementById('logoutBtn').addEventListener('click', async (e) => {
       e.preventDefault();
       await supabaseClient.auth.signOut();
       window.location.href = './login.html';
     });
 
-    // Create Student Logic
-    // We create a secondary supabase client that does not persist session so the assistant is not logged out
-    const supabaseSignup = window.supabaseSdk.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        storageKey: 'utkarshminds-student-signup'
-      }
+    // ---- Modal helpers ----
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    document.querySelectorAll('[data-close]').forEach(btn => {
+      btn.addEventListener('click', () => closeModal(btn.dataset.close));
+    });
+    document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+      backdrop.addEventListener('click', (e) => {
+        if (e.target === backdrop) backdrop.classList.remove('active');
+      });
     });
 
-    async function loadCourses() {
-      const courseSelect = document.getElementById('studentCourse');
-      const { data, error } = await supabaseClient.from('courses').select('id, title, category').in('category', ['datascience', 'ai']).order('category').order('title');
-      if (error || !data || data.length === 0) {
-        courseSelect.innerHTML = '<option value="">No courses available</option>';
+    // ---- Course options (shared by Add Student + Manage Enrollment) ----
+    let courseCache = [];
+    async function loadCourseOptions() {
+      const { data, error } = await supabaseClient.from('courses').select('id, title').order('title');
+      courseCache = data || [];
+      const selects = [document.getElementById('studentCourse'), document.getElementById('enrollmentCourse')];
+      selects.forEach(select => {
+        select.innerHTML = courseCache.length
+          ? courseCache.map(c => `<option value="${c.id}">${c.title}</option>`).join('')
+          : '<option value="">No courses available</option>';
+      });
+      if (error) console.error('Failed to load courses:', error);
+    }
+
+    // ---- Student Management table ----
+    let studentsCache = [];
+
+    function formatCurrency(n) {
+      return '₹' + Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function statusLabel(status) {
+      return { UNPAID: 'Unpaid', PARTIALLY_PAID: 'Partially Paid', PAID: 'Paid' }[status] || status;
+    }
+
+    function renderStudentsTable(rows) {
+      const body = document.getElementById('studentsTableBody');
+      if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="8" class="empty-state">No students found.</td></tr>';
         return;
       }
-      courseSelect.innerHTML = '';
-      const categoryLabels = { datascience: 'Data Science', ai: 'AI/ML' };
-      const categories = ['datascience', 'ai'];
-      categories.forEach(category => {
-        const course = data.find(item => item.category === category);
-        if (!course) return;
-        const option = document.createElement('option');
-        option.value = course.id;
-        option.textContent = categoryLabels[category];
-        courseSelect.appendChild(option);
-      });
+      body.innerHTML = rows.map(r => `
+        <tr>
+          <td>${r.student_id || '—'}</td>
+          <td>${r.full_name || '—'}</td>
+          <td>${r.program || '—'}</td>
+          <td>${formatCurrency(r.total_fee)}</td>
+          <td>${formatCurrency(r.total_paid)}</td>
+          <td>${formatCurrency(r.balance)}</td>
+          <td><span class="status-pill status-${r.status}">${statusLabel(r.status)}</span></td>
+          <td class="row-actions">
+            <button data-action="view" data-id="${r.profile_id}">View</button>
+            <button data-action="pay" data-enrollment="${r.enrollment_id}">Record Payment</button>
+            <button data-action="enroll" data-enrollment="${r.enrollment_id}" data-course="${r.course_id}" data-fee="${r.total_fee}">Manage Enrollment</button>
+          </td>
+        </tr>
+      `).join('');
     }
-    loadCourses();
+
+    async function loadStudents() {
+      const { data, error } = await supabaseClient
+        .from('assistant_student_overview')
+        .select('*')
+        .order('student_id', { ascending: false });
+
+      if (error) {
+        console.error('Failed to load students:', error);
+        document.getElementById('studentsTableBody').innerHTML =
+          `<tr><td colspan="8" class="empty-state">Failed to load students: ${error.message}</td></tr>`;
+        return;
+      }
+      studentsCache = data || [];
+      renderStudentsTable(studentsCache);
+    }
+
+    document.getElementById('studentSearch').addEventListener('input', (e) => {
+      const term = e.target.value.trim().toLowerCase();
+      if (!term) { renderStudentsTable(studentsCache); return; }
+      const filtered = studentsCache.filter(r =>
+        (r.full_name || '').toLowerCase().includes(term) ||
+        (r.student_id || '').toLowerCase().includes(term) ||
+        (r.email || '').toLowerCase().includes(term) ||
+        (r.program || '').toLowerCase().includes(term)
+      );
+      renderStudentsTable(filtered);
+    });
+
+    // ---- Row action delegation ----
+    document.getElementById('studentsTableBody').addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const action = btn.dataset.action;
+      if (action === 'view') openViewStudent(btn.dataset.id);
+      if (action === 'pay') openRecordPayment(btn.dataset.enrollment);
+      if (action === 'enroll') openManageEnrollment(btn.dataset.enrollment, btn.dataset.course, btn.dataset.fee);
+    });
+
+    // ---- Add Student ----
+    document.getElementById('openAddStudentBtn').addEventListener('click', () => openModal('addStudentModal'));
+
+    // Secondary client so the assistant's own session isn't replaced by the new user's session
+    const supabaseSignup = window.supabaseSdk.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false, storageKey: 'utkarshminds-student-signup' }
+    });
 
     document.getElementById('createStudentForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const email = document.getElementById('studentEmail').value;
+      const fullName = document.getElementById('studentFullName').value.trim();
+      const phone = document.getElementById('studentPhone').value.trim();
+      const email = document.getElementById('studentEmail').value.trim();
       const password = document.getElementById('studentPassword').value;
-      const courseIds = [document.getElementById('studentCourse').value].filter(Boolean);
+      const courseId = document.getElementById('studentCourse').value;
+      const totalFee = parseFloat(document.getElementById('studentTotalFee').value);
       const btn = document.getElementById('createStudentBtn');
       const alertBox = document.getElementById('student-alert');
 
@@ -282,67 +627,213 @@
       btn.textContent = 'Creating...';
       alertBox.style.display = 'none';
 
-      const { data, error } = await supabaseSignup.auth.signUp({
-        email: email,
-        password: password,
-        options: {
-          data: { role: 'student' }
+      try {
+        const { data, error } = await supabaseSignup.auth.signUp({ email, password });
+        if (error || !data || !data.user) {
+          throw new Error(error ? error.message : 'Supabase did not return a new user.');
         }
-      });
 
-      if (error || !data || !data.user) {
-        alertBox.className = 'alert alert-error';
-        alertBox.textContent = error ? error.message : 'Supabase did not return a student account.';
-      } else {
-        const { error: profileError } = await supabaseClient.rpc('register_student_courses', {
-          p_student_id: data.user.id,
-          p_student_email: email,
-          p_purchased_course_ids: courseIds
+        const { error: rpcError } = await supabaseClient.rpc('register_student_full', {
+          p_user_id: data.user.id,
+          p_email: email,
+          p_full_name: fullName,
+          p_phone: phone,
+          p_course_id: courseId || null,
+          p_total_fee: totalFee
         });
-        if (profileError) {
+
+        if (rpcError) throw new Error(rpcError.message);
+
+        alertBox.className = 'alert alert-success';
+        alertBox.textContent = 'Student created successfully.';
+        alertBox.style.display = 'block';
+        e.target.reset();
+        await loadStudents();
+        setTimeout(() => closeModal('addStudentModal'), 1200);
+      } catch (err) {
+        alertBox.className = 'alert alert-error';
+        alertBox.textContent = err.message;
+        alertBox.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Create Student';
+      }
+    });
+
+    // ---- View Student (details + payment history) ----
+    async function openViewStudent(profileId) {
+      openModal('viewStudentModal');
+      const nameEl = document.getElementById('viewStudentName');
+      const bodyEl = document.getElementById('viewStudentBody');
+      bodyEl.innerHTML = 'Loading...';
+
+      const student = studentsCache.find(s => s.profile_id === profileId);
+      nameEl.textContent = student ? student.full_name : 'Student Details';
+
+      const { data: payments, error } = await supabaseClient
+        .from('payment_receipts')
+        .select('*')
+        .eq('student_id', profileId)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        bodyEl.innerHTML = `<p class="empty-state">Failed to load payment history: ${error.message}</p>`;
+        return;
+      }
+
+      const summaryHtml = student ? `
+        <div class="summary-grid">
+          <div class="summary-tile"><div class="value">${formatCurrency(student.total_fee)}</div><div class="label">Total Fee</div></div>
+          <div class="summary-tile"><div class="value">${formatCurrency(student.total_paid)}</div><div class="label">Paid</div></div>
+          <div class="summary-tile"><div class="value">${formatCurrency(student.balance)}</div><div class="label">Balance</div></div>
+          <div class="summary-tile"><div class="value">${statusLabel(student.status)}</div><div class="label">Status</div></div>
+        </div>
+        <p style="color:var(--text-gray); font-size:0.9rem;">
+          <strong>Student ID:</strong> ${student.student_id || '—'} &middot;
+          <strong>Email:</strong> ${student.email || '—'} &middot;
+          <strong>Phone:</strong> ${student.phone || '—'} &middot;
+          <strong>Program:</strong> ${student.program || '—'}
+        </p>
+      ` : '';
+
+      const historyHtml = payments && payments.length
+        ? `<table class="payment-history-table">
+            <thead><tr><th>Date</th><th>Amount</th><th>Method</th><th>Receipt #</th><th>Status After</th></tr></thead>
+            <tbody>
+              ${payments.map(p => `
+                <tr>
+                  <td>${p.payment_date}</td>
+                  <td>${formatCurrency(p.amount)}</td>
+                  <td>${p.payment_method}</td>
+                  <td>${p.receipt_number}</td>
+                  <td>${statusLabel(p.status_after_payment)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>`
+        : '<p class="empty-state">No payments recorded yet.</p>';
+
+      bodyEl.innerHTML = `<h4 style="margin-bottom:8px;">Fee Summary</h4>${summaryHtml}<h4 style="margin:20px 0 8px;">Payment History</h4>${historyHtml}`;
+    }
+
+    // ---- Record Payment ----
+    function openRecordPayment(enrollmentId) {
+      document.getElementById('recordPaymentForm').reset();
+      document.getElementById('paymentEnrollmentId').value = enrollmentId;
+      document.getElementById('paymentDate').valueAsDate = new Date();
+      document.getElementById('payment-alert').style.display = 'none';
+      updateMethodFields();
+      openModal('recordPaymentModal');
+    }
+
+    function updateMethodFields() {
+      const method = document.getElementById('paymentMethod').value;
+      document.querySelectorAll('.method-fields').forEach(block => {
+        const methods = block.dataset.method.split(',');
+        block.classList.toggle('active', methods.includes(method));
+      });
+    }
+    document.getElementById('paymentMethod').addEventListener('change', updateMethodFields);
+
+    document.getElementById('recordPaymentForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('recordPaymentBtn');
+      const alertBox = document.getElementById('payment-alert');
+      const method = document.getElementById('paymentMethod').value;
+
+      let referenceNumber = null, chequeBank = null, chequeDate = null;
+      if (['upi', 'netbanking', 'bank_transfer'].includes(method)) {
+        referenceNumber = document.getElementById('paymentReference').value.trim();
+        if (!referenceNumber) {
           alertBox.className = 'alert alert-error';
-          alertBox.textContent = `Account created, but student setup failed: ${profileError.message}`;
+          alertBox.textContent = 'A transaction/reference number is required for this payment method.';
           alertBox.style.display = 'block';
-          btn.disabled = false;
-          btn.textContent = 'Create Account';
           return;
         }
-        alertBox.className = 'alert alert-success';
-        alertBox.textContent = 'Student created successfully. They can log in with the temporary password and change it from the dashboard.';
-        e.target.reset();
       }
-      alertBox.style.display = 'block';
+      if (method === 'cheque') {
+        referenceNumber = document.getElementById('chequeNumber').value.trim();
+        chequeBank = document.getElementById('chequeBank').value.trim();
+        chequeDate = document.getElementById('chequeDate').value;
+        if (!referenceNumber || !chequeBank || !chequeDate) {
+          alertBox.className = 'alert alert-error';
+          alertBox.textContent = 'Cheque number, bank name and cheque date are all required.';
+          alertBox.style.display = 'block';
+          return;
+        }
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Recording...';
+      alertBox.style.display = 'none';
+
+      const { error } = await supabaseClient.rpc('record_payment', {
+        p_enrollment_id: document.getElementById('paymentEnrollmentId').value,
+        p_amount: parseFloat(document.getElementById('paymentAmount').value),
+        p_payment_date: document.getElementById('paymentDate').value,
+        p_payment_method: method,
+        p_reference_number: referenceNumber,
+        p_cheque_bank_name: chequeBank,
+        p_cheque_date: chequeDate || null,
+        p_internal_note: document.getElementById('paymentNote').value.trim() || null
+      });
+
+      if (error) {
+        alertBox.className = 'alert alert-error';
+        alertBox.textContent = error.message;
+        alertBox.style.display = 'block';
+      } else {
+        alertBox.className = 'alert alert-success';
+        alertBox.textContent = 'Payment recorded and receipt generated.';
+        alertBox.style.display = 'block';
+        await loadStudents();
+        setTimeout(() => closeModal('recordPaymentModal'), 1200);
+      }
       btn.disabled = false;
-      btn.textContent = 'Create Account';
+      btn.textContent = 'Record Payment';
     });
 
-    // Fee Receipt Generator Mock
-    document.getElementById('feeReceiptForm').addEventListener('submit', (e) => {
+    // ---- Manage Enrollment ----
+    function openManageEnrollment(enrollmentId, currentCourseId, currentFee) {
+      document.getElementById('enrollmentId').value = enrollmentId;
+      document.getElementById('enrollmentCourse').value = currentCourseId;
+      document.getElementById('enrollmentTotalFee').value = currentFee;
+      document.getElementById('enrollment-alert').style.display = 'none';
+      openModal('manageEnrollmentModal');
+    }
+
+    document.getElementById('manageEnrollmentForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const name = document.getElementById('receiptStudentName').value;
-      const amount = document.getElementById('receiptAmount').value;
-      const course = document.getElementById('receiptCourse').value;
-      const date = new Date().toLocaleDateString();
-      
-      const receiptText = `UTKARSH MINDS - FEE RECEIPT\n\nDate: ${date}\nReceipt No: UM-${Math.floor(Math.random() * 10000)}\n\nReceived with thanks from: ${name}\nThe sum of: ₹${amount}\nFor Course: ${course}\n\nAuthorized Signatory\nUtkarsh Minds`;
-      
-      const output = document.getElementById('generatedReceipt');
-      output.textContent = receiptText;
-      output.style.display = 'block';
+      const alertBox = document.getElementById('enrollment-alert');
+      const { error } = await supabaseClient.rpc('update_enrollment', {
+        p_enrollment_id: document.getElementById('enrollmentId').value,
+        p_course_id: document.getElementById('enrollmentCourse').value || null,
+        p_total_fee: parseFloat(document.getElementById('enrollmentTotalFee').value)
+      });
+      if (error) {
+        alertBox.className = 'alert alert-error';
+        alertBox.textContent = error.message;
+        alertBox.style.display = 'block';
+      } else {
+        alertBox.className = 'alert alert-success';
+        alertBox.textContent = 'Enrollment updated.';
+        alertBox.style.display = 'block';
+        await loadStudents();
+        setTimeout(() => closeModal('manageEnrollmentModal'), 1000);
+      }
     });
 
-    // LinkedIn Post Generator Mock
+    // ---- LinkedIn Post (unchanged mock, clearly labeled as such) ----
     document.getElementById('linkedinPostForm').addEventListener('submit', (e) => {
       e.preventDefault();
       const topic = document.getElementById('postTopic').value;
-      
-      const postText = `🚀 Exciting Update from Utkarsh Minds! 🚀\n\n${topic}\n\nWe are always striving to bring the best educational content to our students. Join us on this learning journey!\n\n#UtkarshMinds #Education #Learning #Growth #StudentSuccess`;
-      
+      const postText = `Draft text (not AI-generated):\n\n${topic}\n\n#UtkarshMinds #Education`;
       const output = document.getElementById('generatedPost');
       output.textContent = postText;
       output.style.display = 'block';
     });
 
+    init();
   </script>
 </body>
 </html>

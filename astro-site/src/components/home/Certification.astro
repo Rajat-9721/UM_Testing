@@ -1,0 +1,88 @@
+---
+import { Image } from 'astro:assets';
+import Container from '../Container.astro';
+import Section from '../Section.astro';
+import certificateUM from '../../assets/certificate/certificate-um.png';
+---
+
+<Section theme="dark">
+  <Container>
+    <div class="cert">
+      <div class="cert-copy" data-reveal>
+        <p class="kicker">Certification</p>
+        <h2>A certificate issued by Sardar Patel Institute of Technology</h2>
+        <p class="lede">
+          Learners who complete the Professional Certification in Artificial Intelligence receive
+          a certificate issued by SPIT, covering Python Programming, Data Science, Artificial
+          Intelligence, Power BI, Big Data Analytics, Machine &amp; Deep Learning and Generative
+          AI — the specialisation areas confirmed in the official program materials.
+        </p>
+      </div>
+
+      <div class="cert-frame" data-reveal>
+        <Image
+          src={certificateUM}
+          alt="Sample SPIT Post Graduate Certificate in Artificial Intelligence, Data Analytics and Deep Learning, awarded to learners who complete the programme"
+          width={800}
+          loading="lazy"
+        />
+        <p class="cert-frame-caption">Sample certificate — recipient name shown for illustration only</p>
+      </div>
+    </div>
+  </Container>
+</Section>
+
+<style>
+  .cert {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: var(--space-16);
+    align-items: center;
+  }
+
+  .kicker {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: var(--space-4);
+  }
+
+  h2 {
+    color: #fff;
+    max-width: 20ch;
+    margin-bottom: var(--space-6);
+  }
+
+  .lede {
+    color: var(--color-dark-text-muted);
+    max-width: 52ch;
+  }
+
+  .cert-frame {
+    text-align: center;
+  }
+
+  .cert-frame :global(img) {
+    width: 100%;
+    height: auto;
+    display: block;
+    border: 1px solid var(--color-dark-border);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .cert-frame-caption {
+    margin-top: var(--space-4);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-dark-text-muted);
+  }
+
+  @media (max-width: 900px) {
+    .cert {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

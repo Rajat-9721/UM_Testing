@@ -1,0 +1,545 @@
+---
+import { Image } from 'astro:assets';
+import Container from '../Container.astro';
+import Button from '../Button.astro';
+import emblem from '../../assets/brand/brand-emblem-card.png';
+
+import pythonIcon from '../../assets/logos/python.svg?raw';
+import tensorflowIcon from '../../assets/logos/tensorflow.svg?raw';
+import pytorchIcon from '../../assets/logos/pytorch.svg?raw';
+import openaiIcon from '../../assets/logos/openai.svg?raw';
+import dataIcon from '../../assets/logos/data-science.svg?raw';
+import mlIcon from '../../assets/logos/machine-learning.svg?raw';
+
+const stats = [
+  { value: '2012', label: 'Training since' },
+  { value: '90%', label: 'Exam success rate' },
+  { value: '60%', label: 'Hands-on practical time' },
+];
+
+/**
+ * Positions are percentages on the 0–100 square that the stage/SVG share,
+ * pushed outward from center (clamped to an 8–92 safe margin so a chip
+ * never touches the stage edge) for more breathing room around the core.
+ * Real official brand marks (Simple Icons, CC0) for Python/TensorFlow/
+ * PyTorch/OpenAI; the ML and Data Science entries are generic in-house
+ * glyphs, not a real company logo, since neither names one.
+ */
+const HUB = { x: 50, y: 50 };
+
+const rawSatellites = [
+  { key: 'python', label: 'Python', icon: pythonIcon, x: 34, y: 8, tint: '#3776AB' },
+  { key: 'tensorflow', label: 'TensorFlow', icon: tensorflowIcon, x: 85, y: 8, tint: '#FF6F00' },
+  { key: 'pytorch', label: 'PyTorch', icon: pytorchIcon, x: 92, y: 58, tint: '#EE4C2C' },
+  { key: 'openai', label: 'Generative AI', icon: openaiIcon, x: 69, y: 92, tint: '#412991' },
+  { key: 'ml', label: 'Machine Learning', icon: mlIcon, x: 22, y: 84, tint: 'var(--color-accent)' },
+  { key: 'data', label: 'Data Science', icon: dataIcon, x: 8, y: 41, tint: 'var(--color-primary-light)' },
+];
+
+/**
+ * Each connection is a gentle quadratic curve, not a straight line — the
+ * control point is offset perpendicular to the hub->node vector, sign
+ * alternating per node so neighbouring paths bow in different directions
+ * (organic "knowledge pathway" feel, per the reference composition).
+ */
+const satellites = rawSatellites.map((s, i) => {
+  const dx = s.x - HUB.x;
+  const dy = s.y - HUB.y;
+  const len = Math.sqrt(dx * dx + dy * dy) || 1;
+  const perpX = -dy / len;
+  const perpY = dx / len;
+  const bow = (i % 2 === 0 ? 1 : -1) * 6;
+  const midX = (HUB.x + s.x) / 2 + perpX * bow;
+  const midY = (HUB.y + s.y) / 2 + perpY * bow;
+  const path = `M ${HUB.x} ${HUB.y} Q ${midX.toFixed(2)} ${midY.toFixed(2)} ${s.x} ${s.y}`;
+  return { ...s, path };
+});
+---
+
+<section class="hero">
+  <Container class="hero__inner">
+    <div class="hero-copy">
+      <p class="eyebrow hero-reveal" style="--d: 0">Empower &middot; Educate &middot; Innovate</p>
+      <h1 class="hero-reveal" style="--d: 1">
+        Master Data Science, AI &amp; Generative AI — with real mentors and real projects.
+      </h1>
+      <p class="lede hero-reveal" style="--d: 2">
+        Utkarsh Minds delivers hands-on, industry-oriented training in Data Science, Machine
+        Learning and Artificial Intelligence — built around live projects, practical case studies
+        and internship &amp; placement support.
+      </p>
+
+      <div class="hero-ctas hero-reveal" style="--d: 3">
+        <Button href="#enquire" variant="accent">Enquire Now</Button>
+        <Button href="/downloads/spit-ai-certification-brochure.pdf" variant="outline-white">
+          Download AI Program Brochure
+        </Button>
+      </div>
+
+      <dl class="hero-stats hero-reveal" style="--d: 4">
+        {
+          stats.map((s) => (
+            <div class="hero-stat">
+              <dt>{s.value}</dt>
+              <dd>{s.label}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+
+    <div class="hero-visual hero-reveal" style="--d: 2" aria-hidden="true">
+      <div class="logo-stage">
+        <svg class="stage-lines" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+          {
+            satellites.map((s, i) => (
+              <path d={s.path} class="stage-link" style={`animation-delay: calc(${i} * 150ms);`} />
+            ))
+          }
+          {
+            /* Small travelling waveform (not a dot): a tiny sine-like
+               squiggle riding the same curve, oriented to the curve's own
+               tangent via offset-rotate so it reads as a signal moving
+               through the path rather than a particle floating past it. */
+            satellites.map((s, i) => (
+              <path
+                d="M -2.6 0 C -1.9 -1.6 -1 1.6 -0.3 0 C 0.4 -1.6 1.3 1.6 2 0 C 2.3 -0.8 2.5 0.4 2.6 0"
+                class="stage-signal"
+                style={`offset-path: path('${s.path}'); animation-delay: calc(${i} * 150ms);`}
+              />
+            ))
+          }
+        </svg>
+
+        <div class="logo-core">
+          <div class="logo-core-frame">
+            <Image src={emblem} alt="" width={640} loading="eager" fetchpriority="high" />
+          </div>
+        </div>
+
+        {
+          satellites.map((s, i) => (
+            <div
+              class="satellite"
+              style={`left:${s.x}%; top:${s.y}%; animation-delay: calc(${i} * 150ms);`}
+            >
+              <span class="satellite-chip">
+                <span class="satellite-icon" style={`color:${s.tint};`} set:html={s.icon} />
+              </span>
+              <span class="satellite-label">{s.label}</span>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </Container>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    background: var(--gradient-signature);
+    color: var(--color-dark-text);
+    overflow: hidden;
+    padding-block: var(--space-24) var(--space-16);
+  }
+
+  :global(.hero__inner) {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: var(--space-16);
+    align-items: center;
+  }
+
+  .eyebrow {
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: var(--space-6);
+  }
+
+  h1 {
+    color: #fff;
+    font-size: var(--text-6xl);
+    font-weight: 600;
+    margin-bottom: var(--space-6);
+  }
+
+  .lede {
+    font-family: var(--font-sans);
+    font-size: var(--text-lg);
+    color: var(--color-dark-text-muted);
+    max-width: 56ch;
+    margin-bottom: var(--space-10);
+  }
+
+  .hero-ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin-bottom: var(--space-16);
+  }
+
+  .hero-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-10);
+    margin: 0;
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--color-dark-border);
+  }
+
+  .hero-stat dt {
+    font-family: var(--font-display);
+    font-size: var(--text-3xl);
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .hero-stat dd {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--color-dark-text-muted);
+  }
+
+  .hero-visual {
+    display: flex;
+    justify-content: center;
+  }
+
+  /* ---- Logo stage: clean hero logo that periodically "powers up" an
+     ecosystem of real technology marks around it, then settles back. ---- */
+
+  .logo-stage {
+    position: relative;
+    width: 100%;
+    max-width: 440px;
+    aspect-ratio: 1 / 1;
+  }
+
+  .stage-lines {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .stage-link {
+    stroke: var(--color-golden-subtle);
+    stroke-width: 0.2;
+    stroke-dasharray: 1 1.6;
+    fill: none;
+    stroke-linecap: round;
+    animation: link-cycle 18s cubic-bezier(0.45, 0.05, 0.15, 1) infinite;
+  }
+
+  @keyframes link-cycle {
+    0%,
+    13% {
+      opacity: 0;
+      stroke-dashoffset: 6;
+    }
+    28% {
+      opacity: 0.35;
+    }
+    34% {
+      opacity: 0.4;
+      stroke-dashoffset: 0;
+    }
+    50% {
+      stroke-dashoffset: -5;
+    }
+    65% {
+      stroke-dashoffset: -10;
+    }
+    78% {
+      opacity: 0.4;
+      stroke-dashoffset: -15;
+    }
+    90%,
+    100% {
+      opacity: 0;
+      stroke-dashoffset: -18;
+    }
+  }
+
+  /* Neural signal: a tiny travelling waveform (not a dot) riding each
+     path, oriented to the curve's tangent so it reads as a pulse of
+     information moving through the connection — core -> node, once per
+     cycle, only once that connection is actually established. */
+  .stage-signal {
+    stroke: var(--color-accent);
+    stroke-width: 0.32;
+    stroke-linecap: round;
+    fill: none;
+    opacity: 0;
+    offset-rotate: auto;
+    animation: signal-travel 18s cubic-bezier(0.45, 0.05, 0.15, 1) infinite;
+  }
+
+  @keyframes signal-travel {
+    0%,
+    36% {
+      opacity: 0;
+      offset-distance: 0%;
+    }
+    41% {
+      opacity: 0.9;
+    }
+    69% {
+      opacity: 0.9;
+      offset-distance: 100%;
+    }
+    75%,
+    100% {
+      opacity: 0;
+      offset-distance: 100%;
+    }
+  }
+
+  .logo-core {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 2;
+    transform: translate(-50%, -50%) scale(1);
+    animation: core-settle 18s cubic-bezier(0.45, 0.05, 0.15, 1) infinite;
+  }
+
+  @keyframes core-settle {
+    0%,
+    13% {
+      transform: translate(-50%, -50%) scale(1);
+    }
+    30%,
+    80% {
+      /* A gentle settle, not a heavy shrink — keeps the logo's own
+         wordmark comfortably legible through the whole cycle. */
+      transform: translate(-50%, -50%) scale(0.88);
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+
+  .logo-core-frame {
+    width: min(72vw, 320px);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    animation: core-breathe 5.5s ease-in-out infinite;
+  }
+
+  .logo-core-frame :global(img) {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  @keyframes core-breathe {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.015);
+    }
+  }
+
+  .satellite {
+    position: absolute;
+    z-index: 1;
+    transform: translate(-50%, -50%) scale(0.5) translateY(4%);
+    opacity: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    animation: satellite-cycle 18s cubic-bezier(0.45, 0.05, 0.15, 1) infinite;
+  }
+
+  @keyframes satellite-cycle {
+    0%,
+    13% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.5) translateY(4%);
+    }
+    26% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.08) translateY(0%);
+    }
+    32% {
+      transform: translate(-50%, -50%) scale(1) translateY(0%);
+    }
+    46% {
+      transform: translate(-50%, -50%) scale(1.035) translateY(0%);
+    }
+    60% {
+      transform: translate(-50%, -50%) scale(1) translateY(0%);
+    }
+    72% {
+      transform: translate(-50%, -50%) scale(1.03) translateY(0%);
+    }
+    82% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1) translateY(0%);
+    }
+    94%,
+    100% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.55) translateY(4%);
+    }
+  }
+
+  .satellite-chip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-full);
+    background: var(--color-bg);
+    box-shadow: var(--shadow-md);
+    animation: chip-receive 18s cubic-bezier(0.45, 0.05, 0.15, 1) infinite;
+    animation-delay: inherit;
+  }
+
+  /* Brief brighten + 1–2% scale exactly when this node's signal arrives
+     (matches the end of signal-travel's window above), then eases back. */
+  @keyframes chip-receive {
+    0%,
+    67% {
+      transform: scale(1);
+      box-shadow: var(--shadow-md);
+    }
+    70% {
+      transform: scale(1.02);
+      box-shadow: 0 0 0 6px rgba(190, 138, 61, 0.14), var(--shadow-md);
+    }
+    76%,
+    100% {
+      transform: scale(1);
+      box-shadow: var(--shadow-md);
+    }
+  }
+
+  .satellite-icon {
+    display: flex;
+    width: 26px;
+    height: 26px;
+  }
+
+  .satellite-icon :global(svg) {
+    width: 100%;
+    height: 100%;
+    display: block;
+    fill: currentColor;
+  }
+
+  /* Solid cream pill behind every label so it reads clearly over both the
+     dark-green and cream ends of the hero gradient — never relying on
+     the background color underneath for contrast. */
+  .satellite-label {
+    font-family: var(--font-sans);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--color-primary-dark);
+    background: var(--color-bg);
+    padding: 3px 8px;
+    border-radius: var(--radius-full);
+    box-shadow: var(--shadow-sm);
+    white-space: nowrap;
+  }
+
+  /* On-load reveal: purposeful, once, staggered — not a looping effect */
+  .hero-reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    animation: hero-rise 0.8s var(--reveal-easing) forwards;
+    animation-delay: calc(var(--d, 0) * 110ms);
+  }
+
+  @keyframes hero-rise {
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-reveal {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+    .logo-core,
+    .logo-core-frame,
+    .satellite,
+    .satellite-chip,
+    .stage-link,
+    .stage-signal {
+      animation: none;
+    }
+    .satellite,
+    .stage-link,
+    .stage-signal {
+      opacity: 0;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    .hero {
+      /* Stacked layout puts copy below the visual, so the gradient runs
+         top-to-bottom and stays mostly dark until content ends, only
+         fading to cream in the empty space near the section's bottom edge. */
+      background: var(--gradient-signature-vertical);
+    }
+
+    :global(.hero__inner) {
+      grid-template-columns: 1fr;
+    }
+
+    .hero-visual {
+      order: -1;
+    }
+
+    .logo-stage {
+      max-width: 340px;
+      margin-inline: auto;
+    }
+  }
+
+  @media (max-width: 768px) {
+    h1 {
+      font-size: var(--text-4xl);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .logo-stage {
+      max-width: 280px;
+    }
+
+    .satellite-chip {
+      width: 44px;
+      height: 44px;
+    }
+
+    .satellite-icon {
+      width: 20px;
+      height: 20px;
+    }
+
+    .satellite-label {
+      font-size: 8px;
+    }
+  }
+</style>

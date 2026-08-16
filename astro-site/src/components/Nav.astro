@@ -1,0 +1,66 @@
+---
+/**
+ * Primary site navigation. Data-driven so the link set can grow
+ * (Courses submenu, Journal, etc.) without touching Header markup.
+ * Routes below don't all exist yet during the Step A foundation —
+ * they'll resolve as each page is built in later steps.
+ */
+interface NavItem {
+  label: string;
+  href: string;
+}
+
+const navItems: NavItem[] = [
+  { label: 'Home', href: '/' },
+  { label: 'About', href: '/about' },
+  { label: 'Courses', href: '/courses' },
+  { label: 'Contact', href: '/contact' },
+  { label: 'FAQ', href: '/faq' },
+];
+---
+
+<nav class="nav-menu" id="nav-menu" aria-label="Primary">
+  {
+    navItems.map((item) => (
+      <a class="nav-link" href={item.href}>
+        {item.label}
+      </a>
+    ))
+  }
+</nav>
+
+<style>
+  .nav-menu {
+    display: flex;
+    gap: var(--space-8);
+    align-items: center;
+  }
+
+  .nav-link {
+    font-weight: 500;
+    color: var(--color-text);
+    transition: var(--transition-base);
+  }
+
+  .nav-link:hover {
+    color: var(--color-secondary);
+  }
+
+  @media (max-width: 768px) {
+    .nav-menu {
+      display: none;
+      flex-direction: column;
+      align-items: flex-start;
+      flex-basis: 100%;
+      order: 3;
+      background: var(--color-bg);
+      padding: var(--space-6);
+      gap: var(--space-5);
+      border-top: 1px solid var(--color-border);
+    }
+
+    .nav-menu.active {
+      display: flex;
+    }
+  }
+</style>

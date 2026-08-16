@@ -1,0 +1,97 @@
+---
+import Container from '../Container.astro';
+import Section from '../Section.astro';
+
+const reasons = [
+  {
+    title: 'Training since 2012',
+    detail: "Over a decade of running certificate courses in Data Science, AI and related digital skills.",
+  },
+  {
+    title: 'Practice-first learning',
+    detail: '60% of course time is hands-on practical work, not just lectures.',
+  },
+  {
+    title: 'Live projects & case studies',
+    detail: 'Coursework is built around real projects and case studies, not only theory.',
+  },
+  {
+    title: 'Internship & placement assistance',
+    detail: 'Support connecting learners to internship and placement opportunities after training.',
+  },
+  {
+    title: 'Academic partnership with SPIT',
+    detail: "The AI Certification program is delivered in partnership with Sardar Patel Institute of Technology, Mumbai.",
+  },
+  {
+    title: "Authorized BYJU'S training partner",
+    detail: "Recognized as an authorized training partner of BYJU'S, The Learning App.",
+  },
+];
+---
+
+<Section theme="subtle">
+  <Container>
+    <p class="kicker" data-reveal>Why Utkarsh Minds</p>
+    <h2 data-reveal>Reasons to train with us</h2>
+
+    <div class="reasons-grid" data-reveal-group>
+      {
+        reasons.map((r) => (
+          <div class="reason" data-reveal>
+            <h3>{r.title}</h3>
+            <p>{r.detail}</p>
+          </div>
+        ))
+      }
+    </div>
+  </Container>
+</Section>
+
+<style>
+  .kicker {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-secondary);
+    margin-bottom: var(--space-3);
+  }
+
+  h2 {
+    margin-bottom: var(--space-10);
+  }
+
+  .reasons-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-8) var(--space-10);
+  }
+
+  .reason {
+    border-top: 3px solid var(--color-accent);
+    padding-top: var(--space-4);
+  }
+
+  .reason h3 {
+    font-size: var(--text-lg);
+    margin-bottom: var(--space-2);
+  }
+
+  .reason p {
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+  }
+
+  @media (max-width: 900px) {
+    .reasons-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .reasons-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

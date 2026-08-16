@@ -1,0 +1,227 @@
+---
+import { Image } from 'astro:assets';
+import Container from '../Container.astro';
+import Section from '../Section.astro';
+import classroom1 from '../../assets/images/classroom-session-1.jpeg';
+import classroom2 from '../../assets/images/classroom-session-2.jpeg';
+import projectP1 from '../../assets/images/projects/Project-p1.png';
+import projectP2 from '../../assets/images/projects/Project-p2.png';
+---
+
+<Section theme="light" class="training-compact">
+  <Container>
+    <div class="tia-columns">
+      <div class="tia-col" data-reveal-group>
+        <div class="tia-col-head">
+          <p class="kicker" data-reveal>Training In Action</p>
+          <h2 data-reveal>What learning with us actually looks like</h2>
+        </div>
+
+        <div class="tia-collage">
+          <figure class="tia-frame tia-frame--primary" data-reveal>
+            <span class="tia-frame-media">
+              <Image src={classroom1} alt="Hands-on classroom training session in progress" width={700} loading="lazy" />
+            </span>
+            <figcaption class="tia-caption">Hands-on classroom training — real interaction, guided learning.</figcaption>
+          </figure>
+
+          <figure class="tia-frame tia-frame--secondary" data-reveal>
+            <span class="tia-frame-media">
+              <Image src={classroom2} alt="Instructor-led training session with a presentation screen" width={500} loading="lazy" />
+            </span>
+            <figcaption class="tia-caption">Instructor-led sessions — practical, hands-on guidance.</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="tia-col" data-reveal-group>
+        <div class="tia-col-head">
+          <p class="kicker" data-reveal>Student Project</p>
+          <h2 data-reveal>From learning to building</h2>
+        </div>
+
+        <div class="tia-collage">
+          <figure class="tia-frame tia-frame--p1" data-reveal>
+            <span class="tia-frame-media">
+              <Image src={projectP1} alt="Utkarsh Minds student project — screen one" width={480} loading="lazy" />
+            </span>
+          </figure>
+
+          <figure class="tia-frame tia-frame--p2" data-reveal>
+            <span class="tia-frame-media">
+              <Image src={projectP2} alt="Utkarsh Minds student project — screen two" width={480} loading="lazy" />
+            </span>
+          </figure>
+        </div>
+      </div>
+    </div>
+  </Container>
+</Section>
+
+<style>
+  /* Reduce this section's own vertical rhythm only — no other section touched */
+  :global(.section.training-compact) {
+    padding-block: var(--space-10);
+  }
+
+  .tia-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-10);
+    max-width: 1200px;
+    margin-inline: auto;
+    align-items: start;
+  }
+
+  .tia-col-head {
+    margin-bottom: var(--space-4);
+  }
+
+  .kicker {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-secondary);
+    margin-bottom: var(--space-2);
+  }
+
+  h2 {
+    font-size: var(--text-2xl);
+    line-height: var(--leading-tight);
+    margin-bottom: 0;
+  }
+
+  /* Editorial stack: two photographs of deliberately different size,
+     nudged out of strict alignment — not a repeating card grid. */
+  .tia-collage {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .tia-frame {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .tia-frame-media {
+    display: block;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 300ms ease, transform 300ms ease;
+  }
+
+  /* Height-only sizing, width auto: the border hugs each photo's own
+     natural shape — no forced box, no letterboxing, never a "card". */
+  .tia-frame-media :global(img) {
+    display: block;
+    height: 100%;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+    transition: transform 300ms ease;
+  }
+
+  .tia-frame:hover .tia-frame-media {
+    box-shadow: var(--shadow-md);
+    transform: rotate(0deg);
+  }
+
+  .tia-frame:hover .tia-frame-media :global(img) {
+    transform: scale(1.02);
+  }
+
+  .tia-caption {
+    margin-top: var(--space-2);
+    font-size: var(--text-xs);
+    line-height: var(--leading-normal);
+    color: var(--color-text-muted);
+  }
+
+  /* Training column: classroom photo leads (larger), the instructor
+     shot follows smaller and nudged in — only the leader carries the
+     tiny signature tilt, the second photo sits level. */
+  .tia-frame--primary .tia-frame-media {
+    height: 170px;
+    transform: rotate(-0.4deg);
+  }
+
+  .tia-frame--primary .tia-caption {
+    max-width: 320px;
+  }
+
+  .tia-frame--secondary {
+    margin-left: 20px;
+  }
+
+  .tia-frame--secondary .tia-frame-media {
+    height: 100px;
+  }
+
+  .tia-frame--secondary .tia-caption {
+    max-width: 260px;
+  }
+
+  /* Project pair: same treatment language (border, shadow, hover) so the
+     two clearly read as one story — compact, only the first carries a
+     tilt, the second sits level and nudged in. */
+  .tia-frame--p1 .tia-frame-media {
+    height: 182px;
+    transform: rotate(0.4deg);
+  }
+
+  .tia-frame--p2 {
+    margin-left: 20px;
+  }
+
+  .tia-frame--p2 .tia-frame-media {
+    /* ~85% of Project-p1's displayed width at this ratio (1.814:1) */
+    height: 163px;
+  }
+
+  @media (max-width: 900px) {
+    .tia-frame--primary .tia-frame-media {
+      height: 140px;
+    }
+    .tia-frame--secondary .tia-frame-media {
+      height: 85px;
+    }
+    .tia-frame--p1 .tia-frame-media {
+      height: 156px;
+    }
+    .tia-frame--p2 .tia-frame-media {
+      height: 140px;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .tia-columns {
+      grid-template-columns: 1fr;
+      gap: var(--space-10);
+    }
+
+    .tia-frame--primary .tia-frame-media {
+      height: 200px;
+    }
+    .tia-frame--secondary .tia-frame-media {
+      height: 130px;
+    }
+    .tia-frame--p1 .tia-frame-media {
+      height: 221px;
+    }
+    .tia-frame--p2 .tia-frame-media {
+      height: 198px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tia-frame-media,
+    .tia-frame-media :global(img) {
+      transition: none;
+    }
+  }
+</style>

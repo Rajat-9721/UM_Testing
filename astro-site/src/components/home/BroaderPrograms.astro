@@ -1,0 +1,79 @@
+---
+import Container from '../Container.astro';
+import Section from '../Section.astro';
+import Button from '../Button.astro';
+
+const areas = [
+  'Data Science & Analytics',
+  'Artificial Intelligence',
+  'Robotics',
+  'Digital Skills',
+  'Foreign & Indian Languages',
+];
+---
+
+<Section theme="subtle">
+  <Container>
+    <div class="beyond" data-reveal>
+      <p class="kicker">Beyond This Program</p>
+      <h2>Utkarsh Minds also trains across these areas</h2>
+      <p class="lede">Detailed course pages for each area are being added to this site.</p>
+
+      <ul class="area-list">
+        {areas.map((a) => <li>{a}</li>)}
+      </ul>
+
+      <div class="beyond-cta">
+        <Button href="/courses" variant="primary">See All Courses</Button>
+      </div>
+    </div>
+  </Container>
+</Section>
+
+<style>
+  .kicker {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-secondary);
+    margin-bottom: var(--space-3);
+  }
+
+  h2 {
+    max-width: 32ch;
+    margin-bottom: var(--space-3);
+  }
+
+  .lede {
+    color: var(--color-text-muted);
+    max-width: 52ch;
+  }
+
+  .area-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-8);
+  }
+
+  .area-list li {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    padding: var(--space-3) var(--space-6);
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--color-primary);
+    transition: transform 250ms ease, box-shadow 250ms ease, border-color 250ms ease;
+  }
+
+  .area-list li:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-sm);
+    border-color: var(--color-accent);
+  }
+
+  .beyond-cta {
+    margin-top: var(--space-8);
+  }
+</style>

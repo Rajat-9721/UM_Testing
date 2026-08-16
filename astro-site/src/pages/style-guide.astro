@@ -1,0 +1,263 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Container from '../components/Container.astro';
+import Section from '../components/Section.astro';
+import Button from '../components/Button.astro';
+
+const colorSwatches = [
+  { name: 'Primary', varName: '--color-primary' },
+  { name: 'Primary Dark', varName: '--color-primary-dark' },
+  { name: 'Primary Light', varName: '--color-primary-light' },
+  { name: 'Accent', varName: '--color-accent' },
+  { name: 'Accent Dark', varName: '--color-accent-dark' },
+  { name: 'Secondary', varName: '--color-secondary' },
+  { name: 'Success', varName: '--color-success' },
+  { name: 'Danger', varName: '--color-danger' },
+];
+
+const neutralSwatches = [
+  { name: 'Background', varName: '--color-bg' },
+  { name: 'Background Subtle', varName: '--color-bg-subtle' },
+  { name: 'Border', varName: '--color-border' },
+  { name: 'Text', varName: '--color-text' },
+  { name: 'Text Muted', varName: '--color-text-muted' },
+];
+
+const darkSwatches = [
+  { name: 'Dark Background', varName: '--color-dark-bg' },
+  { name: 'Dark Background Alt', varName: '--color-dark-bg-alt' },
+  { name: 'Dark Text', varName: '--color-dark-text' },
+  { name: 'Dark Text Muted', varName: '--color-dark-text-muted' },
+];
+
+const gradientSwatches = [
+  { name: 'Cream (transition)', varName: '--color-cream' },
+  { name: 'Golden Subtle (hairlines)', varName: '--color-golden-subtle' },
+];
+
+const typeScale = [
+  { label: 'text-6xl', varName: '--text-6xl' },
+  { label: 'text-5xl', varName: '--text-5xl' },
+  { label: 'text-4xl', varName: '--text-4xl' },
+  { label: 'text-3xl', varName: '--text-3xl' },
+  { label: 'text-2xl', varName: '--text-2xl' },
+  { label: 'text-xl', varName: '--text-xl' },
+  { label: 'text-lg', varName: '--text-lg' },
+  { label: 'text-base', varName: '--text-base' },
+  { label: 'text-sm', varName: '--text-sm' },
+  { label: 'text-xs', varName: '--text-xs' },
+];
+
+const spaceScale = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24];
+---
+
+<BaseLayout
+  title="Design System"
+  description="Internal style guide for the Utkarsh Minds redesign — colors, typography, spacing and components."
+>
+  <Section theme="dark">
+    <Container>
+      <h1>Design System Preview</h1>
+      <p class="lede">
+        Internal reference page for the Utkarsh Minds redesign foundation — not part of the public
+        site navigation. Verifies tokens, header, footer and base components render correctly.
+      </p>
+    </Container>
+  </Section>
+
+  <Section theme="light">
+    <Container>
+      <h2>Colors — Brand</h2>
+      <div class="swatch-grid">
+        {
+          colorSwatches.map((c) => (
+            <div class="swatch">
+              <div class="swatch-color" style={`background-color: var(${c.varName})`} />
+              <p class="swatch-name">{c.name}</p>
+              <code>{c.varName}</code>
+            </div>
+          ))
+        }
+      </div>
+
+      <h2 class="mt">Colors — Light Surfaces</h2>
+      <div class="swatch-grid">
+        {
+          neutralSwatches.map((c) => (
+            <div class="swatch">
+              <div class="swatch-color bordered" style={`background-color: var(${c.varName})`} />
+              <p class="swatch-name">{c.name}</p>
+              <code>{c.varName}</code>
+            </div>
+          ))
+        }
+      </div>
+
+      <h2 class="mt">Colors — Dark Surfaces</h2>
+      <div class="swatch-grid">
+        {
+          darkSwatches.map((c) => (
+            <div class="swatch">
+              <div class="swatch-color bordered" style={`background-color: var(${c.varName})`} />
+              <p class="swatch-name">{c.name}</p>
+              <code>{c.varName}</code>
+            </div>
+          ))
+        }
+      </div>
+    </Container>
+  </Section>
+
+  <Section theme="gradient">
+    <Container>
+      <h2 style="color: #fff;">Signature Gradient — Arrival Band</h2>
+      <p class="lede">
+        Deep forest green easing into warm cream, used for top-of-page moments (Hero). The final
+        stop matches the page's light background exactly, so it dissolves seamlessly into the
+        section below — no hard edge.
+      </p>
+      <div class="swatch-grid mt">
+        {
+          gradientSwatches.map((c) => (
+            <div class="swatch">
+              <div class="swatch-color bordered" style={`background-color: var(${c.varName})`} />
+              <p class="swatch-name">{c.name}</p>
+              <code>{c.varName}</code>
+            </div>
+          ))
+        }
+      </div>
+    </Container>
+  </Section>
+
+  <Section theme="subtle">
+    <Container>
+      <h2>Typography Scale</h2>
+      <div class="type-scale">
+        {
+          typeScale.map((t) => (
+            <p style={`font-size: var(${t.varName})`}>
+              {t.label} — The quick brown fox jumps over the lazy dog
+            </p>
+          ))
+        }
+      </div>
+    </Container>
+  </Section>
+
+  <Section theme="light">
+    <Container>
+      <h2>Spacing Scale</h2>
+      <div class="space-scale">
+        {
+          spaceScale.map((s) => (
+            <div class="space-row">
+              <code>--space-{s}</code>
+              <div class="space-bar" style={`width: var(--space-${s})`} />
+            </div>
+          ))
+        }
+      </div>
+    </Container>
+  </Section>
+
+  <Section theme="subtle">
+    <Container>
+      <h2>Buttons</h2>
+      <div class="button-row">
+        <Button variant="primary">Primary</Button>
+        <Button variant="accent">Accent</Button>
+        <Button variant="outline">Outline</Button>
+      </div>
+      <div class="button-row dark-demo">
+        <Button variant="outline-white">Outline White</Button>
+      </div>
+    </Container>
+  </Section>
+</BaseLayout>
+
+<style>
+  h1 {
+    color: #fff;
+    margin-bottom: var(--space-6);
+  }
+
+  .lede {
+    color: var(--color-dark-text-muted);
+    max-width: 640px;
+    font-size: var(--text-lg);
+  }
+
+  h2.mt {
+    margin-top: var(--space-16);
+  }
+
+  .swatch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: var(--space-6);
+    margin-top: var(--space-6);
+  }
+
+  .swatch-color {
+    height: 72px;
+    border-radius: var(--radius-md);
+  }
+
+  .swatch-color.bordered {
+    border: 1px solid var(--color-border);
+  }
+
+  .swatch-name {
+    margin-top: var(--space-2);
+    font-weight: 600;
+    font-size: var(--text-sm);
+  }
+
+  .swatch code {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+
+  .type-scale p {
+    margin-bottom: var(--space-4);
+  }
+
+  .space-scale {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+  }
+
+  .space-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  .space-row code {
+    width: 110px;
+    font-size: var(--text-sm);
+    flex-shrink: 0;
+  }
+
+  .space-bar {
+    height: 16px;
+    background: var(--color-secondary);
+    border-radius: var(--radius-sm);
+  }
+
+  .button-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin-top: var(--space-6);
+  }
+
+  .dark-demo {
+    background: var(--color-dark-bg);
+    padding: var(--space-6);
+    border-radius: var(--radius-md);
+  }
+</style>

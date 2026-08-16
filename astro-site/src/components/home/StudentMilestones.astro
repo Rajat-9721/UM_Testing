@@ -1,0 +1,389 @@
+---
+import { Image } from 'astro:assets';
+import Container from '../Container.astro';
+import Section from '../Section.astro';
+
+import milestone01 from '../../assets/images/student-milestones/milestone-01.jpg.png';
+import milestone02 from '../../assets/images/student-milestones/milestone-02.jpg.png';
+import milestone03 from '../../assets/images/student-milestones/milestone-03.jpg.png';
+import milestone04 from '../../assets/images/student-milestones/milestone-04.jpg.png';
+import milestone05 from '../../assets/images/student-milestones/milestone-05.jpg.png';
+import milestone06 from '../../assets/images/student-milestones/milestone-06.jpg.png';
+import milestone07 from '../../assets/images/student-milestones/milestone-07.jpg.png';
+import milestone08 from '../../assets/images/student-milestones/milestone-08.jpg.png';
+
+/**
+ * Real, unretouched student milestone photographs (recognition, awards,
+ * certificates, accomplishments — not certification-only). Full frame is
+ * always preserved: no cropping, `object-fit: contain` throughout, since
+ * important detail can sit anywhere in the shot.
+ */
+const milestones = [
+  { image: milestone01, rotation: -2 },
+  { image: milestone02, rotation: 1.5 },
+  { image: milestone03, rotation: -1 },
+  { image: milestone04, rotation: 2 },
+  { image: milestone05, rotation: -1.5 },
+  { image: milestone06, rotation: 1 },
+  { image: milestone07, rotation: -2.5 },
+  { image: milestone08, rotation: 1.5 },
+];
+
+/**
+ * The track is rendered as two back-to-back identical copies of the same
+ * 8 photographs. The CSS keyframe animation (see `ms-roll` below) only
+ * ever slides the track by exactly one copy's width (-50% of its own
+ * total width) before looping — since the next copy is pixel-identical,
+ * the loop point is invisible. This is what makes the right-to-left roll
+ * seamless with no visible jump.
+ */
+const trackItems = [...milestones, ...milestones];
+---
+
+<Section theme="subtle" id="milestones" class="milestones-compact">
+  <Container>
+    <div class="milestones-head">
+      <div>
+        <h2 data-reveal>Student Milestones</h2>
+        <p class="lede" data-reveal>Where learning turns into something real.</p>
+      </div>
+
+      <div class="milestones-nav" data-reveal>
+        <button type="button" class="ms-arrow" data-prev aria-label="Previous milestone">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M15 5L8 12L15 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+        <button type="button" class="ms-arrow" data-next aria-label="Next milestone">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M9 5L16 12L9 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="milestones-wall" data-milestones-wall data-reveal>
+      <ul class="ms-track" data-ms-track>
+        {
+          trackItems.map((m, i) => {
+            const isDuplicate = i >= milestones.length;
+            const displayIndex = i % milestones.length;
+            return (
+              <li
+                class="ms-item"
+                style={`--r: ${m.rotation}deg; --stagger: ${displayIndex % 2 === 0 ? '0px' : '18px'};`}
+                data-ms-item
+                data-ms-original={isDuplicate ? undefined : 'true'}
+                aria-hidden={isDuplicate ? 'true' : undefined}
+              >
+                <figure class="ms-card">
+                  <Image
+                    src={m.image}
+                    alt={isDuplicate ? '' : `Utkarsh Minds student milestone photograph ${displayIndex + 1}`}
+                    width={520}
+                    loading="eager"
+                  />
+                </figure>
+              </li>
+            );
+          })
+        }
+      </ul>
+    </div>
+
+    <div class="ms-dots" data-ms-dots>
+      {
+        milestones.map((_, i) => (
+          <button type="button" class="ms-dot" data-ms-dot aria-label={`Go to milestone photograph ${i + 1}`} />
+        ))
+      }
+    </div>
+  </Container>
+</Section>
+
+<style>
+  /* Reduce this section's own vertical rhythm only — no other section touched */
+  :global(.section.milestones-compact) {
+    padding-block: var(--space-16);
+  }
+
+  .milestones-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: var(--space-6);
+    margin-bottom: var(--space-10);
+  }
+
+  h2 {
+    color: var(--color-primary-dark);
+    margin-bottom: var(--space-2);
+  }
+
+  .lede {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: var(--text-lg);
+    color: var(--color-text-muted);
+  }
+
+  .milestones-nav {
+    display: flex;
+    gap: var(--space-3);
+    flex-shrink: 0;
+  }
+
+  .ms-arrow {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-full);
+    border: 1.5px solid var(--color-primary);
+    background: transparent;
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: var(--transition-fast);
+  }
+
+  .ms-arrow:hover {
+    background: var(--color-primary);
+    color: #fff;
+    opacity: 1;
+  }
+
+  .milestones-wall {
+    /* Clips the doubled track so the seamless loop never creates
+       horizontal page scroll; extra bottom padding on the track (below)
+       keeps the hover shadow's blur from being clipped at this edge. */
+    overflow: hidden;
+  }
+
+  @keyframes ms-roll {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      /* Track holds two identical back-to-back sets, so -50% of its own
+         total width is exactly one set's width — the loop point lines up
+         pixel-for-pixel with the start, with no JS measurement needed. */
+      transform: translate3d(-50%, 0, 0);
+    }
+  }
+
+  .ms-track {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-8);
+    padding: var(--space-6) var(--space-2) var(--space-16);
+    width: max-content;
+    animation: ms-roll 42s linear infinite;
+    will-change: transform;
+  }
+
+  .ms-track.is-paused {
+    animation-play-state: paused;
+  }
+
+  .ms-item {
+    flex: 0 0 auto;
+    transform: translateY(var(--stagger)) rotate(var(--r));
+    transition: transform 280ms ease;
+  }
+
+  .ms-card {
+    margin: 0;
+    display: flex;
+    background: var(--color-bg);
+    border: 1px solid var(--color-golden-subtle);
+    box-shadow: var(--shadow-sm);
+    padding: var(--space-2);
+    transition: transform 280ms ease, box-shadow 280ms ease;
+  }
+
+  .ms-card :global(img) {
+    display: block;
+    width: auto;
+    height: 280px;
+    max-width: 320px;
+    object-fit: contain;
+  }
+
+  .ms-item:hover {
+    transform: translateY(calc(var(--stagger) - 6px)) rotate(0deg);
+  }
+
+  .ms-item:hover .ms-card {
+    box-shadow: var(--shadow-lg);
+  }
+
+  .ms-item:focus-within {
+    transform: translateY(calc(var(--stagger) - 6px)) rotate(0deg);
+  }
+
+  .ms-dots {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-2);
+  }
+
+  .ms-dot {
+    width: 6px;
+    height: 6px;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-full);
+    background: var(--color-border);
+    cursor: pointer;
+    transition: var(--transition-fast);
+  }
+
+  .ms-dot.is-active {
+    background: var(--color-accent);
+    width: 18px;
+    border-radius: var(--radius-full);
+  }
+
+  @media (max-width: 768px) {
+    .milestones-head {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-4);
+    }
+
+    .ms-card :global(img) {
+      height: 220px;
+      max-width: 240px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ms-item,
+    .ms-card {
+      transition: none;
+    }
+
+    /* !important so it also wins over the inline `animation` the nudge
+       script restores after an arrow/dot click — the auto-roll must stay
+       off regardless of manual navigation under reduced motion. */
+    .ms-track {
+      animation: none !important;
+    }
+  }
+</style>
+
+<script>
+  /**
+   * The right-to-left roll itself is a pure CSS `animation` (translate3d,
+   * linear, GPU-composited) — no JS ever touches it frame-by-frame. This
+   * script only does discrete, event-driven work: toggle play-state on
+   * hover, and — for arrow/dot clicks — swap the running keyframe
+   * animation for a single CSS `transition` to the target position, then
+   * hand back to the keyframe animation with an `animation-delay` that
+   * matches exactly where the transition left off, so there's no jump.
+   */
+  const CYCLE_SECONDS = 42;
+
+  const walls = document.querySelectorAll<HTMLElement>('[data-milestones-wall]');
+
+  walls.forEach((wall) => {
+    const track = wall.querySelector<HTMLElement>('[data-ms-track]');
+    const items = Array.from(wall.querySelectorAll<HTMLElement>('[data-ms-item]'));
+    const originalItems = items.filter((item) => item.hasAttribute('data-ms-original'));
+    const section = wall.closest('section');
+    const prevBtn = section?.querySelector<HTMLButtonElement>('[data-prev]');
+    const nextBtn = section?.querySelector<HTMLButtonElement>('[data-next]');
+    const dots = Array.from(section?.querySelectorAll<HTMLElement>('[data-ms-dot]') ?? []);
+    if (!track || originalItems.length === 0) return;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Pixel width of one full 8-photo set — the exact distance the CSS
+    // keyframe covers (its `-50%` endpoint). Layout-only, so it's accurate
+    // even though the animated `transform` never affects box geometry.
+    let setWidthPx = 0;
+    function measure() {
+      setWidthPx = track!.scrollWidth / 2;
+    }
+    measure();
+    window.addEventListener('resize', measure);
+
+    function currentTranslateX(): number {
+      const value = getComputedStyle(track!).transform;
+      if (!value || value === 'none') return 0;
+      return new DOMMatrixReadOnly(value).m41;
+    }
+
+    // Hover: play-state toggle only — the animation freezes/resumes at
+    // its own current position, no position math needed.
+    wall.addEventListener('mouseenter', () => track!.classList.add('is-paused'));
+    wall.addEventListener('mouseleave', () => track!.classList.remove('is-paused'));
+
+    function nudgeTo(targetPx: number) {
+      if (setWidthPx <= 0) return;
+      targetPx = Math.max(-setWidthPx, Math.min(0, targetPx));
+
+      if (prefersReducedMotion) {
+        track!.style.transition = 'none';
+        track!.style.animation = 'none';
+        track!.style.transform = `translate3d(${targetPx}px, 0, 0)`;
+        return;
+      }
+
+      const startPx = currentTranslateX();
+      track!.style.transition = 'none';
+      track!.style.animation = 'none';
+      track!.style.transform = `translate3d(${startPx}px, 0, 0)`;
+      void track!.offsetWidth; // commit the freeze before the transition starts
+
+      requestAnimationFrame(() => {
+        track!.style.transition = 'transform 650ms cubic-bezier(0.16, 1, 0.3, 1)';
+        track!.style.transform = `translate3d(${targetPx}px, 0, 0)`;
+      });
+
+      const onEnd = (e: TransitionEvent) => {
+        if (e.propertyName !== 'transform' || e.target !== track) return;
+        track!.removeEventListener('transitionend', onEnd);
+        track!.style.transition = '';
+        track!.style.transform = '';
+        const phase = targetPx / -setWidthPx; // 0..1 through the keyframe
+        track!.style.animation = `ms-roll ${CYCLE_SECONDS}s linear infinite`;
+        track!.style.animationDelay = `${-(phase * CYCLE_SECONDS)}s`;
+      };
+      track!.addEventListener('transitionend', onEnd);
+    }
+
+    function scrollByCard(dir: 1 | -1) {
+      const card = originalItems[0];
+      const step = card.getBoundingClientRect().width + 32;
+      nudgeTo(currentTranslateX() - step * dir);
+    }
+
+    prevBtn?.addEventListener('click', () => scrollByCard(-1));
+    nextBtn?.addEventListener('click', () => scrollByCard(1));
+
+    if (dots.length) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const idx = originalItems.indexOf(entry.target as HTMLElement);
+              if (idx !== -1) dots.forEach((d, i) => d.classList.toggle('is-active', i === idx));
+            }
+          });
+        },
+        { root: wall, threshold: 0.6 }
+      );
+      originalItems.forEach((item) => observer.observe(item));
+
+      dots.forEach((dot, i) => {
+        dot.addEventListener('click', () => {
+          const target = originalItems[i];
+          nudgeTo(-(target.offsetLeft - originalItems[0].offsetLeft));
+        });
+      });
+    }
+  });
+</script>

@@ -86,17 +86,14 @@
   </div>
 
   <script src="supabaseClient.js"></script>
+  <script src="auth-helpers.js"></script>
   <script>
-    // Check if already logged in
+    // Check if already logged in (role comes from profiles.role, not
+    // user_metadata — see auth-helpers.js)
     async function checkAuth() {
-      const { data: { session } } = await supabaseClient.auth.getSession();
+      const { session, role } = await getTrustedSession(supabaseClient);
       if (session) {
-        const role = session.user.user_metadata.role || 'student';
-        if (role === 'assistant') {
-          window.location.href = './assistant-dashboard.html';
-        } else {
-          window.location.href = './student-dashboard.html';
-        }
+        window.location.href = role === 'assistant' ? './assistant-dashboard.html' : './student-dashboard.html';
       }
     }
     checkAuth();
@@ -130,14 +127,12 @@
           loginBtn.textContent = 'Login';
           loginBtn.disabled = false;
         } else {
-          // Check role
-          const role = (data.user && data.user.user_metadata && data.user.user_metadata.role) || 'student';
+          // Trusted role check — reads profiles.role, not user_metadata
+          const { role } = await getTrustedSession(supabaseClient);
           console.log('Login successful. Role:', role);
           if (role === 'assistant') {
-            console.log('Redirecting to assistant dashboard...');
             window.location.href = './assistant-dashboard.html';
           } else {
-            console.log('Redirecting to student dashboard...');
             window.location.href = './student-dashboard.html';
           }
         }

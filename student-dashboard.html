@@ -6,6 +6,7 @@
   <title>Student Dashboard | Utkarsh Minds</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
   <style>
     body {
       background-color: var(--bg-light);
@@ -28,7 +29,7 @@
       list-style: none;
     }
     .sidebar-menu li {
-      padding: 10px 20px;
+      padding: 4px 20px;
     }
     .sidebar-menu a {
       color: var(--text-gray);
@@ -64,6 +65,38 @@
     .card.active {
       display: block;
     }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-top: 10px;
+    }
+    .summary-tile {
+      background: var(--bg-light);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+    }
+    .summary-tile .value {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .summary-tile .label {
+      font-size: 0.75rem;
+      color: var(--text-gray);
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+    .status-pill {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .status-UNPAID { background: #fee2e2; color: #991b1b; }
+    .status-PARTIALLY_PAID { background: #fef3c7; color: #92400e; }
+    .status-PAID { background: #dcfce7; color: #166534; }
     .course-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -81,14 +114,21 @@
       color: var(--primary);
       margin-bottom: 10px;
     }
-    .receipt-box {
-      border: 1px dashed #cbd5e1;
-      padding: 20px;
-      border-radius: 8px;
-      background: var(--bg-light);
-      margin-top: 15px;
-      font-family: monospace;
-      white-space: pre-wrap;
+    table.payments-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      margin-top: 12px;
+    }
+    .payments-table th, .payments-table td {
+      text-align: left;
+      padding: 10px;
+      border-bottom: 1px solid #edf2f7;
+    }
+    .payments-table th {
+      color: var(--text-gray);
+      font-size: 0.8rem;
+      text-transform: uppercase;
     }
     .form-group {
       margin-bottom: 20px;
@@ -99,20 +139,24 @@
       color: var(--text-gray);
       font-weight: 500;
     }
-    .form-group input, .form-group textarea {
+    .form-group input {
       width: 100%;
       padding: 12px;
       border: 1px solid #cbd5e1;
       border-radius: 6px;
       font-family: inherit;
     }
-    .generated-resume {
-      margin-top: 30px;
-      padding: 40px;
-      background: white;
-      border: 1px solid #e2e8f0;
-      box-shadow: var(--shadow-md);
-      display: none;
+    .profile-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #edf2f7;
+    }
+    .profile-row .label {
+      color: var(--text-gray);
+    }
+    .profile-row .value {
+      font-weight: 600;
     }
     .course-empty {
       color: var(--text-gray);
@@ -142,100 +186,61 @@
       <p style="color: var(--text-gray); font-size: 0.8rem; margin-top: 5px;" id="studentEmailDisplay">Student Portal</p>
     </div>
     <ul class="sidebar-menu">
-      <li><a href="#" class="active" data-target="enrolled-courses">Enrolled Courses</a></li>
-      <li><a href="#" data-target="available-courses">Available Courses</a></li>
-      <li><a href="#" data-target="fee-receipts">My Fee Receipts</a></li>
-      <li><a href="#" data-target="resume-generator">Resume Generator</a></li>
-      <li><a href="#" data-target="change-password">Change Password</a></li>
+      <li><a href="#" class="active" data-target="overview">Overview</a></li>
+      <li><a href="#" data-target="my-program">My Program / Enrollments</a></li>
+      <li><a href="#" data-target="fees-payments">Fees &amp; Payments</a></li>
+      <li><a href="#" data-target="receipts">Receipts</a></li>
+      <li><a href="#" data-target="profile">Profile</a></li>
+      <li><a href="#" data-target="security">Security</a></li>
       <li><a href="#" id="logoutBtn" style="color: #ef4444;">Logout</a></li>
     </ul>
   </aside>
 
   <main class="main-content">
     <div class="dashboard-header">
-      <h2>Welcome, Student!</h2>
+      <h2 id="welcomeHeading">Welcome!</h2>
     </div>
 
-    <!-- Enrolled Courses Section -->
-    <div class="card active" id="enrolled-courses">
-      <h3>Your Enrolled Courses</h3>
-      <p style="color: var(--text-gray);">Continue learning where you left off.</p>
-      
-      <div class="course-grid" id="enrolledCoursesGrid"><p class="course-empty">Loading your courses...</p></div>
-    </div>
-
-    <!-- Available Courses Section -->
-    <div class="card" id="available-courses">
-      <h3>Available Courses</h3>
-      <p style="color: var(--text-gray);">Explore new topics and expand your skillset.</p>
-      
-      <div class="course-grid" id="availableCoursesGrid"><p class="course-empty">Loading courses...</p></div>
-    </div>
-
-    <!-- Fee Receipts Section -->
-    <div class="card" id="fee-receipts">
-      <h3>My Fee Receipts</h3>
-      <p style="color: var(--text-gray);">View and download your past payment receipts.</p>
-      
-      <div class="receipt-box">
-UTKARSH MINDS - FEE RECEIPT
-
-Date: 01/05/2026
-Receipt No: UM-8492
-
-Received with thanks from: Student Name
-The sum of: ₹15,000
-For Course: Full Stack Web Development
-
-Authorized Signatory
-Utkarsh Minds
-      </div>
-      <button class="btn btn-outline" style="margin-top: 15px;" onclick="window.print()">Print Receipt</button>
-    </div>
-
-    <!-- Resume Generator Section -->
-    <div class="card" id="resume-generator">
-      <h3>Resume Generator</h3>
-      <p style="color: var(--text-gray); margin-bottom: 20px;">Fill out the details below to generate a professional resume instantly.</p>
-      
-      <form id="resumeForm">
-        <div class="form-group">
-          <label>Full Name</label>
-          <input type="text" id="resName" required>
-        </div>
-        <div class="form-group">
-          <label>Professional Title</label>
-          <input type="text" id="resTitle" placeholder="e.g. Frontend Developer" required>
-        </div>
-        <div class="form-group">
-          <label>Skills (comma separated)</label>
-          <input type="text" id="resSkills" placeholder="HTML, CSS, JavaScript, React" required>
-        </div>
-        <div class="form-group">
-          <label>Short Summary</label>
-          <textarea id="resSummary" rows="3" required></textarea>
-        </div>
-        <button type="submit" class="btn btn-accent">Generate Resume</button>
-      </form>
-
-      <div id="generatedResume" class="generated-resume">
-        <h2 id="outName" style="color: var(--primary); border-bottom: 2px solid var(--accent); padding-bottom: 10px; margin-bottom: 10px;"></h2>
-        <h3 id="outTitle" style="color: var(--text-gray); margin-bottom: 20px; font-weight: 500;"></h3>
-        
-        <h4 style="margin-bottom: 10px; color: var(--primary);">Summary</h4>
-        <p id="outSummary" style="margin-bottom: 20px; line-height: 1.6;"></p>
-        
-        <h4 style="margin-bottom: 10px; color: var(--primary);">Key Skills</h4>
-        <ul id="outSkills" style="list-style-type: square; margin-left: 20px; color: var(--text-dark);">
-        </ul>
-        
-        <button class="btn btn-primary" style="margin-top: 30px;" onclick="window.print()">Print / Save as PDF</button>
+    <!-- Overview -->
+    <div class="card active" id="overview">
+      <h3>Overview</h3>
+      <p style="color: var(--text-gray);">A quick summary of your program and fee status.</p>
+      <div class="summary-grid" id="overviewSummary">
+        <div class="summary-tile"><div class="value">—</div><div class="label">Program</div></div>
+        <div class="summary-tile"><div class="value">—</div><div class="label">Total Fee</div></div>
+        <div class="summary-tile"><div class="value">—</div><div class="label">Paid</div></div>
+        <div class="summary-tile"><div class="value">—</div><div class="label">Balance</div></div>
       </div>
     </div>
 
-    <!-- Change Password Section -->
-    <div class="card" id="change-password">
-      <h3>Change Password</h3>
+    <!-- My Program / Enrollments -->
+    <div class="card" id="my-program">
+      <h3>My Program / Enrollments</h3>
+      <div class="course-grid" id="enrollmentsGrid"><p class="course-empty">Loading...</p></div>
+    </div>
+
+    <!-- Fees & Payments -->
+    <div class="card" id="fees-payments">
+      <h3>Fees &amp; Payments</h3>
+      <div id="feesSummary"><p class="course-empty">Loading...</p></div>
+    </div>
+
+    <!-- Receipts -->
+    <div class="card" id="receipts">
+      <h3>My Receipts</h3>
+      <p style="color: var(--text-gray);">Every recorded payment has its own receipt.</p>
+      <div id="receiptsList"><p class="course-empty">Loading...</p></div>
+    </div>
+
+    <!-- Profile -->
+    <div class="card" id="profile">
+      <h3>Profile</h3>
+      <div id="profileDetails"><p class="course-empty">Loading...</p></div>
+    </div>
+
+    <!-- Security -->
+    <div class="card" id="security">
+      <h3>Security</h3>
       <p style="color: var(--text-gray); margin-bottom: 20px;">Replace your temporary password with a private password.</p>
       <div id="passwordAlert" class="alert"></div>
       <form id="changePasswordForm">
@@ -254,74 +259,187 @@ Utkarsh Minds
   </main>
 
   <script src="supabaseClient.js"></script>
+  <script src="auth-helpers.js"></script>
+  <script src="receipt.js"></script>
   <script>
-    // Tab switching logic
+    let currentStudent = null;
+    let currentProfile = null;
+
+    async function init() {
+      const result = await requireRole(supabaseClient, 'student');
+      if (!result) return;
+      currentStudent = result.session.user;
+      currentProfile = result.profile;
+
+      document.getElementById('studentEmailDisplay').textContent = currentProfile.email;
+      document.getElementById('welcomeHeading').textContent = `Welcome, ${currentProfile.full_name || 'Student'}!`;
+
+      await loadEnrollmentsAndFees();
+      renderProfile();
+    }
+
+    // ---- Tab switching ----
     document.querySelectorAll('.sidebar-menu a[data-target]').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
         document.querySelectorAll('.sidebar-menu a').forEach(l => l.classList.remove('active'));
         document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
-        
         e.target.classList.add('active');
         document.getElementById(e.target.dataset.target).classList.add('active');
       });
     });
 
-    // Check Auth Status & Role
-    let currentStudent;
-
-    async function checkAuth() {
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      if (!session) {
-        window.location.href = './login.html';
-        return;
-      }
-      const role = session.user.user_metadata.role;
-      if (role !== 'student') {
-        window.location.href = './login.html'; // Or assistant dashboard
-      } else {
-        currentStudent = session.user;
-        document.getElementById('studentEmailDisplay').textContent = session.user.email;
-        await loadStudentCourses(session.user.id);
-      }
-    }
-    checkAuth();
-
-    function courseCard(course, enrollment) {
-      const progress = enrollment ? enrollment.progress : null;
-      const detailsUrl = course.id ? `course-details.html?id=${course.id}` : 'course-details.html';
-      return `<div class="course-card">
-        <h4>${course.title}</h4>
-        <p style="font-size: 0.875rem; color: var(--text-gray); margin-bottom: 15px;">${course.description || 'Explore this course at Utkarsh Minds.'}</p>
-        ${enrollment ? `<p style="font-size: 0.875rem; color: var(--text-gray); margin-bottom: 8px;">Progress: ${progress}%</p>
-        <div style="width: 100%; background: #e2e8f0; height: 8px; border-radius: 4px; margin-bottom: 15px;"><div style="width: ${progress}%; background: var(--success); height: 100%; border-radius: 4px;"></div></div>
-        <a class="btn btn-primary" href="${detailsUrl}" style="display:block; text-align:center; width:100%; padding:8px;">Resume Course</a>` : `<a class="btn btn-outline" href="${detailsUrl}" style="display:block; text-align:center; width:100%; padding:8px;">View Details</a>`}
-      </div>`;
-    }
-
-    async function loadStudentCourses(studentId) {
-      const [enrollmentResult, courseResult] = await Promise.all([
-        supabaseClient.from('enrollments').select('progress, course:courses(*)').eq('student_id', studentId),
-        supabaseClient.from('courses').select('*').order('title')
-      ]);
-      const enrolled = enrollmentResult.data || [];
-      const allCourses = courseResult.data || [];
-      const enrolledIds = new Set(enrolled.map(item => item.course && item.course.id));
-      document.getElementById('enrolledCoursesGrid').innerHTML = enrolled.length
-        ? enrolled.map(item => courseCard(item.course, item)).join('')
-        : '<p class="course-empty">No purchased courses have been assigned yet.</p>';
-      document.getElementById('availableCoursesGrid').innerHTML = allCourses.length
-        ? allCourses.map(course => courseCard(course, enrolledIds.has(course.id) ? enrolled.find(item => item.course.id === course.id) : null)).join('')
-        : '<p class="course-empty">No courses are available right now.</p>';
-    }
-
-    // Logout
+    // ---- Logout ----
     document.getElementById('logoutBtn').addEventListener('click', async (e) => {
       e.preventDefault();
       await supabaseClient.auth.signOut();
       window.location.href = './login.html';
     });
 
+    function formatCurrency(n) {
+      return '₹' + Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    function statusLabel(status) {
+      return { UNPAID: 'Unpaid', PARTIALLY_PAID: 'Partially Paid', PAID: 'Paid' }[status] || status;
+    }
+
+    // ---- Enrollments + Fees (shared load) ----
+    async function loadEnrollmentsAndFees() {
+      const { data: summary, error: summaryError } = await supabaseClient
+        .from('enrollment_payment_summary')
+        .select('*')
+        .eq('student_id', currentStudent.id);
+
+      if (summaryError) {
+        console.error('Failed to load fee summary:', summaryError);
+        document.getElementById('feesSummary').innerHTML = `<p class="course-empty">Failed to load: ${summaryError.message}</p>`;
+        return;
+      }
+
+      const { data: courses } = await supabaseClient.from('courses').select('id, title, description');
+      const courseMap = new Map((courses || []).map(c => [c.id, c]));
+
+      renderEnrollments(summary || [], courseMap);
+      renderFees(summary || [], courseMap);
+      renderOverview(summary || [], courseMap);
+      await loadReceipts();
+    }
+
+    function renderEnrollments(summary, courseMap) {
+      const grid = document.getElementById('enrollmentsGrid');
+      if (!summary.length) {
+        grid.innerHTML = '<p class="course-empty">No enrollments yet.</p>';
+        return;
+      }
+      grid.innerHTML = summary.map(s => {
+        const course = courseMap.get(s.course_id);
+        return `<div class="course-card">
+          <h4>${course ? course.title : 'Program'}</h4>
+          <p style="font-size:0.875rem; color:var(--text-gray); margin-bottom:12px;">${course && course.description ? course.description : ''}</p>
+          <p style="font-size:0.875rem;"><strong>Status:</strong> <span class="status-pill status-${s.status}">${statusLabel(s.status)}</span></p>
+        </div>`;
+      }).join('');
+    }
+
+    function renderFees(summary, courseMap) {
+      const wrap = document.getElementById('feesSummary');
+      if (!summary.length) {
+        wrap.innerHTML = '<p class="course-empty">No fee record yet.</p>';
+        return;
+      }
+      wrap.innerHTML = summary.map(s => {
+        const course = courseMap.get(s.course_id);
+        return `
+          <div style="margin-bottom:30px;">
+            <h4 style="margin-bottom:10px;">${course ? course.title : 'Program'}</h4>
+            <div class="summary-grid">
+              <div class="summary-tile"><div class="value">${formatCurrency(s.total_fee)}</div><div class="label">Total Fee</div></div>
+              <div class="summary-tile"><div class="value">${formatCurrency(s.total_paid)}</div><div class="label">Paid</div></div>
+              <div class="summary-tile"><div class="value">${formatCurrency(s.balance)}</div><div class="label">Balance</div></div>
+              <div class="summary-tile"><div class="value"><span class="status-pill status-${s.status}">${statusLabel(s.status)}</span></div><div class="label">Status</div></div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function renderOverview(summary, courseMap) {
+      const el = document.getElementById('overviewSummary');
+      if (!summary.length) return;
+      const s = summary[0];
+      const course = courseMap.get(s.course_id);
+      el.innerHTML = `
+        <div class="summary-tile"><div class="value">${course ? course.title : '—'}</div><div class="label">Program</div></div>
+        <div class="summary-tile"><div class="value">${formatCurrency(s.total_fee)}</div><div class="label">Total Fee</div></div>
+        <div class="summary-tile"><div class="value">${formatCurrency(s.total_paid)}</div><div class="label">Paid</div></div>
+        <div class="summary-tile"><div class="value">${formatCurrency(s.balance)}</div><div class="label">Balance</div></div>
+      `;
+    }
+
+    // ---- Receipts ----
+    async function loadReceipts() {
+      const { data, error } = await supabaseClient
+        .from('payment_receipts')
+        .select('*')
+        .eq('student_id', currentStudent.id)
+        .order('created_at', { ascending: false });
+
+      const wrap = document.getElementById('receiptsList');
+      if (error) {
+        wrap.innerHTML = `<p class="course-empty">Failed to load receipts: ${error.message}</p>`;
+        return;
+      }
+      if (!data || !data.length) {
+        wrap.innerHTML = '<p class="course-empty">No payments recorded yet.</p>';
+        return;
+      }
+
+      wrap.innerHTML = `
+        <table class="payments-table">
+          <thead>
+            <tr><th>Date</th><th>Amount</th><th>Method</th><th>Receipt #</th><th>Status After</th><th></th></tr>
+          </thead>
+          <tbody>
+            ${data.map(p => `
+              <tr>
+                <td>${p.payment_date}</td>
+                <td>${formatCurrency(p.amount)}</td>
+                <td>${p.payment_method}</td>
+                <td>${p.receipt_number}</td>
+                <td><span class="status-pill status-${p.status_after_payment}">${statusLabel(p.status_after_payment)}</span></td>
+                <td><button class="btn btn-outline" style="padding:6px 12px; font-size:0.85rem;" data-download="${p.payment_id}">Download PDF</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+
+      wrap.querySelectorAll('[data-download]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          btn.disabled = true;
+          btn.textContent = 'Generating...';
+          try {
+            await downloadReceipt(supabaseClient, btn.dataset.download);
+          } catch (err) {
+            alert('Failed to generate receipt: ' + err.message);
+          } finally {
+            btn.disabled = false;
+            btn.textContent = 'Download PDF';
+          }
+        });
+      });
+    }
+
+    // ---- Profile ----
+    function renderProfile() {
+      document.getElementById('profileDetails').innerHTML = `
+        <div class="profile-row"><span class="label">Student ID</span><span class="value">${currentProfile.student_id || '—'}</span></div>
+        <div class="profile-row"><span class="label">Full Name</span><span class="value">${currentProfile.full_name || '—'}</span></div>
+        <div class="profile-row"><span class="label">Email</span><span class="value">${currentProfile.email || '—'}</span></div>
+        <div class="profile-row"><span class="label">Registered Mobile</span><span class="value">${currentProfile.phone || '—'}</span></div>
+      `;
+    }
+
+    // ---- Security: change password (existing logic, kept) ----
     document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const newPassword = document.getElementById('newPassword').value;
@@ -348,29 +466,7 @@ Utkarsh Minds
       button.textContent = 'Update Password';
     });
 
-    // Resume Generator Logic
-    document.getElementById('resumeForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      
-      const name = document.getElementById('resName').value;
-      const title = document.getElementById('resTitle').value;
-      const skills = document.getElementById('resSkills').value.split(',');
-      const summary = document.getElementById('resSummary').value;
-
-      document.getElementById('outName').textContent = name;
-      document.getElementById('outTitle').textContent = title;
-      document.getElementById('outSummary').textContent = summary;
-      
-      const skillsList = document.getElementById('outSkills');
-      skillsList.innerHTML = '';
-      skills.forEach(skill => {
-        const li = document.createElement('li');
-        li.textContent = skill.trim();
-        skillsList.appendChild(li);
-      });
-
-      document.getElementById('generatedResume').style.display = 'block';
-    });
+    init();
   </script>
 </body>
 </html>
