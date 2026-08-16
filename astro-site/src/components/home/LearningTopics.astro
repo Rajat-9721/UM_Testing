@@ -26,6 +26,11 @@ const topics = [
     <ul class="topic-grid" data-reveal-group>
       {topics.map((t) => <li class="topic-item" data-reveal>{t}</li>)}
     </ul>
+
+    <div class="eligibility" data-reveal>
+      <p class="eligibility-label">Eligibility Criteria</p>
+      <p class="eligibility-detail">Cleared first year undergraduate — BA / BCom / BSc / BEngg</p>
+    </div>
   </Container>
 </Section>
 
@@ -71,5 +76,28 @@ const topics = [
     .topic-grid {
       grid-template-columns: 1fr;
     }
+  }
+
+  .eligibility {
+    margin-top: var(--space-8);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2) var(--space-3);
+  }
+
+  .eligibility-label {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-secondary);
+  }
+
+  .eligibility-detail {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
   }
 </style>

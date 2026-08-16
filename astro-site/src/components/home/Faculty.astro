@@ -18,6 +18,8 @@ import sapnaSingh from '../../assets/faculty/sapna-singh.png';
 import gauravPangam from '../../assets/faculty/gaurav-pangam.png';
 import jayPrakashPathak from '../../assets/faculty/jay-prakash-pathak.png';
 import shreyaSahu from '../../assets/faculty/shreya-sahu.png';
+import steffiKalluveetil from '../../assets/faculty/steffi-kalluveetil.png';
+import arshadPhoto from '../../assets/faculty/arshad.jpg';
 
 /**
  * Source of truth: "Website details (1).pdf", pages 2-3 — faculty photos with
@@ -25,38 +27,52 @@ import shreyaSahu from '../../assets/faculty/shreya-sahu.png';
  * `description` is a direct, literal restatement of that same designation
  * (no added credentials, years or claims beyond what the source states).
  *
- * `fit` + `focus` were tuned by simulating the exact crop this card box
- * produces (1.85:1) against every source photo and inspecting the result,
- * rather than guessing from headroom alone. That test showed the earlier
- * top-weighted positions were wrong: for a tight face-filling headshot,
- * biasing toward preserving hair/forehead space pushes the crop window up
- * and cuts the chin/mouth instead — the face needs to be *centered* on the
- * eyes/nose/mouth (a mid-range focus, ~40-70%), which crops hair/forehead
- * and shoulders instead of the face. `fit: 'contain'` is reserved for the
- * one photo (Sapna Singh) where the head sits so high in a full-body shot
- * that no crop window at this box ratio can include it — the full photo is
- * shown uncropped, centered against the card's own background.
+ * Photo presentation: every faculty image is shown in full via
+ * `object-fit: contain` inside a fixed-height stage — the complete
+ * photograph is always visible, scaled proportionally, never cropped to
+ * fill the box (matching the Sapna Singh reference treatment for every
+ * card, not just hers). The stage background matches the card's own
+ * background exactly, so there's no visible inner frame/seam around the
+ * photo. `imageScale` is an optional per-entry escape hatch (via CSS
+ * transform, applied after `contain` already fit the whole photo) for the
+ * rare case a photo reads noticeably smaller/larger than its neighbours —
+ * it never hides cropping because nothing is cropped to begin with.
  *
  * Vishwanath Chikareddi and Shreya Sahu had black vertical borders baked
  * into their extracted source photos; those were trimmed directly from the
  * asset files (src/assets/faculty) rather than papered over with CSS.
+ *
+ * Featured order (first four rail positions) is fixed to Pranav, Arshad,
+ * Shubham, Steffi per project request — everyone else keeps their existing
+ * data and simply follows after in the same relative order as before.
+ *
+ * Arshad's photo was supplied directly by the project owner and copied
+ * into src/assets/faculty. His exact role/title still isn't confirmed from
+ * project data, so `role` keeps the conservative placeholder "Faculty
+ * Member" rather than inventing a title/company/experience — the
+ * `.rail-photo-fallback` initials treatment below is kept in the markup
+ * as a general safety net for any future entry with `image: null`.
+ *
+ * Steffi's photo was supplied directly and copied into src/assets/faculty.
  */
 const faculty = [
-  { name: 'Dr. Pranav Nerurkar', role: 'Specialist – AI, Data Science', description: 'Specialist in Artificial Intelligence and Data Science.', image: drPranavNerurkar, fit: 'cover', focus: '50%' },
-  { name: 'Dr. Anupama Deshpande', role: 'Specialist – Electronics/Electricals', description: 'Specialist in Electronics and Electrical Engineering.', image: drAnupamaDeshpande, fit: 'cover', focus: '55%' },
-  { name: 'Moreshwar Dhaigude', role: 'Specialist – Mathematics', description: 'Specialist in Mathematics.', image: moreshwarDhaigude, fit: 'cover', focus: '48%' },
-  { name: 'Shubham Meshram', role: 'Specialist – FinTech', description: 'Specialist in FinTech.', image: shubhamMeshram, fit: 'cover', focus: '50%' },
-  { name: 'Preeti Godabole', role: 'Specialist – Ethical Hacking, Cybersecurity', description: 'Specialist in Ethical Hacking and Cybersecurity.', image: preetiGodabole, fit: 'cover', focus: '50%' },
-  { name: 'Vishwanath Chikareddi', role: 'Specialist – Robotics/Internet of Things', description: 'Specialist in Robotics and Internet of Things.', image: vishwanathChikareddi, fit: 'cover', focus: '45%' },
-  { name: 'Sanjiv Sinh', role: 'Advisor – Deep Learning', description: 'Advisor, Deep Learning.', image: sanjivSinh, fit: 'cover', focus: '38%' },
-  { name: 'Puja Mishra', role: 'Advisor – Organic Chemistry', description: 'Advisor, Organic Chemistry.', image: pujaMishra, fit: 'cover', focus: '42%' },
-  { name: 'Palash Ingle', role: 'Specialist – LiDAR, Deep Learning', description: 'Specialist in LiDAR and Deep Learning.', image: palashIngle, fit: 'cover', focus: '62%' },
-  { name: 'Prajwal Khandare', role: 'Specialist – Arduino Programming', description: 'Specialist in Arduino Programming.', image: prajwalKhandare, fit: 'cover', focus: '62%' },
-  { name: 'Pradnya Sambary', role: 'Expert – French', description: 'Expert in French.', image: pradnyaSambary, fit: 'cover', focus: '45%' },
-  { name: 'Sapna Singh', role: 'Expert – Spoken English', description: 'Expert in Spoken English.', image: sapnaSingh, fit: 'contain', focus: '50%' },
-  { name: 'Gaurav Pangam', role: 'Specialist – Full Stack Development', description: 'Specialist in Full Stack Development.', image: gauravPangam, fit: 'cover', focus: '28%' },
-  { name: 'Jay Prakash Pathak', role: 'Specialist – Full Stack Development', description: 'Specialist in Full Stack Development.', image: jayPrakashPathak, fit: 'cover', focus: '68%' },
-  { name: 'Shreya Sahu', role: 'Expert – Digital Marketing/Tally/Tableau', description: 'Expert in Digital Marketing, Tally and Tableau.', image: shreyaSahu, fit: 'cover', focus: '55%' },
+  { name: 'Dr. Pranav Nerurkar', role: 'Specialist – AI, Data Science', description: 'Specialist in Artificial Intelligence and Data Science.', image: drPranavNerurkar },
+  { name: 'Arshad', role: 'Faculty Member', description: 'Faculty member — specific role to be confirmed.', image: arshadPhoto, initials: 'A' },
+  { name: 'Shubham Meshram', role: 'Specialist – FinTech', description: 'Specialist in FinTech.', image: shubhamMeshram },
+  { name: 'Steffi Kalluveetil', role: 'Management & Statistics', description: 'Management and Statistics.', image: steffiKalluveetil },
+  { name: 'Dr. Anupama Deshpande', role: 'Specialist – Electronics/Electricals', description: 'Specialist in Electronics and Electrical Engineering.', image: drAnupamaDeshpande },
+  { name: 'Moreshwar Dhaigude', role: 'Specialist – Mathematics', description: 'Specialist in Mathematics.', image: moreshwarDhaigude },
+  { name: 'Preeti Godabole', role: 'Specialist – Ethical Hacking, Cybersecurity', description: 'Specialist in Ethical Hacking and Cybersecurity.', image: preetiGodabole },
+  { name: 'Vishwanath Chikareddi', role: 'Specialist – Robotics/Internet of Things', description: 'Specialist in Robotics and Internet of Things.', image: vishwanathChikareddi },
+  { name: 'Sanjiv Sinh', role: 'Advisor – Deep Learning', description: 'Advisor, Deep Learning.', image: sanjivSinh },
+  { name: 'Puja Mishra', role: 'Advisor – Organic Chemistry', description: 'Advisor, Organic Chemistry.', image: pujaMishra },
+  { name: 'Palash Ingle', role: 'Specialist – LiDAR, Deep Learning', description: 'Specialist in LiDAR and Deep Learning.', image: palashIngle },
+  { name: 'Prajwal Khandare', role: 'Specialist – Arduino Programming', description: 'Specialist in Arduino Programming.', image: prajwalKhandare },
+  { name: 'Pradnya Sambary', role: 'Expert – French', description: 'Expert in French.', image: pradnyaSambary },
+  { name: 'Sapna Singh', role: 'Expert – Spoken English', description: 'Expert in Spoken English.', image: sapnaSingh },
+  { name: 'Gaurav Pangam', role: 'Specialist – Full Stack Development', description: 'Specialist in Full Stack Development.', image: gauravPangam },
+  { name: 'Jay Prakash Pathak', role: 'Specialist – Full Stack Development', description: 'Specialist in Full Stack Development.', image: jayPrakashPathak },
+  { name: 'Shreya Sahu', role: 'Expert – Digital Marketing/Tally/Tableau', description: 'Expert in Digital Marketing, Tally and Tableau.', image: shreyaSahu },
 ];
 ---
 
@@ -79,13 +95,17 @@ const faculty = [
               <li class="rail-item">
                 <article class="rail-card">
                   <span class="rail-photo">
-                    <Image
-                      src={f.image}
-                      alt={`${f.name}, ${f.role}`}
-                      width={340}
-                      loading={i < 3 ? 'eager' : 'lazy'}
-                      style={`object-fit: ${f.fit}; object-position: 50% ${f.focus};`}
-                    />
+                    {f.image ? (
+                      <Image
+                        src={f.image}
+                        alt={`${f.name}, ${f.role}`}
+                        width={340}
+                        loading={i < 3 ? 'eager' : 'lazy'}
+                        style={f.imageScale ? `--img-scale: ${f.imageScale};` : undefined}
+                      />
+                    ) : (
+                      <span class="rail-photo-fallback" aria-hidden="true">{f.initials}</span>
+                    )}
                   </span>
                   <div class="rail-info">
                     <h3 class="rail-name">{f.name}</h3>
@@ -198,19 +218,36 @@ const faculty = [
   }
 
   .rail-photo {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 100%;
-    aspect-ratio: 1.85 / 1;
+    height: 210px;
     overflow: hidden;
-    background: var(--color-bg-subtle);
+    background: var(--color-bg);
     pointer-events: none;
   }
 
   .rail-photo :global(img) {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
+    object-position: center;
     display: block;
+    transform: scale(var(--img-scale, 1));
+    transform-origin: center;
+  }
+
+  .rail-photo-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: var(--text-3xl);
+    font-weight: 600;
+    color: var(--color-primary-light);
   }
 
   .rail-info {

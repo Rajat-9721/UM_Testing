@@ -1,0 +1,536 @@
+---
+import Button from './Button.astro';
+
+/**
+ * Shared brochure-download verification modal.
+ *
+ * Rendered once per page; any button anywhere on the page can open it by
+ * adding `data-brochure-trigger` (see Hero.astro / StickyProgramPanel.astro).
+ *
+ * Flow: name+email+mobile -> Supabase Auth email OTP (signInWithOtp) ->
+ * verifyOtp -> insert into the existing marketing_leads table
+ * (source: "ai_brochure") -> sign the auth session back out immediately
+ * (verifying an OTP creates a real auth.users session; this project's
+ * legacy student/assistant dashboards trust auth sessions, so a brochure
+ * download must never leave one lingering) -> reveal the existing static
+ * brochure PDF.
+ *
+ * Reuses the same inline Supabase client pattern as the Notify Me feature
+ * (StickyProgramPanel.astro) rather than introducing a second client.
+ */
+
+const BROCHURE_URL = '/downloads/spit-ai-certification-brochure.pdf';
+const PROGRAM_NAME = 'Professional Certification in AI';
+---
+
+<dialog id="brochure-dialog" class="brochure-dialog">
+  <form id="brochure-form" class="brochure-form" novalidate>
+    <button type="button" class="brochure-close" data-brochure-close aria-label="Close">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+    </button>
+
+    <!-- Step 1: details -->
+    <div class="brochure-step" data-step="details">
+      <h3 class="brochure-title">Download the AI Program Brochure</h3>
+      <p class="brochure-subtitle">
+        We'll email an 8-digit verification code to confirm it's really you before sending the
+        brochure.
+      </p>
+
+      <div class="brochure-field">
+        <label for="brochure-name">Full Name</label>
+        <input id="brochure-name" name="name" type="text" autocomplete="name" required />
+        <span class="brochure-error" data-error-for="name"></span>
+      </div>
+
+      <div class="brochure-field">
+        <label for="brochure-email">Email</label>
+        <input id="brochure-email" name="email" type="email" autocomplete="email" required />
+        <span class="brochure-error" data-error-for="email"></span>
+      </div>
+
+      <div class="brochure-field">
+        <label for="brochure-mobile">Mobile Number</label>
+        <input id="brochure-mobile" name="mobile" type="tel" inputmode="numeric" autocomplete="tel" placeholder="10-digit mobile number" required />
+        <span class="brochure-error" data-error-for="mobile"></span>
+      </div>
+
+      <p class="brochure-submit-error" data-send-error hidden></p>
+
+      <div class="brochure-actions">
+        <button type="button" class="brochure-cancel" data-brochure-close>Cancel</button>
+        <Button type="button" variant="primary" class="brochure-submit-btn" data-send-otp>
+          Send Verification Code
+        </Button>
+      </div>
+    </div>
+
+    <!-- Step 2: verify -->
+    <div class="brochure-step" data-step="verify" hidden>
+      <h3 class="brochure-title">Enter verification code</h3>
+      <p class="brochure-subtitle">
+        We sent an 8-digit code to <strong data-sent-to-email></strong>.
+      </p>
+
+      <div class="brochure-field">
+        <label for="brochure-otp">Verification Code</label>
+        <input id="brochure-otp" name="otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="8-digit code" />
+        <span class="brochure-error" data-error-for="otp"></span>
+      </div>
+
+      <p class="brochure-submit-error" data-verify-error hidden></p>
+
+      <div class="brochure-actions brochure-actions--verify">
+        <button type="button" class="brochure-cancel" data-back-to-details>Change details</button>
+        <button type="button" class="brochure-resend" data-resend-otp>Resend code</button>
+        <Button type="button" variant="primary" class="brochure-submit-btn" data-verify-otp>
+          Verify &amp; Download
+        </Button>
+      </div>
+    </div>
+
+    <!-- Step 3: success -->
+    <div class="brochure-step brochure-success" data-step="success" hidden>
+      <p>Verified! Your download should start automatically.</p>
+      <a href={BROCHURE_URL} download class="brochure-download-link" data-download-link>
+        Download Brochure Again
+      </a>
+      <button type="button" class="brochure-cancel" data-brochure-close>Close</button>
+    </div>
+  </form>
+</dialog>
+
+<style>
+  .brochure-dialog {
+    padding: 0;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    width: min(440px, 92vw);
+    max-height: min(620px, 88vh);
+    overflow: hidden auto;
+  }
+
+  .brochure-dialog::backdrop {
+    background: rgba(22, 34, 28, 0.55);
+  }
+
+  .brochure-form {
+    position: relative;
+    padding: var(--space-8) var(--space-6) var(--space-6);
+  }
+
+  .brochure-close {
+    position: absolute;
+    top: var(--space-4);
+    right: var(--space-4);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-full);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: var(--transition-fast);
+  }
+
+  .brochure-close:hover {
+    background: var(--color-bg-subtle);
+    color: var(--color-primary);
+  }
+
+  .brochure-title {
+    font-size: var(--text-xl);
+    color: var(--color-primary);
+    margin-bottom: var(--space-2);
+    padding-right: var(--space-8);
+  }
+
+  .brochure-subtitle {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-6);
+  }
+
+  .brochure-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    margin-bottom: var(--space-4);
+  }
+
+  .brochure-field label {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+  }
+
+  .brochure-field input {
+    font-family: inherit;
+    font-size: var(--text-base);
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg);
+    color: var(--color-text);
+  }
+
+  .brochure-field input:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
+  }
+
+  .brochure-field input[aria-invalid='true'] {
+    border-color: var(--color-danger);
+  }
+
+  .brochure-error {
+    font-size: var(--text-xs);
+    color: var(--color-danger);
+    min-height: 1em;
+  }
+
+  .brochure-submit-error {
+    font-size: var(--text-sm);
+    color: var(--color-danger);
+    margin-bottom: var(--space-4);
+  }
+
+  .brochure-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
+    flex-wrap: wrap;
+  }
+
+  .brochure-actions--verify {
+    justify-content: space-between;
+  }
+
+  .brochure-cancel,
+  .brochure-resend {
+    font-family: inherit;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    background: transparent;
+    border: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    padding: var(--space-3) var(--space-2);
+  }
+
+  .brochure-cancel:hover,
+  .brochure-resend:hover:not(:disabled) {
+    color: var(--color-primary);
+  }
+
+  .brochure-resend:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .brochure-form :global(.brochure-submit-btn) {
+    min-width: 160px;
+  }
+
+  .brochure-form :global(.brochure-submit-btn[disabled]) {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .brochure-success {
+    padding-top: var(--space-4);
+    text-align: center;
+  }
+
+  .brochure-success p {
+    color: var(--color-text);
+    font-size: var(--text-lg);
+    margin-bottom: var(--space-6);
+  }
+
+  .brochure-download-link {
+    display: inline-block;
+    margin-bottom: var(--space-4);
+    color: var(--color-primary);
+    font-weight: 600;
+    text-decoration: underline;
+  }
+
+  @media (max-width: 480px) {
+    .brochure-form {
+      padding: var(--space-6) var(--space-5) var(--space-5);
+    }
+  }
+</style>
+
+<script>
+  const SUPABASE_URL = 'https://ohytjcwcmzalftmsdvbq.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_ApiQJQ2W-sfMo7i3jl_NSw_0eWMvVmF';
+  const PROGRAM_NAME = 'Professional Certification in AI';
+  const LEAD_SOURCE = 'ai_brochure';
+  const RESEND_COOLDOWN_SECONDS = 30;
+
+  let supabaseClientPromise: Promise<any> | null = null;
+  function getSupabaseClient() {
+    if (!supabaseClientPromise) {
+      supabaseClientPromise = import('https://esm.sh/@supabase/supabase-js@2').then(
+        ({ createClient }) => createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      );
+    }
+    return supabaseClientPromise;
+  }
+
+  const dialog = document.getElementById('brochure-dialog') as HTMLDialogElement | null;
+  const form = document.getElementById('brochure-form') as HTMLFormElement | null;
+  if (!dialog || !form) {
+    // Nothing to wire up if the modal markup isn't present on this page.
+  } else {
+    const steps = {
+      details: form.querySelector<HTMLElement>('[data-step="details"]')!,
+      verify: form.querySelector<HTMLElement>('[data-step="verify"]')!,
+      success: form.querySelector<HTMLElement>('[data-step="success"]')!,
+    };
+
+    const nameInput = form.elements.namedItem('name') as HTMLInputElement;
+    const emailInput = form.elements.namedItem('email') as HTMLInputElement;
+    const mobileInput = form.elements.namedItem('mobile') as HTMLInputElement;
+    const otpInput = form.elements.namedItem('otp') as HTMLInputElement;
+
+    const sendBtn = form.querySelector<HTMLButtonElement>('[data-send-otp]')!;
+    const verifyBtn = form.querySelector<HTMLButtonElement>('[data-verify-otp]')!;
+    const resendBtn = form.querySelector<HTMLButtonElement>('[data-resend-otp]')!;
+    const backBtn = form.querySelector<HTMLButtonElement>('[data-back-to-details]')!;
+    const sentToEl = form.querySelector<HTMLElement>('[data-sent-to-email]')!;
+    const sendError = form.querySelector<HTMLElement>('[data-send-error]')!;
+    const verifyError = form.querySelector<HTMLElement>('[data-verify-error]')!;
+    const downloadLink = form.querySelector<HTMLAnchorElement>('[data-download-link]')!;
+
+    let isBusy = false;
+    let verifiedValues: { name: string; email: string; mobile: string } | null = null;
+    let resendTimer: ReturnType<typeof setInterval> | null = null;
+
+    function showStep(name: keyof typeof steps) {
+      for (const key of Object.keys(steps) as (keyof typeof steps)[]) {
+        steps[key].hidden = key !== name;
+      }
+    }
+
+    function fieldError(field: string) {
+      return form!.querySelector<HTMLElement>(`[data-error-for="${field}"]`);
+    }
+
+    function setError(input: HTMLInputElement, field: string, message: string) {
+      input.setAttribute('aria-invalid', message ? 'true' : 'false');
+      const el = fieldError(field);
+      if (el) el.textContent = message;
+    }
+
+    function resetAll() {
+      form!.reset();
+      isBusy = false;
+      verifiedValues = null;
+      stopResendCooldown();
+      sendBtn.removeAttribute('disabled');
+      sendBtn.textContent = 'Send Verification Code';
+      verifyBtn.removeAttribute('disabled');
+      verifyBtn.textContent = 'Verify & Download';
+      sendError.hidden = true;
+      sendError.textContent = '';
+      verifyError.hidden = true;
+      verifyError.textContent = '';
+      setError(nameInput, 'name', '');
+      setError(emailInput, 'email', '');
+      setError(mobileInput, 'mobile', '');
+      setError(otpInput, 'otp', '');
+      showStep('details');
+    }
+
+    function validateDetails() {
+      let valid = true;
+
+      const name = nameInput.value.trim();
+      if (name.length < 2) {
+        setError(nameInput, 'name', 'Please enter your full name.');
+        valid = false;
+      } else {
+        setError(nameInput, 'name', '');
+      }
+
+      const email = emailInput.value.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        setError(emailInput, 'email', 'Please enter a valid email address.');
+        valid = false;
+      } else {
+        setError(emailInput, 'email', '');
+      }
+
+      const mobileDigits = mobileInput.value.replace(/[^0-9]/g, '');
+      if (!/^[6-9][0-9]{9}$/.test(mobileDigits)) {
+        setError(mobileInput, 'mobile', 'Please enter a valid 10-digit mobile number.');
+        valid = false;
+      } else {
+        setError(mobileInput, 'mobile', '');
+      }
+
+      return valid ? { name, email, mobile: mobileDigits } : null;
+    }
+
+    function startResendCooldown() {
+      let remaining = RESEND_COOLDOWN_SECONDS;
+      resendBtn.setAttribute('disabled', 'true');
+      resendBtn.textContent = `Resend code (${remaining}s)`;
+      resendTimer = setInterval(() => {
+        remaining -= 1;
+        if (remaining <= 0) {
+          stopResendCooldown();
+        } else {
+          resendBtn.textContent = `Resend code (${remaining}s)`;
+        }
+      }, 1000);
+    }
+
+    function stopResendCooldown() {
+      if (resendTimer) {
+        clearInterval(resendTimer);
+        resendTimer = null;
+      }
+      resendBtn.removeAttribute('disabled');
+      resendBtn.textContent = 'Resend code';
+    }
+
+    async function sendOtp() {
+      const values = validateDetails();
+      if (!values || isBusy) return;
+
+      isBusy = true;
+      sendBtn.setAttribute('disabled', 'true');
+      sendBtn.textContent = 'Sending…';
+      sendError.hidden = true;
+
+      try {
+        const client = await getSupabaseClient();
+        const { error } = await client.auth.signInWithOtp({
+          email: values.email,
+          options: { shouldCreateUser: true },
+        });
+        if (error) throw error;
+
+        verifiedValues = values;
+        sentToEl.textContent = values.email;
+        otpInput.value = '';
+        showStep('verify');
+        startResendCooldown();
+      } catch (err: any) {
+        sendError.textContent =
+          err?.message?.includes('rate limit') || err?.status === 429
+            ? 'Too many requests right now. Please wait a bit and try again.'
+            : 'Could not send the verification code. Please try again.';
+        sendError.hidden = false;
+      } finally {
+        isBusy = false;
+        sendBtn.removeAttribute('disabled');
+        sendBtn.textContent = 'Send Verification Code';
+      }
+    }
+
+    async function verifyOtp() {
+      if (isBusy || !verifiedValues) return;
+
+      const code = otpInput.value.trim();
+      if (!/^[0-9]{8}$/.test(code)) {
+        setError(otpInput, 'otp', 'Enter the 8-digit code from your email.');
+        return;
+      }
+      setError(otpInput, 'otp', '');
+
+      isBusy = true;
+      verifyBtn.setAttribute('disabled', 'true');
+      verifyBtn.textContent = 'Verifying…';
+      verifyError.hidden = true;
+
+      try {
+        const client = await getSupabaseClient();
+        const { error: verifyErr } = await client.auth.verifyOtp({
+          email: verifiedValues.email,
+          token: code,
+          type: 'email',
+        });
+        if (verifyErr) throw verifyErr;
+
+        // Best-effort lead capture — a failure here must not block a
+        // verified visitor from getting the brochure they were promised.
+        try {
+          await client.from('marketing_leads').insert({
+            name: verifiedValues.name,
+            email: verifiedValues.email,
+            mobile: verifiedValues.mobile,
+            program: PROGRAM_NAME,
+            source: LEAD_SOURCE,
+          });
+        } catch {
+          // Swallowed intentionally — see comment above.
+        }
+
+        // Verifying an OTP signs the browser in as a real auth user. This
+        // project's legacy student/assistant dashboards trust any active
+        // Supabase session, so a brochure download must never leave one
+        // behind.
+        await client.auth.signOut();
+
+        showStep('success');
+        downloadLink.focus();
+        // Kick off the download automatically; the visible link is the
+        // fallback if the browser blocks the programmatic click.
+        const auto = document.createElement('a');
+        auto.href = downloadLink.href;
+        auto.setAttribute('download', '');
+        document.body.appendChild(auto);
+        auto.click();
+        auto.remove();
+      } catch (err: any) {
+        verifyError.textContent = 'That code didn’t work. Check it and try again, or resend a new code.';
+        verifyError.hidden = false;
+      } finally {
+        isBusy = false;
+        verifyBtn.removeAttribute('disabled');
+        verifyBtn.textContent = 'Verify & Download';
+      }
+    }
+
+    sendBtn.addEventListener('click', sendOtp);
+    verifyBtn.addEventListener('click', verifyOtp);
+    backBtn.addEventListener('click', () => {
+      stopResendCooldown();
+      showStep('details');
+    });
+    resendBtn.addEventListener('click', () => {
+      if (!resendBtn.hasAttribute('disabled')) sendOtp();
+    });
+
+    form.addEventListener('submit', (e) => e.preventDefault());
+
+    document.querySelectorAll<HTMLElement>('[data-brochure-trigger]').forEach((trigger) => {
+      trigger.addEventListener('click', () => {
+        resetAll();
+        dialog.showModal();
+      });
+    });
+
+    form.querySelectorAll('[data-brochure-close]').forEach((btn) => {
+      btn.addEventListener('click', () => dialog.close());
+    });
+
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) dialog.close();
+    });
+  }
+</script>

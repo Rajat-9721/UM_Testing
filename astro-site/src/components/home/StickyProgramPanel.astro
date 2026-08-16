@@ -25,7 +25,10 @@ const { name, facts } = Astro.props;
 
   <div class="panel-ctas">
     <Button href="#enquire" variant="primary" class="panel-btn">Enquire Now</Button>
-    <Button href="/downloads/spit-ai-certification-brochure.pdf" variant="outline" class="panel-btn">
+    <Button type="button" variant="outline" class="panel-btn" id="notify-me-trigger">
+      Notify Me for Next Batch
+    </Button>
+    <Button type="button" variant="outline" class="panel-btn" data-brochure-trigger>
       Download Brochure
     </Button>
   </div>
@@ -36,6 +39,54 @@ const { name, facts } = Astro.props;
     <a href="mailto:pranav.nerurkar@spit.ac.in">pranav.nerurkar@spit.ac.in</a>
   </div>
 </aside>
+
+<dialog id="notify-me-dialog" class="notify-dialog">
+  <form id="notify-me-form" class="notify-form" novalidate>
+    <button type="button" class="notify-close" id="notify-me-close" aria-label="Close">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+    </button>
+
+    <div class="notify-body" data-notify-form-body>
+      <h3 class="notify-title">Notify me for the next batch</h3>
+      <p class="notify-subtitle">
+        Leave your details and our team will reach out with the next batch schedule for the
+        Professional Certification in AI.
+      </p>
+
+      <div class="notify-field">
+        <label for="notify-name">Full Name</label>
+        <input id="notify-name" name="name" type="text" autocomplete="name" required />
+        <span class="notify-error" data-error-for="name"></span>
+      </div>
+
+      <div class="notify-field">
+        <label for="notify-email">Email</label>
+        <input id="notify-email" name="email" type="email" autocomplete="email" required />
+        <span class="notify-error" data-error-for="email"></span>
+      </div>
+
+      <div class="notify-field">
+        <label for="notify-mobile">Mobile Number</label>
+        <input id="notify-mobile" name="mobile" type="tel" inputmode="numeric" autocomplete="tel" placeholder="10-digit mobile number" required />
+        <span class="notify-error" data-error-for="mobile"></span>
+      </div>
+
+      <p class="notify-submit-error" data-submit-error hidden></p>
+
+      <div class="notify-actions">
+        <button type="button" class="notify-cancel" data-notify-cancel>Cancel</button>
+        <Button type="submit" variant="primary" class="notify-submit-btn" id="notify-submit-btn">
+          Notify Me
+        </Button>
+      </div>
+    </div>
+
+    <div class="notify-success" data-notify-success hidden>
+      <p>Thank you! Our team will contact you with the next batch details.</p>
+      <button type="button" class="notify-cancel" data-notify-close-success>Close</button>
+    </div>
+  </form>
+</dialog>
 
 <style>
   .panel {
@@ -117,4 +168,293 @@ const { name, facts } = Astro.props;
       position: static;
     }
   }
+
+  /* Notify Me modal — reuses the site's card border/shadow/radius language
+     rather than inventing new modal chrome. */
+  .notify-dialog {
+    padding: 0;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    width: min(420px, 92vw);
+    max-height: min(600px, 88vh);
+    overflow: hidden auto;
+  }
+
+  .notify-dialog::backdrop {
+    background: rgba(22, 34, 28, 0.55);
+  }
+
+  .notify-form {
+    position: relative;
+    padding: var(--space-8) var(--space-6) var(--space-6);
+  }
+
+  .notify-close {
+    position: absolute;
+    top: var(--space-4);
+    right: var(--space-4);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-full);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: var(--transition-fast);
+  }
+
+  .notify-close:hover {
+    background: var(--color-bg-subtle);
+    color: var(--color-primary);
+  }
+
+  .notify-title {
+    font-size: var(--text-xl);
+    color: var(--color-primary);
+    margin-bottom: var(--space-2);
+    padding-right: var(--space-8);
+  }
+
+  .notify-subtitle {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-6);
+  }
+
+  .notify-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    margin-bottom: var(--space-4);
+  }
+
+  .notify-field label {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+  }
+
+  .notify-field input {
+    font-family: inherit;
+    font-size: var(--text-base);
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg);
+    color: var(--color-text);
+  }
+
+  .notify-field input:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
+  }
+
+  .notify-field input[aria-invalid='true'] {
+    border-color: var(--color-danger);
+  }
+
+  .notify-error {
+    font-size: var(--text-xs);
+    color: var(--color-danger);
+    min-height: 1em;
+  }
+
+  .notify-submit-error {
+    font-size: var(--text-sm);
+    color: var(--color-danger);
+    margin-bottom: var(--space-4);
+  }
+
+  .notify-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
+  }
+
+  .notify-cancel {
+    font-family: inherit;
+    font-size: var(--text-base);
+    font-weight: 600;
+    background: transparent;
+    border: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .notify-cancel:hover {
+    color: var(--color-primary);
+  }
+
+  .notify-form :global(.notify-submit-btn) {
+    min-width: 140px;
+  }
+
+  .notify-form :global(.notify-submit-btn[disabled]) {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .notify-success {
+    padding: var(--space-8) var(--space-6);
+    text-align: center;
+  }
+
+  .notify-success p {
+    color: var(--color-text);
+    font-size: var(--text-lg);
+    margin-bottom: var(--space-6);
+  }
+
+  @media (max-width: 480px) {
+    .notify-form {
+      padding: var(--space-6) var(--space-5) var(--space-5);
+    }
+  }
 </style>
+
+<script>
+  const SUPABASE_URL = 'https://ohytjcwcmzalftmsdvbq.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_ApiQJQ2W-sfMo7i3jl_NSw_0eWMvVmF';
+  const PROGRAM_NAME = 'Professional Certification in AI';
+  const LEAD_SOURCE = 'next_batch_notify';
+
+  let supabaseClientPromise: Promise<any> | null = null;
+  function getSupabaseClient() {
+    if (!supabaseClientPromise) {
+      supabaseClientPromise = import('https://esm.sh/@supabase/supabase-js@2').then(
+        ({ createClient }) => createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      );
+    }
+    return supabaseClientPromise;
+  }
+
+  const trigger = document.getElementById('notify-me-trigger') as HTMLButtonElement | null;
+  const dialog = document.getElementById('notify-me-dialog') as HTMLDialogElement | null;
+  const form = document.getElementById('notify-me-form') as HTMLFormElement | null;
+  const closeBtn = document.getElementById('notify-me-close');
+  const submitBtn = document.getElementById('notify-submit-btn') as HTMLButtonElement | null;
+  const formBody = form?.querySelector<HTMLElement>('[data-notify-form-body]');
+  const successPanel = form?.querySelector<HTMLElement>('[data-notify-success]');
+  const submitError = form?.querySelector<HTMLElement>('[data-submit-error]');
+
+  if (trigger && dialog && form && submitBtn && formBody && successPanel && submitError) {
+    const nameInput = form.elements.namedItem('name') as HTMLInputElement;
+    const emailInput = form.elements.namedItem('email') as HTMLInputElement;
+    const mobileInput = form.elements.namedItem('mobile') as HTMLInputElement;
+    let isSubmitting = false;
+
+    function fieldError(field: string) {
+      return form!.querySelector<HTMLElement>(`[data-error-for="${field}"]`);
+    }
+
+    function setError(input: HTMLInputElement, field: string, message: string) {
+      input.setAttribute('aria-invalid', message ? 'true' : 'false');
+      const el = fieldError(field);
+      if (el) el.textContent = message;
+    }
+
+    function resetDialogState() {
+      form!.reset();
+      isSubmitting = false;
+      submitBtn!.removeAttribute('disabled');
+      submitBtn!.textContent = 'Notify Me';
+      submitError!.hidden = true;
+      submitError!.textContent = '';
+      setError(nameInput, 'name', '');
+      setError(emailInput, 'email', '');
+      setError(mobileInput, 'mobile', '');
+      formBody!.hidden = false;
+      successPanel!.hidden = true;
+    }
+
+    function validate() {
+      let valid = true;
+
+      const name = nameInput.value.trim();
+      if (name.length < 2) {
+        setError(nameInput, 'name', 'Please enter your full name.');
+        valid = false;
+      } else {
+        setError(nameInput, 'name', '');
+      }
+
+      const email = emailInput.value.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        setError(emailInput, 'email', 'Please enter a valid email address.');
+        valid = false;
+      } else {
+        setError(emailInput, 'email', '');
+      }
+
+      const mobileDigits = mobileInput.value.replace(/[^0-9]/g, '');
+      if (!/^[6-9][0-9]{9}$/.test(mobileDigits)) {
+        setError(mobileInput, 'mobile', 'Please enter a valid 10-digit mobile number.');
+        valid = false;
+      } else {
+        setError(mobileInput, 'mobile', '');
+      }
+
+      return valid ? { name, email, mobile: mobileDigits } : null;
+    }
+
+    trigger.addEventListener('click', () => {
+      resetDialogState();
+      dialog.showModal();
+    });
+
+    closeBtn?.addEventListener('click', () => dialog.close());
+    form.querySelectorAll('[data-notify-cancel], [data-notify-close-success]').forEach((btn) => {
+      btn.addEventListener('click', () => dialog.close());
+    });
+
+    // Native <dialog> backdrop click: only the dialog element itself is the
+    // click target when the click lands outside the form content.
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) dialog.close();
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (isSubmitting) return;
+
+      const values = validate();
+      if (!values) return;
+
+      isSubmitting = true;
+      submitBtn.setAttribute('disabled', 'true');
+      submitBtn.textContent = 'Submitting…';
+      submitError.hidden = true;
+
+      try {
+        const client = await getSupabaseClient();
+        const { error } = await client.from('marketing_leads').insert({
+          name: values.name,
+          email: values.email,
+          mobile: values.mobile,
+          program: PROGRAM_NAME,
+          source: LEAD_SOURCE,
+        });
+
+        if (error) throw error;
+
+        formBody.hidden = true;
+        successPanel.hidden = false;
+      } catch (err) {
+        submitError.textContent = 'Something went wrong while submitting. Please try again.';
+        submitError.hidden = false;
+        isSubmitting = false;
+        submitBtn.removeAttribute('disabled');
+        submitBtn.textContent = 'Notify Me';
+      }
+    });
+  }
+</script>

@@ -5,7 +5,7 @@ import Section from '../Section.astro';
 const faqs = [
   {
     q: 'Is the AI Certification program online or offline?',
-    a: 'It runs as a live online certification course. An offline center is also available in Borivali (East), Mumbai.',
+    a: 'It runs as an offline certification course at SPIT, Andheri (West), Mumbai.',
   },
   {
     q: 'Will session recordings be provided?',
@@ -30,7 +30,7 @@ const faqs = [
 ];
 ---
 
-<Section theme="light" id="faq">
+<Section theme="subtle" id="faq">
   <Container>
     <p class="kicker" data-reveal>FAQ</p>
     <h2 data-reveal>Common questions about the AI Certification program</h2>
@@ -74,15 +74,16 @@ const faqs = [
   }
 
   .faq-item {
+    background: var(--color-bg);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     padding: var(--space-4) var(--space-5);
-    transition: border-color 250ms ease, background-color 250ms ease;
+    transition: border-color 250ms ease, box-shadow 250ms ease;
   }
 
   .faq-item:hover {
     border-color: var(--color-accent);
-    background: var(--color-bg-subtle);
+    box-shadow: var(--shadow-sm);
   }
 
   .faq-item summary {

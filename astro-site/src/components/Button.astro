@@ -9,16 +9,17 @@ interface Props {
   variant?: 'primary' | 'accent' | 'outline' | 'outline-white';
   type?: 'button' | 'submit' | 'reset';
   class?: string;
+  id?: string;
 }
 
-const { href, variant = 'primary', type = 'button', class: className = '' } = Astro.props;
+const { href, variant = 'primary', type = 'button', class: className = '', id, ...rest } = Astro.props;
 const Tag = href ? 'a' : 'button';
 const extraAttrs = href
   ? {}
   : { type };
 ---
 
-<Tag class={`btn btn-${variant} ${className}`} href={href} {...extraAttrs}>
+<Tag class={`btn btn-${variant} ${className}`} href={href} id={id} {...extraAttrs} {...rest}>
   <slot />
 </Tag>
 
