@@ -24,3 +24,9 @@ CREATE POLICY "Public can submit a marketing lead" ON public.marketing_leads
     FOR INSERT
     TO anon, authenticated
     WITH CHECK (true);
+
+-- Added for the "Book a Free Demo Lecture" bar — optional, so it stays
+-- nullable rather than breaking the existing brochure/notify-me inserts
+-- that don't send it.
+ALTER TABLE public.marketing_leads
+    ADD COLUMN IF NOT EXISTS education_status TEXT;

@@ -4,20 +4,35 @@ import Container from './Container.astro';
 import Nav from './Nav.astro';
 import Button from './Button.astro';
 import logo from '../assets/brand/logo-transparent.png';
+import spitLogo from '../assets/brand/spit-logo.png';
 ---
 
 <header class="header" id="main-header">
   <Container class="header__inner">
-    <a href="/" class="logo" aria-label="Utkarsh Minds — home">
-      <Image
-        src={logo}
-        alt="Utkarsh Minds"
-        height={60}
-        densities={[1, 2]}
-        loading="eager"
-        fetchpriority="high"
-      />
-    </a>
+    <div class="logo-group">
+      <a href="/" class="logo" aria-label="Utkarsh Minds — home">
+        <Image
+          src={logo}
+          alt="Utkarsh Minds"
+          height={60}
+          densities={[1, 2]}
+          loading="eager"
+          fetchpriority="high"
+        />
+      </a>
+
+      <span class="logo-divider" aria-hidden="true" />
+
+      <a
+        href="https://www.spit.ac.in/"
+        class="logo logo--partner"
+        target="_blank"
+        rel="noopener"
+        aria-label="Sardar Patel Institute of Technology (SPIT) — academic partner"
+      >
+        <Image src={spitLogo} alt="SPIT — Sardar Patel Institute of Technology" height={48} densities={[1, 2]} loading="eager" />
+      </a>
+    </div>
 
     <Nav />
 
@@ -72,6 +87,13 @@ import logo from '../assets/brand/logo-transparent.png';
     min-height: 80px;
   }
 
+  .logo-group {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    flex-shrink: 0;
+  }
+
   .logo {
     display: flex;
     align-items: center;
@@ -82,6 +104,35 @@ import logo from '../assets/brand/logo-transparent.png';
     height: 60px;
     width: auto;
     display: block;
+  }
+
+  .logo-divider {
+    width: 1px;
+    height: 36px;
+    background: var(--color-border);
+    flex-shrink: 0;
+  }
+
+  .logo--partner :global(img) {
+    height: 48px;
+  }
+
+  @media (max-width: 560px) {
+    .logo-group {
+      gap: var(--space-2);
+    }
+
+    .logo :global(img) {
+      height: 44px;
+    }
+
+    .logo-divider {
+      height: 28px;
+    }
+
+    .logo--partner :global(img) {
+      height: 36px;
+    }
   }
 
   .header-actions {

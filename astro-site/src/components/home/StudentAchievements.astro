@@ -6,32 +6,83 @@ import Section from '../Section.astro';
 import aaditHire from '../../assets/achievements/aadit-hire.png';
 import virenNagrani from '../../assets/achievements/viren-nagrani.png';
 import parthGandhi from '../../assets/achievements/parth-gandhi.png';
+import parishaBhatia from '../../assets/achievements/parisha-bhatia.png';
+import tanmayPal from '../../assets/achievements/tanmay-pal.png';
+import miteshGohil from '../../assets/achievements/mitesh-gohil.png';
+import mitheshRamachandran from '../../assets/achievements/mithesh-ramachandran.png';
+import heetanshJhaveri from '../../assets/achievements/heetansh-jhaveri.png';
+import jenilGathani from '../../assets/achievements/jenil-gathani.png';
 
 /**
- * Source of truth: "Website details (1).pdf", pages 10-11 — Student
- * Achievements. Only the three entries with an explicit, unambiguous
- * one-line fact in the PDF are included here (per client direction);
- * name-only certificate photos and company/faculty recognitions were
- * deliberately left out rather than inferred.
+ * Source of truth: "Website details (1).pdf", pages 10-11 (first three
+ * entries) plus names/roles/companies/LinkedIn URLs given directly by
+ * the client for the rest. `linkedin` is only set where a profile URL
+ * was actually confirmed — Aadit Hire and Viren Nagrani's weren't
+ * found, so their names render as plain text instead of a link.
  */
 const achievements = [
   {
     name: 'Aadit Hire',
     tag: 'Startup Founder',
-    caption: 'Aadit Hire, one of our students, has started his own startup — a proud milestone in his journey.',
+    caption: 'has started his own startup — choosing to build something of his own straight out of the program.',
     image: aaditHire,
+    linkedin: null,
   },
   {
     name: 'Viren Nagrani',
     tag: 'Placed at OneInsure',
-    caption: 'Viren Nagrani, our student, has successfully cleared the interview with OneInsure — a proud placement milestone.',
+    caption: 'cleared his interview with OneInsure — another placement win for the cohort.',
     image: virenNagrani,
+    linkedin: null,
   },
   {
     name: 'Parth Gandhi',
     tag: 'Placed at Delhivery',
-    caption: 'Parth Gandhi, our student, has successfully cleared the interview with Delhivery — another great placement success.',
+    caption: 'landed his placement at Delhivery after a standout interview performance.',
     image: parthGandhi,
+    linkedin: 'https://www.linkedin.com/in/parth-gandhi-120b36273/',
+  },
+  {
+    name: 'Mithesh Ramachandran',
+    tag: 'Business Data Analyst · University of Southern California',
+    caption: 'carried his data foundations all the way to USC, where he now works as a Business Data Analyst.',
+    image: mitheshRamachandran,
+    linkedin: 'https://www.linkedin.com/in/259mit/',
+  },
+  {
+    name: 'Heetansh Jhaveri',
+    tag: 'Business Analyst · Media.net',
+    caption: 'is driving business decisions with data as a Business Analyst at Media.net.',
+    image: heetanshJhaveri,
+    linkedin: 'https://www.linkedin.com/in/heetansh-jhaveri/',
+  },
+  {
+    name: 'Parisha Bhatia',
+    tag: 'Data Science Manager · HDFC Bank',
+    caption: 'went from our classroom to the boardroom, now serving as a Data Science Manager at HDFC Bank.',
+    image: parishaBhatia,
+    linkedin: 'https://www.linkedin.com/in/parisha-bhatia/',
+  },
+  {
+    name: 'Tanmay Pal',
+    tag: 'Senior Data Scientist · YASH Technologies',
+    caption: 'has grown into a Senior Data Scientist role at YASH Technologies.',
+    image: tanmayPal,
+    linkedin: 'https://www.linkedin.com/in/tanmay-pal-552056103/',
+  },
+  {
+    name: 'Mitesh Gohil',
+    tag: 'Senior Product Manager · Quantiphi',
+    caption: 'now shapes product strategy as a Senior Product Manager at Quantiphi.',
+    image: miteshGohil,
+    linkedin: 'https://www.linkedin.com/in/mitesh-gohil-a46087bb/',
+  },
+  {
+    name: 'Jenil Gathani',
+    tag: 'Senior Data Scientist · Marsh',
+    caption: 'has stepped up to a Senior Data Scientist role at Marsh.',
+    image: jenilGathani,
+    linkedin: 'https://www.linkedin.com/in/jenilgathani/',
   },
 ];
 ---
@@ -50,7 +101,13 @@ const achievements = [
                 <p class="panel-tag">{a.tag}</p>
                 <h3>{a.name}</h3>
                 <span class="panel-rule" aria-hidden="true" />
-                <p class="panel-caption">{a.caption}</p>
+                <p class="panel-caption">
+                  {a.linkedin ? (
+                    <a href={a.linkedin} target="_blank" rel="noopener noreferrer" class="name-link">{a.name}</a>
+                  ) : (
+                    a.name
+                  )}{' '}{a.caption}
+                </p>
               </div>
               <div class="panel-photo">
                 <div class="panel-photo-frame">
@@ -180,6 +237,21 @@ const achievements = [
     max-width: 34ch;
     font-family: var(--font-display);
     line-height: 1.7;
+  }
+
+  .name-link {
+    color: var(--color-primary-dark);
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-color: var(--color-golden-subtle);
+    text-underline-offset: 3px;
+    transition: var(--transition-fast);
+  }
+
+  .name-link:hover,
+  .name-link:focus-visible {
+    color: var(--color-accent-dark);
+    text-decoration-color: var(--color-accent);
   }
 
   .panel-photo {

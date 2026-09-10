@@ -3,13 +3,24 @@ import Container from '../Container.astro';
 import Section from '../Section.astro';
 import StickyProgramPanel from './StickyProgramPanel.astro';
 
+/**
+ * Source of truth: "Professional_Certification_AI_Agentic_AI_FAQ.pdf",
+ * "Revised Curriculum – 200 Hours" table. Matches the official brochure
+ * figures exactly, module-for-module — including the total.
+ */
 const modules = [
-  { name: 'Python Programming', hours: 30 },
-  { name: 'Statistics for Python', hours: 30 },
+  { name: 'Python Programming', hours: 20 },
+  { name: 'Statistics in Python', hours: 20 },
   { name: 'Machine Learning', hours: 30 },
-  { name: 'Deep Learning, Computer Vision & NLP', hours: 60 },
-  { name: 'Generative AI, Power BI & Big Data', hours: 60 },
+  { name: 'Deep Learning', hours: 20 },
+  { name: 'Natural Language Processing', hours: 20 },
+  { name: 'Generative AI + Agentic AI', hours: 25 },
+  { name: 'Computer Vision', hours: 20 },
+  { name: 'Power BI', hours: 20 },
+  { name: 'Big Data', hours: 20 },
+  { name: 'Interview Preparation + Resume Building + Soft Skills Training', hours: 5 },
 ];
+const totalHours = modules.reduce((sum, m) => sum + m.hours, 0);
 
 const highlights = [
   'Hybrid delivery — offline at SPIT, or live online via Google Meet',
@@ -28,28 +39,21 @@ const panelFacts = [
 
 <Section theme="light" id="programs">
   <Container>
-    <p class="kicker" data-reveal>Flagship Program</p>
-    <h2 class="spotlight-title" data-reveal>Professional Certification in Artificial Intelligence</h2>
-    <p class="partner-line" data-reveal>
-      In academic partnership with <strong>Sardar Patel Institute of Technology (SPIT)</strong>,
-      Bhavan's Campus, Mumbai.
-    </p>
-
     <div class="spotlight">
       <div class="spotlight-main">
+        <p class="kicker" data-reveal>Flagship Program</p>
+        <h2 class="spotlight-title" data-reveal>Professional Certification in Artificial Intelligence</h2>
+        <p class="partner-line" data-reveal>
+          In academic partnership with <strong>Sardar Patel Institute of Technology (SPIT)</strong>,
+          Bhavan's Campus, Mumbai.
+        </p>
+
         <ul class="highlight-list" data-reveal>
           {highlights.map((h) => <li>{h}</li>)}
         </ul>
 
         <div class="curriculum" data-reveal>
-          <div class="curriculum-header">
-            <h3>Curriculum</h3>
-            <p class="curriculum-note">
-              Individual module hours below are as stated in the official program brochure. The
-              brochure's own summary figure differs from the sum of these modules — we're
-              confirming the correct total with the institute before publishing one.
-            </p>
-          </div>
+          <h3>Curriculum</h3>
           <ul class="module-list" data-reveal-group>
             {
               modules.map((m) => (
@@ -59,6 +63,10 @@ const panelFacts = [
                 </li>
               ))
             }
+            <li class="module-total">
+              <span class="module-name">Total</span>
+              <span class="module-hours">{totalHours} hrs</span>
+            </li>
           </ul>
         </div>
       </div>
@@ -121,16 +129,9 @@ const panelFacts = [
     background: var(--color-accent);
   }
 
-  .curriculum-header h3 {
+  .curriculum h3 {
     font-size: var(--text-lg);
-    margin-bottom: var(--space-3);
-  }
-
-  .curriculum-note {
-    font-size: var(--text-sm);
-    color: var(--color-text-muted);
-    max-width: 60ch;
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-4);
   }
 
   .module-list {
@@ -149,6 +150,16 @@ const panelFacts = [
 
   .module-list li:first-child {
     border-top: 1px solid var(--color-border);
+  }
+
+  .module-total {
+    border-bottom: none !important;
+  }
+
+  .module-total .module-name,
+  .module-total .module-hours {
+    color: var(--color-primary-dark);
+    font-weight: 700;
   }
 
   .module-name {

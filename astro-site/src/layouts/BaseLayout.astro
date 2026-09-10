@@ -1,6 +1,7 @@
 ---
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import DemoBookingBar from '../components/DemoBookingBar.astro';
 import '../styles/global.css';
 
 interface Props {
@@ -30,6 +31,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
+    <DemoBookingBar />
     <Header />
     <main id="main-content">
       <slot />
