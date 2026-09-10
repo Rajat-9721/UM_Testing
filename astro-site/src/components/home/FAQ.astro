@@ -1,31 +1,52 @@
 ---
 import Container from '../Container.astro';
 import Section from '../Section.astro';
+import FAQAccordion from '../FAQAccordion.astro';
 
 const faqs = [
   {
-    q: 'Is the AI Certification program online or offline?',
-    a: 'It runs as an offline certification course at SPIT, Andheri (West), Mumbai.',
+    q: 'Do I need prior programming knowledge?',
+    a: 'No. Basic computer knowledge is sufficient.',
   },
   {
-    q: 'Will session recordings be provided?',
-    a: 'Yes, recordings are given so you can revisit any session.',
+    q: 'Who can join the course?',
+    a: 'Students pursuing graduation, diploma holders, graduates, postgraduates/PGDM, PhD scholars and working professionals can join.',
   },
   {
-    q: 'Can I change my batch?',
-    a: 'Yes, batch changes are allowed.',
+    q: 'What does the course cover?',
+    a: 'Python, Statistics, Machine Learning, Deep Learning, NLP, Generative AI + Agentic AI, Computer Vision, Power BI, Big Data and career preparation.',
   },
   {
-    q: 'What if I miss a lecture?',
-    a: 'Revision is provided if a lecture is missed.',
+    q: 'What is the course duration?',
+    a: '200 hours.',
   },
   {
-    q: 'What do I get with the course — notes, assignments, projects?',
-    a: 'Notes, assignments, quizzes, projects and certification are all included.',
+    q: 'What are the class timings?',
+    a: 'Saturday and Sunday, 9:00 AM to 1:00 PM.',
   },
   {
-    q: 'Is placement assistance included?',
-    a: 'Yes, the program includes placement assistance.',
+    q: 'Where are the classes conducted?',
+    a: "In hybrid mode. Offline at Bhartiya Vidya Bhavan – Sardar Patel Institute of Technology (SPIT), Andheri West Campus, Mumbai – 400058. Students can also join online via Google Meet.",
+  },
+  {
+    q: 'Is internship provided?',
+    a: 'Yes. An internship is guaranteed for every student who successfully completes the training, through SPIT and applicable internship partners.',
+  },
+  {
+    q: 'Is placement assistance provided?',
+    a: 'Yes. 100% Internship and Placement Assistance is provided through SPIT for all eligible participants who successfully complete the training.',
+  },
+  {
+    q: 'How much does the course cost?',
+    a: '₹29,500/-, payable in up to 3 installments.',
+  },
+  {
+    q: 'Is Agentic AI included?',
+    a: 'Yes. Generative AI + Agentic AI is a dedicated 25-hour component.',
+  },
+  {
+    q: 'What happens if I miss a class?',
+    a: 'All lectures are recorded and stored on YouTube for on-demand viewing and self-paced learning.',
   },
 ];
 ---
@@ -35,16 +56,12 @@ const faqs = [
     <p class="kicker" data-reveal>FAQ</p>
     <h2 data-reveal>Common questions about the AI Certification program</h2>
 
-    <div class="faq-list" data-reveal-group>
-      {
-        faqs.map((item) => (
-          <details class="faq-item" data-reveal>
-            <summary>{item.q}</summary>
-            <p>{item.a}</p>
-          </details>
-        ))
-      }
-    </div>
+    <FAQAccordion items={faqs} class="home-faq-list" />
+
+    <a class="view-all" data-reveal href="/faq">
+      View all frequently asked questions
+      <span aria-hidden="true">&rarr;</span>
+    </a>
   </Container>
 </Section>
 
@@ -64,86 +81,31 @@ const faqs = [
     margin-bottom: var(--space-6);
   }
 
-  .faq-list {
+  :global(.home-faq-list) {
     width: 68%;
     max-width: 780px;
     min-width: min(100%, 480px);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
   }
 
-  .faq-item {
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    padding: var(--space-4) var(--space-5);
-    transition: border-color 250ms ease, box-shadow 250ms ease;
-  }
-
-  .faq-item:hover {
-    border-color: var(--color-accent);
-    box-shadow: var(--shadow-sm);
-  }
-
-  .faq-item summary {
-    cursor: pointer;
-    font-size: var(--text-base);
-    font-weight: 600;
-    list-style: none;
-    display: flex;
-    justify-content: space-between;
+  .view-all {
+    display: inline-flex;
     align-items: center;
-    gap: var(--space-4);
-  }
-
-  .faq-item summary::-webkit-details-marker {
-    display: none;
-  }
-
-  .faq-item summary::after {
-    content: '+';
-    font-size: var(--text-lg);
-    color: var(--color-accent);
-    flex-shrink: 0;
+    gap: var(--space-2);
+    margin-top: var(--space-6);
+    font-weight: 600;
+    color: var(--color-primary);
     transition: var(--transition-fast);
   }
 
-  .faq-item[open] summary::after {
-    content: '\2212';
-  }
-
-  /* Native <details> hides non-summary children outright when closed
-     (UA stylesheet `display:none`); overriding that to `block` lets us
-     animate the reveal ourselves via max-height instead of an instant
-     snap open/close. */
-  .faq-item > p {
-    display: block !important;
-    overflow: hidden;
-    max-height: 0;
-    opacity: 0;
-    margin-top: 0;
-    font-size: var(--text-sm);
-    color: var(--color-text-muted);
-    transition: max-height 320ms ease, opacity 250ms ease, margin-top 320ms ease;
-  }
-
-  .faq-item[open] > p {
-    max-height: 160px;
-    opacity: 1;
-    margin-top: var(--space-2);
+  .view-all:hover {
+    color: var(--color-accent);
+    gap: var(--space-3);
   }
 
   @media (max-width: 900px) {
-    .faq-list {
+    :global(.home-faq-list) {
       width: 100%;
       max-width: 100%;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .faq-item > p {
-      transition: none;
     }
   }
 </style>

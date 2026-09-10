@@ -1,0 +1,866 @@
+---
+import DashboardLayout from '../layouts/DashboardLayout.astro';
+import Button from '../components/Button.astro';
+
+const menu = [
+  { label: 'Student Management', target: 'student-management' },
+  { label: 'Programs', target: 'programs' },
+  { label: 'Team', target: 'team' },
+  { label: 'LinkedIn Post Generator', target: 'linkedin-post' },
+];
+const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
+---
+
+<DashboardLayout title="Assistant Dashboard" portalLabel="Assistant Portal" menu={menu} comingSoon={comingSoon}>
+  <div class="dash-header">
+    <h1>Assistant Dashboard</h1>
+  </div>
+
+  <section class="dash-panel active" id="student-management">
+    <div class="toolbar">
+      <input type="text" id="studentSearch" class="search-input" placeholder="Search by name, student ID or email..." />
+      <Button variant="accent" id="openAddStudentBtn">+ Add Student</Button>
+    </div>
+
+    <table class="data-table" id="studentsTable">
+      <thead>
+        <tr>
+          <th>Student ID</th>
+          <th>Name</th>
+          <th>Program</th>
+          <th>Total Fee</th>
+          <th>Paid</th>
+          <th>Balance</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="studentsTableBody">
+        <tr><td colspan="8" class="empty-state">Loading students...</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="dash-panel" id="programs">
+    <div class="toolbar">
+      <p class="dash-muted" style="margin:0;">Programs shown here are what appears in the "Program / Course" picker when registering a student.</p>
+      <Button variant="accent" id="openAddProgramBtn">+ Add Program</Button>
+    </div>
+
+    <table class="data-table" id="programsTable">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Category</th>
+          <th>Price</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="programsTableBody">
+        <tr><td colspan="5" class="empty-state">Loading programs...</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="dash-panel" id="team">
+    <div class="toolbar">
+      <p class="dash-muted" style="margin:0;">Everyone listed here has full assistant access — student records, payments and program management.</p>
+      <Button variant="accent" id="openAddAssistantBtn">+ Add Assistant</Button>
+    </div>
+
+    <table class="data-table" id="assistantsTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Added On</th>
+        </tr>
+      </thead>
+      <tbody id="assistantsTableBody">
+        <tr><td colspan="4" class="empty-state">Loading team...</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="dash-panel" id="linkedin-post">
+    <h2>LinkedIn Post Generator</h2>
+    <p class="dash-muted" style="margin-bottom: 1.25rem;">
+      This is a placeholder tool for drafting announcement text. It is not connected to LinkedIn
+      and does not use AI generation — a real content-generation module is a future module.
+    </p>
+    <form id="linkedinPostForm">
+      <div class="form-group">
+        <label for="postTopic">Topic / Key Points</label>
+        <textarea id="postTopic" rows="4" required placeholder="e.g., New course launch for Python programming..."></textarea>
+      </div>
+      <Button type="submit" variant="accent">Generate Draft Text</Button>
+    </form>
+    <div id="generatedPost" style="margin-top: 20px; padding: 20px; background: var(--color-bg-subtle); border-radius: 8px; white-space: pre-wrap; display: none;"></div>
+  </section>
+
+  <Fragment slot="modals">
+    <!-- Add Student Modal -->
+    <div class="modal-backdrop" id="addStudentModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>Register New Student</h2>
+          <button class="modal-close" data-close="addStudentModal">&times;</button>
+        </div>
+        <div id="student-alert" class="alert"></div>
+        <form id="createStudentForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="studentFullName">Full Name</label>
+              <input type="text" id="studentFullName" required />
+            </div>
+            <div class="form-group">
+              <label for="studentPhone">Registered Mobile Number</label>
+              <input type="tel" id="studentPhone" required placeholder="+91 XXXXX XXXXX" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="studentEmail">Student Email</label>
+            <input type="email" id="studentEmail" required />
+          </div>
+          <div class="form-group">
+            <label for="studentPassword">Temporary Password</label>
+            <input type="password" id="studentPassword" required minlength="6" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="studentCourse">Program / Course</label>
+              <select id="studentCourse" required></select>
+            </div>
+            <div class="form-group">
+              <label for="studentTotalFee">Total Program Fee (₹)</label>
+              <input type="number" id="studentTotalFee" min="0" step="0.01" required />
+            </div>
+          </div>
+          <Button type="submit" variant="accent" id="createStudentBtn">Create Student</Button>
+        </form>
+      </div>
+    </div>
+
+    <!-- View Student Modal -->
+    <div class="modal-backdrop" id="viewStudentModal">
+      <div class="modal modal-wide">
+        <div class="modal-header">
+          <h2 id="viewStudentName">Student Details</h2>
+          <button class="modal-close" data-close="viewStudentModal">&times;</button>
+        </div>
+        <div id="viewStudentBody">Loading...</div>
+      </div>
+    </div>
+
+    <!-- Record Payment Modal -->
+    <div class="modal-backdrop" id="recordPaymentModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>Record Payment</h2>
+          <button class="modal-close" data-close="recordPaymentModal">&times;</button>
+        </div>
+        <div id="payment-alert" class="alert"></div>
+        <form id="recordPaymentForm">
+          <input type="hidden" id="paymentEnrollmentId" />
+          <div class="form-row">
+            <div class="form-group">
+              <label for="paymentAmount">Amount (₹)</label>
+              <input type="number" id="paymentAmount" min="0.01" step="0.01" required />
+            </div>
+            <div class="form-group">
+              <label for="paymentDate">Payment Date</label>
+              <input type="date" id="paymentDate" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="paymentMethod">Payment Method</label>
+            <select id="paymentMethod" required>
+              <option value="cash">Cash</option>
+              <option value="upi">UPI</option>
+              <option value="netbanking">Net Banking</option>
+              <option value="bank_transfer">Bank Transfer</option>
+              <option value="cheque">Cheque</option>
+            </select>
+          </div>
+
+          <div class="method-fields" data-method="upi,netbanking,bank_transfer">
+            <div class="form-group">
+              <label for="paymentReference">Transaction / UTR / Reference ID</label>
+              <input type="text" id="paymentReference" />
+            </div>
+          </div>
+
+          <div class="method-fields" data-method="cheque">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="chequeNumber">Cheque Number</label>
+                <input type="text" id="chequeNumber" />
+              </div>
+              <div class="form-group">
+                <label for="chequeBank">Bank Name</label>
+                <input type="text" id="chequeBank" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="chequeDate">Cheque Date</label>
+              <input type="date" id="chequeDate" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="paymentNote">Internal Note (optional)</label>
+            <textarea id="paymentNote" rows="2"></textarea>
+          </div>
+
+          <Button type="submit" variant="accent" id="recordPaymentBtn">Record Payment</Button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Manage Enrollment Modal -->
+    <div class="modal-backdrop" id="manageEnrollmentModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h2 id="manageEnrollmentTitle">Manage Enrollment</h2>
+          <button class="modal-close" data-close="manageEnrollmentModal">&times;</button>
+        </div>
+        <div id="enrollment-alert" class="alert"></div>
+        <form id="manageEnrollmentForm">
+          <input type="hidden" id="enrollmentId" />
+          <input type="hidden" id="enrollmentStudentId" />
+          <div class="form-group">
+            <label for="enrollmentCourse">Program / Course</label>
+            <select id="enrollmentCourse" required></select>
+          </div>
+          <div class="form-group">
+            <label for="enrollmentTotalFee">Total Program Fee (₹)</label>
+            <input type="number" id="enrollmentTotalFee" min="0" step="0.01" required />
+          </div>
+          <Button type="submit" variant="accent">Save Changes</Button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Add / Edit Program Modal -->
+    <div class="modal-backdrop" id="programModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h2 id="programModalTitle">Add Program</h2>
+          <button class="modal-close" data-close="programModal">&times;</button>
+        </div>
+        <div id="program-alert" class="alert"></div>
+        <form id="programForm">
+          <input type="hidden" id="programId" />
+          <div class="form-group">
+            <label for="programTitle">Title</label>
+            <input type="text" id="programTitle" required />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="programCategory">Category</label>
+              <input type="text" id="programCategory" required placeholder="e.g., ai, datascience, foundation" />
+            </div>
+            <div class="form-group">
+              <label for="programPrice">Price (₹, optional)</label>
+              <input type="number" id="programPrice" min="0" step="0.01" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="programFaculty">Faculty (optional)</label>
+              <input type="text" id="programFaculty" />
+            </div>
+            <div class="form-group">
+              <label for="programMode">Mode (optional)</label>
+              <input type="text" id="programMode" placeholder="e.g., Online/Offline" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="programBadge">Badge (optional)</label>
+            <input type="text" id="programBadge" placeholder="e.g., Most Popular" />
+          </div>
+          <div class="form-group">
+            <label for="programDescription">Description (optional)</label>
+            <textarea id="programDescription" rows="3"></textarea>
+          </div>
+          <Button type="submit" variant="accent" id="saveProgramBtn">Save Program</Button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Add Assistant Modal -->
+    <div class="modal-backdrop" id="addAssistantModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>Add Assistant</h2>
+          <button class="modal-close" data-close="addAssistantModal">&times;</button>
+        </div>
+        <p class="dash-muted" style="margin-bottom: 1rem;">This grants full assistant access — student records, payments and program management.</p>
+        <div id="assistant-alert" class="alert"></div>
+        <form id="createAssistantForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="assistantFullName">Full Name</label>
+              <input type="text" id="assistantFullName" required />
+            </div>
+            <div class="form-group">
+              <label for="assistantPhone">Mobile Number</label>
+              <input type="tel" id="assistantPhone" required placeholder="+91 XXXXX XXXXX" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="assistantEmail">Email</label>
+            <input type="email" id="assistantEmail" required />
+          </div>
+          <div class="form-group">
+            <label for="assistantPassword">Temporary Password</label>
+            <input type="password" id="assistantPassword" required minlength="6" />
+          </div>
+          <Button type="submit" variant="accent" id="createAssistantBtn">Create Assistant</Button>
+        </form>
+      </div>
+    </div>
+  </Fragment>
+</DashboardLayout>
+
+<script>
+  import { supabase, requireRole, createEphemeralClient } from '../lib/supabase';
+
+  async function init() {
+    const result = await requireRole('assistant');
+    if (!result) return;
+    await loadCourseOptions();
+    await loadStudents();
+    await loadPrograms();
+    await loadAssistants();
+  }
+
+  function openModal(id: string) { document.getElementById(id)?.classList.add('active'); }
+  function closeModal(id: string) { document.getElementById(id)?.classList.remove('active'); }
+
+  // Active-only course list, used by the two enrollment-facing dropdowns
+  // (Add Student, Manage Enrollment). Archived programs still show up
+  // fine everywhere else because past enrollments reference the course
+  // row directly, regardless of is_active.
+  async function loadCourseOptions() {
+    const { data, error } = await supabase.from('courses').select('id, title').eq('is_active', true).order('title');
+    const activeCourses = data || [];
+    const selects = [document.getElementById('studentCourse') as HTMLSelectElement, document.getElementById('enrollmentCourse') as HTMLSelectElement];
+    selects.forEach((select) => {
+      select.innerHTML = activeCourses.length
+        ? activeCourses.map((c) => `<option value="${c.id}">${c.title}</option>`).join('')
+        : '<option value="">No active programs available</option>';
+    });
+    if (error) console.error('Failed to load courses:', error);
+  }
+
+  let studentsCache: any[] = [];
+
+  function formatCurrency(n: number) {
+    return '₹' + Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function statusLabel(status: string) {
+    return ({ UNPAID: 'Unpaid', PARTIALLY_PAID: 'Partially Paid', PAID: 'Paid' } as Record<string, string>)[status] || status;
+  }
+
+  function renderStudentsTable(rows: any[]) {
+    const body = document.getElementById('studentsTableBody')!;
+    if (!rows.length) {
+      body.innerHTML = '<tr><td colspan="8" class="empty-state">No students found.</td></tr>';
+      return;
+    }
+    body.innerHTML = rows.map((r) => `
+      <tr>
+        <td>${r.student_id || '—'}</td>
+        <td>${r.full_name || '—'}</td>
+        <td>${r.program || 'No program assigned'}</td>
+        <td>${formatCurrency(r.total_fee)}</td>
+        <td>${formatCurrency(r.total_paid)}</td>
+        <td>${formatCurrency(r.balance)}</td>
+        <td><span class="status-pill status-${r.status}">${statusLabel(r.status)}</span></td>
+        <td class="row-actions">
+          <button data-action="view" data-id="${r.profile_id}">View</button>
+          ${r.enrollment_id ? `
+            <button data-action="pay" data-enrollment="${r.enrollment_id}">Record Payment</button>
+            <button data-action="enroll" data-enrollment="${r.enrollment_id}" data-course="${r.course_id || ''}" data-fee="${r.total_fee}">Manage Enrollment</button>
+          ` : `
+            <button data-action="assign" data-student="${r.profile_id}">Assign Program</button>
+          `}
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function loadStudents() {
+    const { data, error } = await supabase
+      .from('assistant_student_overview')
+      .select('*')
+      .order('student_id', { ascending: false });
+
+    if (error) {
+      console.error('Failed to load students:', error);
+      document.getElementById('studentsTableBody')!.innerHTML =
+        `<tr><td colspan="8" class="empty-state">Failed to load students: ${error.message}</td></tr>`;
+      return;
+    }
+    studentsCache = data || [];
+    renderStudentsTable(studentsCache);
+  }
+
+  document.getElementById('studentSearch')!.addEventListener('input', (e) => {
+    const term = (e.target as HTMLInputElement).value.trim().toLowerCase();
+    if (!term) { renderStudentsTable(studentsCache); return; }
+    const filtered = studentsCache.filter((r) =>
+      (r.full_name || '').toLowerCase().includes(term) ||
+      (r.student_id || '').toLowerCase().includes(term) ||
+      (r.email || '').toLowerCase().includes(term) ||
+      (r.program || '').toLowerCase().includes(term)
+    );
+    renderStudentsTable(filtered);
+  });
+
+  document.getElementById('studentsTableBody')!.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest('button[data-action]') as HTMLButtonElement | null;
+    if (!btn) return;
+    const action = btn.dataset.action;
+    if (action === 'view') openViewStudent(btn.dataset.id as string);
+    if (action === 'pay') openRecordPayment(btn.dataset.enrollment as string);
+    if (action === 'enroll') openManageEnrollment(btn.dataset.enrollment as string, btn.dataset.course as string, btn.dataset.fee as string);
+    if (action === 'assign') openAssignEnrollment(btn.dataset.student as string);
+  });
+
+  document.getElementById('openAddStudentBtn')!.addEventListener('click', () => openModal('addStudentModal'));
+
+  // Secondary client so the assistant's own session isn't replaced by the new user's session
+  const supabaseSignup = createEphemeralClient();
+
+  document.getElementById('createStudentForm')!.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fullName = (document.getElementById('studentFullName') as HTMLInputElement).value.trim();
+    const phone = (document.getElementById('studentPhone') as HTMLInputElement).value.trim();
+    const email = (document.getElementById('studentEmail') as HTMLInputElement).value.trim();
+    const password = (document.getElementById('studentPassword') as HTMLInputElement).value;
+    const courseId = (document.getElementById('studentCourse') as HTMLSelectElement).value;
+    const totalFee = parseFloat((document.getElementById('studentTotalFee') as HTMLInputElement).value);
+    const btn = document.getElementById('createStudentBtn') as HTMLButtonElement;
+    const alertBox = document.getElementById('student-alert')!;
+
+    btn.disabled = true;
+    btn.textContent = 'Creating...';
+    alertBox.style.display = 'none';
+
+    try {
+      const { data, error } = await supabaseSignup.auth.signUp({ email, password });
+      if (error || !data || !data.user) {
+        throw new Error(error ? error.message : 'Supabase did not return a new user.');
+      }
+
+      const { error: rpcError } = await supabase.rpc('register_student_full', {
+        p_user_id: data.user.id,
+        p_email: email,
+        p_full_name: fullName,
+        p_phone: phone,
+        p_course_id: courseId || null,
+        p_total_fee: totalFee,
+      });
+
+      if (rpcError) throw new Error(rpcError.message);
+
+      alertBox.className = 'alert alert-success';
+      alertBox.textContent = 'Student created successfully.';
+      alertBox.style.display = 'block';
+      (e.target as HTMLFormElement).reset();
+      await loadStudents();
+      setTimeout(() => closeModal('addStudentModal'), 1200);
+    } catch (err) {
+      alertBox.className = 'alert alert-error';
+      alertBox.textContent = (err as Error).message;
+      alertBox.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Create Student';
+    }
+  });
+
+  async function openViewStudent(profileId: string) {
+    openModal('viewStudentModal');
+    const nameEl = document.getElementById('viewStudentName')!;
+    const bodyEl = document.getElementById('viewStudentBody')!;
+    bodyEl.innerHTML = 'Loading...';
+
+    const student = studentsCache.find((s) => s.profile_id === profileId);
+    nameEl.textContent = student ? student.full_name : 'Student Details';
+
+    const { data: payments, error } = await supabase
+      .from('payment_receipts')
+      .select('*')
+      .eq('student_id', profileId)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      bodyEl.innerHTML = `<p class="empty-state">Failed to load payment history: ${error.message}</p>`;
+      return;
+    }
+
+    const summaryHtml = student ? `
+      <div class="summary-grid">
+        <div class="summary-tile"><div class="value">${formatCurrency(student.total_fee)}</div><div class="label">Total Fee</div></div>
+        <div class="summary-tile"><div class="value">${formatCurrency(student.total_paid)}</div><div class="label">Paid</div></div>
+        <div class="summary-tile"><div class="value">${formatCurrency(student.balance)}</div><div class="label">Balance</div></div>
+        <div class="summary-tile"><div class="value">${statusLabel(student.status)}</div><div class="label">Status</div></div>
+      </div>
+      <p class="dash-muted">
+        <strong>Student ID:</strong> ${student.student_id || '—'} &middot;
+        <strong>Email:</strong> ${student.email || '—'} &middot;
+        <strong>Phone:</strong> ${student.phone || '—'} &middot;
+        <strong>Program:</strong> ${student.program || '—'}
+      </p>
+    ` : '';
+
+    const historyHtml = payments && payments.length
+      ? `<table class="data-table">
+          <thead><tr><th>Date</th><th>Amount</th><th>Method</th><th>Receipt #</th><th>Status After</th></tr></thead>
+          <tbody>
+            ${payments.map((p: any) => `
+              <tr>
+                <td>${p.payment_date}</td>
+                <td>${formatCurrency(p.amount)}</td>
+                <td>${p.payment_method}</td>
+                <td>${p.receipt_number}</td>
+                <td>${statusLabel(p.status_after_payment)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>`
+      : '<p class="empty-state">No payments recorded yet.</p>';
+
+    bodyEl.innerHTML = `<h3 style="margin-bottom:8px;">Fee Summary</h3>${summaryHtml}<h3 style="margin:20px 0 8px;">Payment History</h3>${historyHtml}`;
+  }
+
+  function openRecordPayment(enrollmentId: string) {
+    (document.getElementById('recordPaymentForm') as HTMLFormElement).reset();
+    (document.getElementById('paymentEnrollmentId') as HTMLInputElement).value = enrollmentId;
+    (document.getElementById('paymentDate') as HTMLInputElement).valueAsDate = new Date();
+    document.getElementById('payment-alert')!.style.display = 'none';
+    updateMethodFields();
+    openModal('recordPaymentModal');
+  }
+
+  function updateMethodFields() {
+    const method = (document.getElementById('paymentMethod') as HTMLSelectElement).value;
+    document.querySelectorAll<HTMLElement>('.method-fields').forEach((block) => {
+      const methods = (block.dataset.method as string).split(',');
+      block.classList.toggle('active', methods.includes(method));
+    });
+  }
+  document.getElementById('paymentMethod')!.addEventListener('change', updateMethodFields);
+
+  document.getElementById('recordPaymentForm')!.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('recordPaymentBtn') as HTMLButtonElement;
+    const alertBox = document.getElementById('payment-alert')!;
+    const method = (document.getElementById('paymentMethod') as HTMLSelectElement).value;
+
+    let referenceNumber: string | null = null, chequeBank: string | null = null, chequeDate: string | null = null;
+    if (['upi', 'netbanking', 'bank_transfer'].includes(method)) {
+      referenceNumber = (document.getElementById('paymentReference') as HTMLInputElement).value.trim();
+      if (!referenceNumber) {
+        alertBox.className = 'alert alert-error';
+        alertBox.textContent = 'A transaction/reference number is required for this payment method.';
+        alertBox.style.display = 'block';
+        return;
+      }
+    }
+    if (method === 'cheque') {
+      referenceNumber = (document.getElementById('chequeNumber') as HTMLInputElement).value.trim();
+      chequeBank = (document.getElementById('chequeBank') as HTMLInputElement).value.trim();
+      chequeDate = (document.getElementById('chequeDate') as HTMLInputElement).value;
+      if (!referenceNumber || !chequeBank || !chequeDate) {
+        alertBox.className = 'alert alert-error';
+        alertBox.textContent = 'Cheque number, bank name and cheque date are all required.';
+        alertBox.style.display = 'block';
+        return;
+      }
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Recording...';
+    alertBox.style.display = 'none';
+
+    const { error } = await supabase.rpc('record_payment', {
+      p_enrollment_id: (document.getElementById('paymentEnrollmentId') as HTMLInputElement).value,
+      p_amount: parseFloat((document.getElementById('paymentAmount') as HTMLInputElement).value),
+      p_payment_date: (document.getElementById('paymentDate') as HTMLInputElement).value,
+      p_payment_method: method,
+      p_reference_number: referenceNumber,
+      p_cheque_bank_name: chequeBank,
+      p_cheque_date: chequeDate || null,
+      p_internal_note: (document.getElementById('paymentNote') as HTMLTextAreaElement).value.trim() || null,
+    });
+
+    if (error) {
+      alertBox.className = 'alert alert-error';
+      alertBox.textContent = error.message;
+      alertBox.style.display = 'block';
+    } else {
+      alertBox.className = 'alert alert-success';
+      alertBox.textContent = 'Payment recorded and receipt generated.';
+      alertBox.style.display = 'block';
+      await loadStudents();
+      setTimeout(() => closeModal('recordPaymentModal'), 1200);
+    }
+    btn.disabled = false;
+    btn.textContent = 'Record Payment';
+  });
+
+  function openManageEnrollment(enrollmentId: string, currentCourseId: string, currentFee: string) {
+    (document.getElementById('enrollmentId') as HTMLInputElement).value = enrollmentId;
+    (document.getElementById('enrollmentStudentId') as HTMLInputElement).value = '';
+    (document.getElementById('enrollmentCourse') as HTMLSelectElement).value = currentCourseId;
+    (document.getElementById('enrollmentTotalFee') as HTMLInputElement).value = currentFee;
+    document.getElementById('manageEnrollmentTitle')!.textContent = 'Manage Enrollment';
+    document.getElementById('enrollment-alert')!.style.display = 'none';
+    openModal('manageEnrollmentModal');
+  }
+
+  // A student with no enrollment yet has nothing to "update" — this
+  // reuses the same modal/form but creates the enrollment instead.
+  function openAssignEnrollment(studentId: string) {
+    (document.getElementById('manageEnrollmentForm') as HTMLFormElement).reset();
+    (document.getElementById('enrollmentId') as HTMLInputElement).value = '';
+    (document.getElementById('enrollmentStudentId') as HTMLInputElement).value = studentId;
+    document.getElementById('manageEnrollmentTitle')!.textContent = 'Assign Program';
+    document.getElementById('enrollment-alert')!.style.display = 'none';
+    openModal('manageEnrollmentModal');
+  }
+
+  document.getElementById('manageEnrollmentForm')!.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const alertBox = document.getElementById('enrollment-alert')!;
+    const enrollmentId = (document.getElementById('enrollmentId') as HTMLInputElement).value;
+    const studentId = (document.getElementById('enrollmentStudentId') as HTMLInputElement).value;
+    const p_course_id = (document.getElementById('enrollmentCourse') as HTMLSelectElement).value || null;
+    const p_total_fee = parseFloat((document.getElementById('enrollmentTotalFee') as HTMLInputElement).value);
+
+    const { error } = enrollmentId
+      ? await supabase.rpc('update_enrollment', { p_enrollment_id: enrollmentId, p_course_id, p_total_fee })
+      : await supabase.rpc('assign_enrollment', { p_student_id: studentId, p_course_id, p_total_fee });
+
+    if (error) {
+      alertBox.className = 'alert alert-error';
+      alertBox.textContent = error.message;
+      alertBox.style.display = 'block';
+    } else {
+      alertBox.className = 'alert alert-success';
+      alertBox.textContent = 'Enrollment updated.';
+      alertBox.style.display = 'block';
+      await loadStudents();
+      setTimeout(() => closeModal('manageEnrollmentModal'), 1000);
+    }
+  });
+
+  document.getElementById('linkedinPostForm')!.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const topic = (document.getElementById('postTopic') as HTMLTextAreaElement).value;
+    const postText = `Draft text (not AI-generated):\n\n${topic}\n\n#UtkarshMinds #Education`;
+    const output = document.getElementById('generatedPost')!;
+    output.textContent = postText;
+    output.style.display = 'block';
+  });
+
+  // ---- Programs (course catalog) ----
+  let programsCache: any[] = [];
+
+  function renderProgramsTable(rows: any[]) {
+    const body = document.getElementById('programsTableBody')!;
+    if (!rows.length) {
+      body.innerHTML = '<tr><td colspan="5" class="empty-state">No programs yet.</td></tr>';
+      return;
+    }
+    body.innerHTML = rows.map((p) => `
+      <tr>
+        <td>${p.title}</td>
+        <td>${p.category || '—'}</td>
+        <td>${p.price != null ? formatCurrency(p.price) : '—'}</td>
+        <td><span class="status-pill ${p.is_active ? 'status-PAID' : 'status-UNPAID'}">${p.is_active ? 'Active' : 'Archived'}</span></td>
+        <td class="row-actions">
+          <button data-program-action="edit" data-id="${p.id}">Edit</button>
+          <button data-program-action="toggle" data-id="${p.id}" data-active="${p.is_active}">${p.is_active ? 'Archive' : 'Reactivate'}</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function loadPrograms() {
+    const { data, error } = await supabase.from('courses').select('*').order('title');
+    if (error) {
+      console.error('Failed to load programs:', error);
+      document.getElementById('programsTableBody')!.innerHTML =
+        `<tr><td colspan="5" class="empty-state">Failed to load programs: ${error.message}</td></tr>`;
+      return;
+    }
+    programsCache = data || [];
+    renderProgramsTable(programsCache);
+  }
+
+  document.getElementById('programsTableBody')!.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest('button[data-program-action]') as HTMLButtonElement | null;
+    if (!btn) return;
+    if (btn.dataset.programAction === 'edit') openEditProgram(btn.dataset.id as string);
+    if (btn.dataset.programAction === 'toggle') toggleProgramActive(btn.dataset.id as string, btn.dataset.active === 'true');
+  });
+
+  document.getElementById('openAddProgramBtn')!.addEventListener('click', () => {
+    (document.getElementById('programForm') as HTMLFormElement).reset();
+    (document.getElementById('programId') as HTMLInputElement).value = '';
+    document.getElementById('programModalTitle')!.textContent = 'Add Program';
+    document.getElementById('program-alert')!.style.display = 'none';
+    openModal('programModal');
+  });
+
+  function openEditProgram(id: string) {
+    const program = programsCache.find((p) => p.id === id);
+    if (!program) return;
+    (document.getElementById('programId') as HTMLInputElement).value = program.id;
+    (document.getElementById('programTitle') as HTMLInputElement).value = program.title || '';
+    (document.getElementById('programCategory') as HTMLInputElement).value = program.category || '';
+    (document.getElementById('programPrice') as HTMLInputElement).value = program.price ?? '';
+    (document.getElementById('programFaculty') as HTMLInputElement).value = program.faculty || '';
+    (document.getElementById('programMode') as HTMLInputElement).value = program.mode || '';
+    (document.getElementById('programBadge') as HTMLInputElement).value = program.badge || '';
+    (document.getElementById('programDescription') as HTMLTextAreaElement).value = program.description || '';
+    document.getElementById('programModalTitle')!.textContent = 'Edit Program';
+    document.getElementById('program-alert')!.style.display = 'none';
+    openModal('programModal');
+  }
+
+  document.getElementById('programForm')!.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('saveProgramBtn') as HTMLButtonElement;
+    const alertBox = document.getElementById('program-alert')!;
+    const id = (document.getElementById('programId') as HTMLInputElement).value;
+    const priceRaw = (document.getElementById('programPrice') as HTMLInputElement).value;
+
+    const payload = {
+      title: (document.getElementById('programTitle') as HTMLInputElement).value.trim(),
+      category: (document.getElementById('programCategory') as HTMLInputElement).value.trim(),
+      price: priceRaw ? parseFloat(priceRaw) : null,
+      faculty: (document.getElementById('programFaculty') as HTMLInputElement).value.trim() || null,
+      mode: (document.getElementById('programMode') as HTMLInputElement).value.trim() || null,
+      badge: (document.getElementById('programBadge') as HTMLInputElement).value.trim() || null,
+      description: (document.getElementById('programDescription') as HTMLTextAreaElement).value.trim() || null,
+    };
+
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    alertBox.style.display = 'none';
+
+    const { error } = id
+      ? await supabase.from('courses').update(payload).eq('id', id)
+      : await supabase.from('courses').insert(payload);
+
+    if (error) {
+      alertBox.className = 'alert alert-error';
+      alertBox.textContent = error.message;
+      alertBox.style.display = 'block';
+    } else {
+      alertBox.className = 'alert alert-success';
+      alertBox.textContent = 'Program saved.';
+      alertBox.style.display = 'block';
+      await loadPrograms();
+      await loadCourseOptions();
+      setTimeout(() => closeModal('programModal'), 900);
+    }
+    btn.disabled = false;
+    btn.textContent = 'Save Program';
+  });
+
+  async function toggleProgramActive(id: string, currentlyActive: boolean) {
+    const { error } = await supabase.from('courses').update({ is_active: !currentlyActive }).eq('id', id);
+    if (error) {
+      alert('Failed to update program: ' + error.message);
+      return;
+    }
+    await loadPrograms();
+    await loadCourseOptions();
+  }
+
+  // ---- Team (assistant accounts) ----
+  function renderAssistantsTable(rows: any[]) {
+    const body = document.getElementById('assistantsTableBody')!;
+    if (!rows.length) {
+      body.innerHTML = '<tr><td colspan="4" class="empty-state">No assistants found.</td></tr>';
+      return;
+    }
+    body.innerHTML = rows.map((a) => `
+      <tr>
+        <td>${a.full_name || '—'}</td>
+        <td>${a.email || '—'}</td>
+        <td>${a.phone || '—'}</td>
+        <td>${a.created_at ? new Date(a.created_at).toLocaleDateString('en-IN') : '—'}</td>
+      </tr>
+    `).join('');
+  }
+
+  async function loadAssistants() {
+    const { data, error } = await supabase.from('profiles').select('*').eq('role', 'assistant').order('created_at');
+    if (error) {
+      console.error('Failed to load team:', error);
+      document.getElementById('assistantsTableBody')!.innerHTML =
+        `<tr><td colspan="4" class="empty-state">Failed to load team: ${error.message}</td></tr>`;
+      return;
+    }
+    renderAssistantsTable(data || []);
+  }
+
+  document.getElementById('openAddAssistantBtn')!.addEventListener('click', () => openModal('addAssistantModal'));
+
+  document.getElementById('createAssistantForm')!.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fullName = (document.getElementById('assistantFullName') as HTMLInputElement).value.trim();
+    const phone = (document.getElementById('assistantPhone') as HTMLInputElement).value.trim();
+    const email = (document.getElementById('assistantEmail') as HTMLInputElement).value.trim();
+    const password = (document.getElementById('assistantPassword') as HTMLInputElement).value;
+    const btn = document.getElementById('createAssistantBtn') as HTMLButtonElement;
+    const alertBox = document.getElementById('assistant-alert')!;
+
+    btn.disabled = true;
+    btn.textContent = 'Creating...';
+    alertBox.style.display = 'none';
+
+    try {
+      const { data, error } = await supabaseSignup.auth.signUp({ email, password });
+      if (error || !data || !data.user) {
+        throw new Error(error ? error.message : 'Supabase did not return a new user.');
+      }
+
+      const { error: rpcError } = await supabase.rpc('register_assistant', {
+        p_user_id: data.user.id,
+        p_email: email,
+        p_full_name: fullName,
+        p_phone: phone,
+      });
+
+      if (rpcError) throw new Error(rpcError.message);
+
+      alertBox.className = 'alert alert-success';
+      alertBox.textContent = 'Assistant account created successfully.';
+      alertBox.style.display = 'block';
+      (e.target as HTMLFormElement).reset();
+      await loadAssistants();
+      setTimeout(() => closeModal('addAssistantModal'), 1200);
+    } catch (err) {
+      alertBox.className = 'alert alert-error';
+      alertBox.textContent = (err as Error).message;
+      alertBox.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Create Assistant';
+    }
+  });
+
+  init();
+</script>

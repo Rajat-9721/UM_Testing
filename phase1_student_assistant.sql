@@ -326,7 +326,7 @@ begin
     raise exception 'Only assistants can register students';
   end if;
 
-  insert into public.profiles (id, email, full_name, phone, role, student_id, created_by)
+  insert into public.profiles as pr (id, email, full_name, phone, role, student_id, created_by)
   values (
     p_user_id, lower(p_email), p_full_name, p_phone, 'student',
     public.generate_student_id(), auth.uid()
@@ -335,7 +335,7 @@ begin
     email = excluded.email,
     full_name = excluded.full_name,
     phone = excluded.phone
-  returning student_id into v_student_id;
+  returning pr.student_id into v_student_id;
 
   if p_course_id is not null then
     insert into public.enrollments (student_id, course_id, total_fee)

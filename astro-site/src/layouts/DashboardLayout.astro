@@ -1,0 +1,97 @@
+---
+import '../styles/global.css';
+import '../styles/dashboard.css';
+
+interface MenuItem {
+  label: string;
+  target: string;
+}
+
+interface Props {
+  title: string;
+  portalLabel: string;
+  menu: MenuItem[];
+  comingSoon?: string[];
+}
+
+const { title, portalLabel, menu, comingSoon = [] } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title} | Utkarsh Minds</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="generator" content={Astro.generator} />
+  </head>
+  <body>
+    <div class="dash-layout">
+      <aside class="dash-sidebar">
+        <div class="dash-sidebar__header">
+          <a href="/" class="dash-logo">Utkarsh <span>Minds</span></a>
+          <p class="dash-portal-label">{portalLabel}</p>
+        </div>
+
+        <ul class="dash-nav">
+          {menu.map((item, i) => (
+            <li><a href="#" data-target={item.target} class={i === 0 ? 'active' : ''}>{item.label}</a></li>
+          ))}
+        </ul>
+
+        {comingSoon.length > 0 && (
+          <>
+            <p class="dash-nav-label">Coming Soon</p>
+            <ul class="dash-nav">
+              {comingSoon.map((label) => (
+                <li><a href="#" class="dash-nav-disabled">{label} <span class="dash-badge">Soon</span></a></li>
+              ))}
+            </ul>
+          </>
+        )}
+
+        <ul class="dash-nav dash-nav--footer">
+          <li><a href="#" id="logoutBtn" class="dash-nav-danger">Logout</a></li>
+        </ul>
+      </aside>
+
+      <main class="dash-main">
+        <slot />
+      </main>
+    </div>
+
+    <slot name="modals" />
+
+    <script>
+      import { supabase } from '../lib/supabase';
+
+      document.querySelectorAll<HTMLAnchorElement>('.dash-nav a[data-target]').forEach((link) => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          document.querySelectorAll('.dash-nav a').forEach((l) => l.classList.remove('active'));
+          document.querySelectorAll('.dash-panel').forEach((c) => c.classList.remove('active'));
+          link.classList.add('active');
+          document.getElementById(link.dataset.target as string)?.classList.add('active');
+        });
+      });
+
+      document.getElementById('logoutBtn')?.addEventListener('click', async (e) => {
+        e.preventDefault();
+        await supabase.auth.signOut();
+        window.location.href = '/login';
+      });
+
+      document.querySelectorAll<HTMLElement>('[data-close]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.getElementById(btn.dataset.close as string)?.classList.remove('active');
+        });
+      });
+      document.querySelectorAll<HTMLElement>('.modal-backdrop').forEach((backdrop) => {
+        backdrop.addEventListener('click', (e) => {
+          if (e.target === backdrop) backdrop.classList.remove('active');
+        });
+      });
+    </script>
+  </body>
+</html>

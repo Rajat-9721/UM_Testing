@@ -1,0 +1,167 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+import Button from '../components/Button.astro';
+---
+
+<AppLayout title="Login">
+  <div class="login-page">
+    <div class="login-card">
+      <a href="/" class="login-logo">Utkarsh <span>Minds</span></a>
+
+      <div class="login-heading">
+        <h1>Welcome back</h1>
+        <p>Log in to access your dashboard.</p>
+      </div>
+
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <label for="email">Email address</label>
+          <input type="email" id="email" required placeholder="you@example.com" autocomplete="email" />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" required placeholder="••••••••" autocomplete="current-password" />
+        </div>
+
+        <p class="error-msg" id="errorMsg" role="alert"></p>
+
+        <Button type="submit" variant="accent" id="loginBtn" class="login-submit">Login</Button>
+      </form>
+    </div>
+  </div>
+</AppLayout>
+
+<style>
+  .login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-6);
+  }
+
+  .login-card {
+    width: 100%;
+    max-width: 400px;
+    background: #fff;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-10) var(--space-8);
+  }
+
+  .login-logo {
+    display: block;
+    text-align: center;
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    color: var(--color-primary);
+    margin-bottom: var(--space-8);
+  }
+
+  .login-logo span {
+    color: var(--color-accent-dark);
+  }
+
+  .login-heading {
+    text-align: center;
+    margin-bottom: var(--space-8);
+  }
+
+  .login-heading h1 {
+    font-size: var(--text-2xl);
+    color: var(--color-text);
+    margin-bottom: var(--space-2);
+  }
+
+  .login-heading p {
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+  }
+
+  .field {
+    margin-bottom: var(--space-5);
+  }
+
+  .field label {
+    display: block;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: var(--space-2);
+  }
+
+  .field input {
+    width: 100%;
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font: inherit;
+    color: var(--color-text);
+    background: var(--color-bg);
+    transition: var(--transition-fast);
+  }
+
+  .field input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    background: #fff;
+  }
+
+  .error-msg {
+    color: var(--color-danger);
+    font-size: var(--text-sm);
+    margin-bottom: var(--space-4);
+    display: none;
+  }
+
+  :global(.login-submit) {
+    width: 100%;
+  }
+</style>
+
+<script>
+  import { supabase, getTrustedSession, redirectToDashboard } from '../lib/supabase';
+
+  async function checkAuth() {
+    const { session, role } = await getTrustedSession();
+    if (session) redirectToDashboard(role);
+  }
+  checkAuth();
+
+  const form = document.getElementById('loginForm') as HTMLFormElement;
+  const errorMsg = document.getElementById('errorMsg') as HTMLElement;
+  const loginBtn = document.getElementById('loginBtn') as HTMLButtonElement;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = (document.getElementById('email') as HTMLInputElement).value;
+    const password = (document.getElementById('password') as HTMLInputElement).value;
+
+    loginBtn.textContent = 'Logging in…';
+    loginBtn.disabled = true;
+    errorMsg.style.display = 'none';
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        errorMsg.textContent = error.message === 'Email not confirmed'
+          ? 'Email not confirmed. Ask the assistant to confirm this account in Supabase Auth, or disable email confirmation for temporary student accounts.'
+          : error.message;
+        errorMsg.style.display = 'block';
+        loginBtn.textContent = 'Login';
+        loginBtn.disabled = false;
+        return;
+      }
+
+      const { role } = await getTrustedSession();
+      redirectToDashboard(role);
+    } catch (err) {
+      errorMsg.textContent = 'An unexpected error occurred: ' + (err as Error).message;
+      errorMsg.style.display = 'block';
+      loginBtn.textContent = 'Login';
+      loginBtn.disabled = false;
+    }
+  });
+</script>

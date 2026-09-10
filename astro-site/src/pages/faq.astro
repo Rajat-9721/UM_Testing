@@ -1,0 +1,379 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Container from '../components/Container.astro';
+import Section from '../components/Section.astro';
+import Button from '../components/Button.astro';
+import FAQAccordion from '../components/FAQAccordion.astro';
+
+interface FAQItem {
+  q: string;
+  a: string;
+}
+
+interface FAQGroup {
+  id: string;
+  title: string;
+  items: FAQItem[];
+}
+
+const groups: FAQGroup[] = [
+  {
+    id: 'overview',
+    title: 'Program Overview',
+    items: [
+      {
+        q: 'What is the Professional Certification in Artificial Intelligence and Agentic AI?',
+        a: 'The Professional Certification in Artificial Intelligence and Agentic AI is a comprehensive, hands-on program designed to help learners build practical skills in modern Artificial Intelligence. The program covers Python Programming, Statistics in Python, Machine Learning, Deep Learning, Natural Language Processing, Generative AI + Agentic AI, Computer Vision, Power BI, Big Data and career preparation.',
+      },
+      {
+        q: 'Who is this AI certification course designed for?',
+        a: 'The program is suitable for students pursuing graduation, diploma holders, graduates, postgraduates and PGDM students, PhD scholars, working professionals and learners who want to build practical AI skills.',
+      },
+      {
+        q: 'Can students who are currently pursuing graduation join the course?',
+        a: 'Yes. Students currently pursuing graduation can enroll in the program.',
+      },
+      {
+        q: 'Do I need prior programming or AI knowledge?',
+        a: 'No. Prior programming knowledge is not required. Basic computer knowledge is sufficient. The program starts with Python and progressively builds the skills required for Artificial Intelligence.',
+      },
+      {
+        q: 'Is this course suitable for beginners?',
+        a: 'Yes. The learning path progresses from Python and statistics to Machine Learning, Deep Learning, NLP, Generative AI + Agentic AI and other AI technologies.',
+      },
+      {
+        q: 'Is the course useful for working professionals?',
+        a: 'Yes. The Saturday and Sunday schedule, from 9:00 AM to 1:00 PM, is designed to be convenient for working professionals.',
+      },
+      {
+        q: 'Is the course useful for students?',
+        a: 'Yes. The program can complement academic education with practical exposure to AI technologies, projects and career preparation.',
+      },
+      {
+        q: 'What makes this course different from a typical online AI course?',
+        a: 'The program combines structured classroom learning, hands-on implementation, projects, modern Generative AI + Agentic AI, career preparation, internship and placement assistance through SPIT.',
+      },
+      {
+        q: 'What is Utkarsh Minds Technologies?',
+        a: 'Utkarsh Minds Technologies partners with leading enterprises and top-tier academic institutions to co-create industry-relevant learning experiences that drive high-impact outcomes.',
+      },
+    ],
+  },
+  {
+    id: 'curriculum',
+    title: 'Curriculum & Agentic AI',
+    items: [
+      {
+        q: 'What topics are covered in the course?',
+        a: 'The program covers Python Programming, Statistics in Python, Machine Learning, Deep Learning, Natural Language Processing, Generative AI + Agentic AI, Computer Vision, Power BI, Big Data, and Interview Preparation + Resume Building + Soft Skills Training.',
+      },
+      {
+        q: 'Does the course include Machine Learning?',
+        a: 'Yes. Machine Learning is a major component of the program, with practical learning focused on applying ML concepts to datasets and problems.',
+      },
+      {
+        q: 'Does the course include Deep Learning?',
+        a: 'Yes. Deep Learning is included as a dedicated component of the program, with practical applications involving neural networks and model development.',
+      },
+      {
+        q: 'Does the course include Generative AI + Agentic AI?',
+        a: 'Yes. Generative AI + Agentic AI is a dedicated 25-hour component of the 200-hour program.',
+      },
+      {
+        q: 'What topics are covered under Agentic AI?',
+        a: 'The dedicated Agentic AI component covers AI Agents and Agentic Workflows, LLM-based Agents, Tool Calling, Function Calling, Planning and Reasoning, Memory, Multi-Agent Systems, Retrieval-Augmented Generation (RAG), Agent Orchestration, Building Practical AI Agents, and Agent Evaluation and Responsible AI.',
+      },
+      {
+        q: 'What is Agentic AI and why is it included in the course?',
+        a: "Agentic AI focuses on AI systems that can work toward goals through reasoning, planning, tool use and coordinated actions. It extends the learner's understanding beyond conventional AI applications toward practical AI-agent workflows.",
+      },
+      {
+        q: 'Does the course include Natural Language Processing?',
+        a: 'Yes. Natural Language Processing is included in the curriculum, with practical work involving text processing and text-based AI applications.',
+      },
+      {
+        q: 'Does the course include Computer Vision?',
+        a: 'Yes. Computer Vision is covered through practical image-based AI applications.',
+      },
+      {
+        q: 'Is Statistics included in the course?',
+        a: 'Yes. Statistics in Python is a dedicated 20-hour component and supports data analysis, statistical reasoning and Machine Learning.',
+      },
+      {
+        q: 'Is Python taught from the basics?',
+        a: 'Yes. Python is taught as a foundation for the subsequent AI and Machine Learning modules.',
+      },
+      {
+        q: 'Is the course theoretical or practical?',
+        a: 'The program is designed as hands-on classroom training, with practical exercises, assignments and projects supporting the concepts taught.',
+      },
+      {
+        q: 'Will I work on real-world projects?',
+        a: 'Yes. The program includes practical and industry-oriented projects and case studies across AI and related areas.',
+      },
+      {
+        q: 'Will I learn how to build AI applications?',
+        a: 'Yes. The program emphasizes implementation and application of AI concepts through programming, datasets, Machine Learning, Deep Learning, NLP, Computer Vision, Generative AI and Agentic AI.',
+      },
+      {
+        q: 'Does the course include AI model or application deployment?',
+        a: 'Deployment-oriented practical learning is included in the program where applicable to the AI application modules.',
+      },
+    ],
+  },
+  {
+    id: 'schedule',
+    title: 'Schedule, Format & Learning Experience',
+    items: [
+      {
+        q: 'What is the duration of the course?',
+        a: 'The total course duration is 200 hours.',
+      },
+      {
+        q: 'What are the class timings?',
+        a: 'Classes are conducted every Saturday and Sunday from 9:00 AM to 1:00 PM.',
+      },
+      {
+        q: 'Where is the course conducted?',
+        a: 'The course is conducted in hybrid mode — offline at Bhartiya Vidya Bhavan – Sardar Patel Institute of Technology (SPIT), Andheri West Campus, Mumbai – 400058, with the option to join online via Google Meet as well.',
+      },
+      {
+        q: 'What happens if I miss a class?',
+        a: 'All lectures are recorded and stored on YouTube for on-demand viewing and self-paced learning. Students can use the recorded lectures to revise concepts or catch up on sessions they are unable to attend.',
+      },
+      {
+        q: 'Will I receive assignments and practical exercises?',
+        a: 'Yes. Practical exercises and assignments form part of the learning process.',
+      },
+      {
+        q: 'Will I receive study material?',
+        a: 'Yes. Study and learning resources are provided as part of the program.',
+      },
+    ],
+  },
+  {
+    id: 'fees',
+    title: 'Fees & Enrollment',
+    items: [
+      {
+        q: 'How much does the course cost?',
+        a: 'The course fee is ₹29,500/-. The fee is payable in up to 3 installments.',
+      },
+      {
+        q: 'Are installment payments available?',
+        a: 'Yes. The ₹29,500/- course fee can be paid in up to 3 installments. Students can contact the admissions team for the applicable installment schedule.',
+      },
+      {
+        q: 'Do I need to purchase expensive software or AI tools?',
+        a: 'No. Students do not need to purchase expensive software or AI tools to participate in the training.',
+      },
+      {
+        q: 'What is the cancellation and refund policy?',
+        a: 'There is no cancellation or refund after the training starts. Students are advised to review the course details, schedule, eligibility and fee structure carefully before enrollment.',
+      },
+      {
+        q: 'How can I enroll in the course?',
+        a: 'Contact the admissions team for registration, eligibility confirmation, batch availability and payment details.',
+      },
+      {
+        q: 'How can I contact the course team?',
+        a: 'Phone: +91 96199 97797 or +91 77188 49238. Students may contact the course team for admissions, fee, schedule and enrollment information.',
+      },
+    ],
+  },
+  {
+    id: 'career',
+    title: 'Certification, Career & Placement',
+    items: [
+      {
+        q: 'What certificate will I receive?',
+        a: 'Students who successfully complete the training will receive certification from Bhartiya Vidya Bhavan – Sardar Patel Institute of Technology (SPIT).',
+      },
+      {
+        q: 'Is internship provided after the course?',
+        a: 'Yes. An internship is guaranteed for every student who successfully completes the training. Internship opportunities shall be provided through SPIT, and may involve SPIT, Utkarsh Minds Technologies or partner companies. The internship may be paid or unpaid depending on the opportunity.',
+      },
+      {
+        q: 'Is placement assistance provided?',
+        a: 'Yes. 100% Internship and Placement Assistance is provided through SPIT for all eligible participants who successfully complete the training. Placement assistance means support in accessing and pursuing employment opportunities and does not constitute a guarantee of employment.',
+      },
+      {
+        q: 'Will I receive interview preparation?',
+        a: 'Yes. Interview preparation is included in the program as part of the career-readiness component.',
+      },
+      {
+        q: 'Is resume building included?',
+        a: 'Yes. Resume building is included as part of the 5-hour Interview Preparation + Resume Building + Soft Skills Training component.',
+      },
+      {
+        q: 'Is soft-skills training included?',
+        a: 'Yes. Soft-skills training is included in the 5-hour career-readiness component.',
+      },
+      {
+        q: 'What kind of jobs can I target after completing the course?',
+        a: 'Depending on your educational background, skills, projects and interview performance, the course can help prepare you for AI/ML, Data Science, AI development, Generative AI, Agentic AI, Python, Data Analytics, NLP and Computer Vision related opportunities.',
+      },
+      {
+        q: 'Who teaches the course?',
+        a: 'The course is delivered through the academic and training ecosystem associated with SPIT and its training partners, with a focus on practical and industry-relevant learning.',
+      },
+      {
+        q: 'Can I suggest additional AI topics?',
+        a: 'Students may communicate topics that they believe are important for interviews or career preparation to the course team.',
+      },
+    ],
+  },
+];
+---
+
+<BaseLayout
+  title="Frequently Asked Questions"
+  description="Answers to common questions about the Professional Certification in Artificial Intelligence and Agentic AI — curriculum, schedule, fees, certification, internship and placement."
+>
+  <Section theme="subtle" class="faq-hero-section">
+    <Container>
+      <div class="hero-card" data-reveal>
+        <p class="kicker">FAQ</p>
+        <h1>Frequently Asked Questions</h1>
+
+        <nav class="jump-nav" aria-label="Jump to FAQ category">
+          {
+            groups.map((group) => (
+              <a href={`#${group.id}`}>{group.title}</a>
+            ))
+          }
+        </nav>
+      </div>
+    </Container>
+  </Section>
+
+  {
+    groups.map((group, i) => (
+      <Section theme={i % 2 === 0 ? 'light' : 'subtle'} id={group.id} class="faq-group-section">
+        <Container>
+          <h2 data-reveal>{group.title}</h2>
+          <FAQAccordion items={group.items} class="page-faq-list" />
+        </Container>
+      </Section>
+    ))
+  }
+
+  <Section theme="dark" id="faq-contact">
+    <Container>
+      <div class="cta" data-reveal>
+        <div>
+          <h2>Still have questions?</h2>
+          <p>Reach out to the admissions team for enrollment, fees and batch availability.</p>
+        </div>
+
+        <div class="cta-actions">
+          <Button href="https://wa.me/919619997797" variant="accent">WhatsApp Us</Button>
+          <Button href="tel:+917718849238" variant="outline-white">Call +91 77188 49238</Button>
+          <Button href="mailto:pranav.nerurkar@utkarshminds.com" variant="outline-white">
+            Email Us
+          </Button>
+        </div>
+      </div>
+    </Container>
+  </Section>
+</BaseLayout>
+
+<style>
+  :global(.section.faq-hero-section) {
+    padding-block: var(--space-10);
+  }
+
+  :global(.section.faq-group-section) {
+    padding-block: var(--space-12);
+  }
+
+  .hero-card {
+    background-color: #fff;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-6) var(--space-8);
+  }
+
+  .kicker {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-accent-dark);
+    margin-bottom: var(--space-2);
+  }
+
+  h1 {
+    font-size: var(--text-3xl);
+    max-width: 24ch;
+    margin-bottom: var(--space-4);
+    color: var(--color-primary-light);
+  }
+
+  .jump-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .jump-nav a {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    padding: var(--space-1) var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    color: var(--color-secondary);
+    transition: var(--transition-fast);
+  }
+
+  .jump-nav a:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent-dark);
+    background-color: var(--color-bg-subtle);
+  }
+
+  @media (max-width: 768px) {
+    :global(.section.faq-hero-section),
+    :global(.section.faq-group-section) {
+      padding-block: var(--space-8);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .hero-card {
+      padding: var(--space-5) var(--space-4);
+    }
+
+    h1 {
+      font-size: var(--text-2xl);
+    }
+  }
+
+  h2 {
+    font-size: var(--text-2xl);
+    margin-bottom: var(--space-4);
+    scroll-margin-top: var(--space-16);
+  }
+
+  :global(.page-faq-list) {
+    max-width: 860px;
+  }
+
+  .cta h2 {
+    color: #fff;
+    margin-bottom: var(--space-4);
+  }
+
+  .cta p {
+    color: var(--color-dark-text-muted);
+    max-width: 56ch;
+    font-size: var(--text-lg);
+    margin-bottom: var(--space-10);
+  }
+
+  .cta-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+  }
+</style>

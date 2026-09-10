@@ -1,0 +1,103 @@
+---
+/**
+ * Reusable accordion list for Q&A content.
+ * Used on the homepage short-FAQ section and the full /faq page.
+ */
+interface FAQItem {
+  q: string;
+  a: string;
+}
+
+interface Props {
+  items: FAQItem[];
+  class?: string;
+}
+
+const { items, class: className = '' } = Astro.props;
+---
+
+<div class:list={['faq-list', className]} data-reveal-group>
+  {
+    items.map((item) => (
+      <details class="faq-item" data-reveal>
+        <summary>{item.q}</summary>
+        <p>{item.a}</p>
+      </details>
+    ))
+  }
+</div>
+
+<style>
+  .faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .faq-item {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4) var(--space-5);
+    transition: border-color 250ms ease, box-shadow 250ms ease;
+  }
+
+  .faq-item:hover {
+    border-color: var(--color-accent);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .faq-item summary {
+    cursor: pointer;
+    font-size: var(--text-base);
+    font-weight: 600;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  .faq-item summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq-item summary::after {
+    content: '+';
+    font-size: var(--text-lg);
+    color: var(--color-accent);
+    flex-shrink: 0;
+    transition: var(--transition-fast);
+  }
+
+  .faq-item[open] summary::after {
+    content: '\2212';
+  }
+
+  /* Native <details> hides non-summary children outright when closed
+     (UA stylesheet `display:none`); overriding that to `block` lets us
+     animate the reveal ourselves via max-height instead of an instant
+     snap open/close. */
+  .faq-item > p {
+    display: block !important;
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    margin-top: 0;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    transition: max-height 320ms ease, opacity 250ms ease, margin-top 320ms ease;
+  }
+
+  .faq-item[open] > p {
+    max-height: 320px;
+    opacity: 1;
+    margin-top: var(--space-2);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .faq-item > p {
+      transition: none;
+    }
+  }
+</style>

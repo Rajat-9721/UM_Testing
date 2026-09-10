@@ -57,9 +57,9 @@ import arshadPhoto from '../../assets/faculty/arshad.jpg';
  */
 const faculty = [
   { name: 'Dr. Pranav Nerurkar', role: 'Specialist – AI, Data Science', description: 'Specialist in Artificial Intelligence and Data Science.', image: drPranavNerurkar },
-  { name: 'Arshad', role: 'Faculty Member', description: 'Faculty member — specific role to be confirmed.', image: arshadPhoto, initials: 'A' },
-  { name: 'Shubham Meshram', role: 'Specialist – FinTech', description: 'Specialist in FinTech.', image: shubhamMeshram },
-  { name: 'Steffi Kalluveetil', role: 'Management & Statistics', description: 'Management and Statistics.', image: steffiKalluveetil },
+  { name: 'Arshad Malik', role: 'Big Data Analyst', description: 'Big Data Analyst.', image: arshadPhoto, initials: 'A' },
+  { name: 'Shubham Meshram', role: 'Power BI Expert', description: 'Power BI Expert.', image: shubhamMeshram },
+  { name: 'Steffi Kalluveetil', role: 'Soft Skills & HR', description: 'Soft Skills and HR.', image: steffiKalluveetil },
   { name: 'Dr. Anupama Deshpande', role: 'Specialist – Electronics/Electricals', description: 'Specialist in Electronics and Electrical Engineering.', image: drAnupamaDeshpande },
   { name: 'Moreshwar Dhaigude', role: 'Specialist – Mathematics', description: 'Specialist in Mathematics.', image: moreshwarDhaigude },
   { name: 'Preeti Godabole', role: 'Specialist – Ethical Hacking, Cybersecurity', description: 'Specialist in Ethical Hacking and Cybersecurity.', image: preetiGodabole },
@@ -109,9 +109,8 @@ const faculty = [
                   </span>
                   <div class="rail-info">
                     <h3 class="rail-name">{f.name}</h3>
-                    <p class="rail-role">{f.role}</p>
                     <span class="rail-rule" aria-hidden="true" />
-                    <p class="rail-description">{f.description}</p>
+                    <p class="rail-role">{f.role}</p>
                   </div>
                 </article>
               </li>
@@ -253,40 +252,36 @@ const faculty = [
   .rail-info {
     display: flex;
     flex-direction: column;
-    padding: var(--space-3) var(--space-5) var(--space-4);
+    align-items: center;
+    text-align: center;
+    padding: var(--space-4) var(--space-5) var(--space-4);
     min-width: 0;
   }
 
   .rail-name {
     font-size: var(--text-lg);
     color: var(--color-primary-dark);
-    margin-bottom: 2px;
   }
 
   .rail-role {
-    font-size: var(--text-xs);
+    font-family: var(--font-display);
+    font-size: 0.625rem;
+    font-style: italic;
     font-weight: 600;
     letter-spacing: 0.02em;
     color: var(--color-accent-dark);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 100%;
   }
 
   .rail-rule {
     display: block;
-    width: 32px;
-    height: 2px;
+    width: 56px;
+    height: 1px;
     background: var(--color-golden-subtle);
     margin-block: var(--space-2);
-  }
-
-  .rail-description {
-    font-size: var(--text-sm);
-    color: var(--color-text-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   /* Progress line */

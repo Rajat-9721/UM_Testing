@@ -1,0 +1,256 @@
+---
+import DashboardLayout from '../layouts/DashboardLayout.astro';
+import Button from '../components/Button.astro';
+
+const menu = [
+  { label: 'Overview', target: 'overview' },
+  { label: 'My Program / Enrollments', target: 'my-program' },
+  { label: 'Fees & Payments', target: 'fees-payments' },
+  { label: 'Receipts', target: 'receipts' },
+  { label: 'Profile', target: 'profile' },
+  { label: 'Security', target: 'security' },
+];
+---
+
+<DashboardLayout title="Student Dashboard" portalLabel="Student Portal" menu={menu}>
+  <div class="dash-header">
+    <h1 id="welcomeHeading">Welcome!</h1>
+  </div>
+
+  <section class="dash-panel active" id="overview">
+    <h2>Overview</h2>
+    <p class="dash-muted">A quick summary of your program and fee status.</p>
+    <div class="summary-grid" id="overviewSummary">
+      <div class="summary-tile"><div class="value">—</div><div class="label">Program</div></div>
+      <div class="summary-tile"><div class="value">—</div><div class="label">Total Fee</div></div>
+      <div class="summary-tile"><div class="value">—</div><div class="label">Paid</div></div>
+      <div class="summary-tile"><div class="value">—</div><div class="label">Balance</div></div>
+    </div>
+  </section>
+
+  <section class="dash-panel" id="my-program">
+    <h2>My Program / Enrollments</h2>
+    <div class="course-grid" id="enrollmentsGrid"><p class="course-empty">Loading...</p></div>
+  </section>
+
+  <section class="dash-panel" id="fees-payments">
+    <h2>Fees &amp; Payments</h2>
+    <div id="feesSummary"><p class="course-empty">Loading...</p></div>
+  </section>
+
+  <section class="dash-panel" id="receipts">
+    <h2>My Receipts</h2>
+    <p class="dash-muted">Every recorded payment has its own receipt.</p>
+    <div id="receiptsList"><p class="course-empty">Loading...</p></div>
+  </section>
+
+  <section class="dash-panel" id="profile">
+    <h2>Profile</h2>
+    <div id="profileDetails"><p class="course-empty">Loading...</p></div>
+  </section>
+
+  <section class="dash-panel" id="security">
+    <h2>Security</h2>
+    <p class="dash-muted" style="margin-bottom: 1.25rem;">Replace your temporary password with a private password.</p>
+    <div id="passwordAlert" class="alert"></div>
+    <form id="changePasswordForm">
+      <div class="form-group">
+        <label for="newPassword">New Password</label>
+        <input type="password" id="newPassword" minlength="6" required />
+      </div>
+      <div class="form-group">
+        <label for="confirmPassword">Confirm New Password</label>
+        <input type="password" id="confirmPassword" minlength="6" required />
+      </div>
+      <Button type="submit" variant="accent" id="changePasswordBtn">Update Password</Button>
+    </form>
+  </section>
+</DashboardLayout>
+
+<script>
+  import { supabase, requireRole, type TrustedProfile } from '../lib/supabase';
+  import { downloadReceipt } from '../lib/receipt';
+
+  let currentStudent: { id: string } | null = null;
+  let currentProfile: TrustedProfile | null = null;
+
+  async function init() {
+    const result = await requireRole('student');
+    if (!result) return;
+    currentStudent = result.session.user;
+    currentProfile = result.profile;
+
+    document.getElementById('welcomeHeading')!.textContent = `Welcome, ${currentProfile.full_name || 'Student'}!`;
+
+    await loadEnrollmentsAndFees();
+    renderProfile();
+  }
+
+  function formatCurrency(n: number) {
+    return '₹' + Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function statusLabel(status: string) {
+    return ({ UNPAID: 'Unpaid', PARTIALLY_PAID: 'Partially Paid', PAID: 'Paid' } as Record<string, string>)[status] || status;
+  }
+
+  async function loadEnrollmentsAndFees() {
+    const { data: summary, error: summaryError } = await supabase
+      .from('enrollment_payment_summary')
+      .select('*')
+      .eq('student_id', currentStudent!.id);
+
+    if (summaryError) {
+      console.error('Failed to load fee summary:', summaryError);
+      document.getElementById('feesSummary')!.innerHTML = `<p class="course-empty">Failed to load: ${summaryError.message}</p>`;
+      return;
+    }
+
+    const { data: courses } = await supabase.from('courses').select('id, title, description');
+    const courseMap = new Map((courses || []).map((c: any) => [c.id, c]));
+
+    renderEnrollments(summary || [], courseMap);
+    renderFees(summary || [], courseMap);
+    renderOverview(summary || [], courseMap);
+    await loadReceipts();
+  }
+
+  function renderEnrollments(summary: any[], courseMap: Map<string, any>) {
+    const grid = document.getElementById('enrollmentsGrid')!;
+    if (!summary.length) {
+      grid.innerHTML = '<p class="course-empty">No enrollments yet.</p>';
+      return;
+    }
+    grid.innerHTML = summary.map((s) => {
+      const course = courseMap.get(s.course_id);
+      return `<div class="course-card">
+        <h3>${course ? course.title : 'Program'}</h3>
+        <p class="dash-muted" style="margin-bottom:12px;">${course && course.description ? course.description : ''}</p>
+        <p style="font-size:0.875rem;"><strong>Status:</strong> <span class="status-pill status-${s.status}">${statusLabel(s.status)}</span></p>
+      </div>`;
+    }).join('');
+  }
+
+  function renderFees(summary: any[], courseMap: Map<string, any>) {
+    const wrap = document.getElementById('feesSummary')!;
+    if (!summary.length) {
+      wrap.innerHTML = '<p class="course-empty">No fee record yet.</p>';
+      return;
+    }
+    wrap.innerHTML = summary.map((s) => {
+      const course = courseMap.get(s.course_id);
+      return `
+        <div style="margin-bottom:30px;">
+          <h3 style="margin-bottom:10px;">${course ? course.title : 'Program'}</h3>
+          <div class="summary-grid">
+            <div class="summary-tile"><div class="value">${formatCurrency(s.total_fee)}</div><div class="label">Total Fee</div></div>
+            <div class="summary-tile"><div class="value">${formatCurrency(s.total_paid)}</div><div class="label">Paid</div></div>
+            <div class="summary-tile"><div class="value">${formatCurrency(s.balance)}</div><div class="label">Balance</div></div>
+            <div class="summary-tile"><div class="value"><span class="status-pill status-${s.status}">${statusLabel(s.status)}</span></div><div class="label">Status</div></div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function renderOverview(summary: any[], courseMap: Map<string, any>) {
+    const el = document.getElementById('overviewSummary')!;
+    if (!summary.length) return;
+    const s = summary[0];
+    const course = courseMap.get(s.course_id);
+    el.innerHTML = `
+      <div class="summary-tile"><div class="value">${course ? course.title : '—'}</div><div class="label">Program</div></div>
+      <div class="summary-tile"><div class="value">${formatCurrency(s.total_fee)}</div><div class="label">Total Fee</div></div>
+      <div class="summary-tile"><div class="value">${formatCurrency(s.total_paid)}</div><div class="label">Paid</div></div>
+      <div class="summary-tile"><div class="value">${formatCurrency(s.balance)}</div><div class="label">Balance</div></div>
+    `;
+  }
+
+  async function loadReceipts() {
+    const { data, error } = await supabase
+      .from('payment_receipts')
+      .select('*')
+      .eq('student_id', currentStudent!.id)
+      .order('created_at', { ascending: false });
+
+    const wrap = document.getElementById('receiptsList')!;
+    if (error) {
+      wrap.innerHTML = `<p class="course-empty">Failed to load receipts: ${error.message}</p>`;
+      return;
+    }
+    if (!data || !data.length) {
+      wrap.innerHTML = '<p class="course-empty">No payments recorded yet.</p>';
+      return;
+    }
+
+    wrap.innerHTML = `
+      <table class="data-table">
+        <thead>
+          <tr><th>Date</th><th>Amount</th><th>Method</th><th>Receipt #</th><th>Status After</th><th></th></tr>
+        </thead>
+        <tbody>
+          ${data.map((p: any) => `
+            <tr>
+              <td>${p.payment_date}</td>
+              <td>${formatCurrency(p.amount)}</td>
+              <td>${p.payment_method}</td>
+              <td>${p.receipt_number}</td>
+              <td><span class="status-pill status-${p.status_after_payment}">${statusLabel(p.status_after_payment)}</span></td>
+              <td><button class="row-actions" style="padding:6px 12px; font-size:0.85rem; border:1px solid var(--color-border); background:#fff; border-radius:6px; cursor:pointer;" data-download="${p.payment_id}">Download PDF</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+
+    wrap.querySelectorAll<HTMLButtonElement>('[data-download]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        btn.textContent = 'Generating...';
+        try {
+          await downloadReceipt(btn.dataset.download as string);
+        } catch (err) {
+          alert('Failed to generate receipt: ' + (err as Error).message);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Download PDF';
+        }
+      });
+    });
+  }
+
+  function renderProfile() {
+    document.getElementById('profileDetails')!.innerHTML = `
+      <div class="profile-row"><span class="label">Student ID</span><span class="value">${currentProfile!.student_id || '—'}</span></div>
+      <div class="profile-row"><span class="label">Full Name</span><span class="value">${currentProfile!.full_name || '—'}</span></div>
+      <div class="profile-row"><span class="label">Email</span><span class="value">${currentProfile!.email || '—'}</span></div>
+      <div class="profile-row"><span class="label">Registered Mobile</span><span class="value">${currentProfile!.phone || '—'}</span></div>
+    `;
+  }
+
+  document.getElementById('changePasswordForm')!.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const newPassword = (document.getElementById('newPassword') as HTMLInputElement).value;
+    const confirmPassword = (document.getElementById('confirmPassword') as HTMLInputElement).value;
+    const alertBox = document.getElementById('passwordAlert')!;
+    const button = document.getElementById('changePasswordBtn') as HTMLButtonElement;
+    alertBox.style.display = 'none';
+
+    if (newPassword !== confirmPassword) {
+      alertBox.className = 'alert alert-error';
+      alertBox.textContent = 'The passwords do not match.';
+      alertBox.style.display = 'block';
+      return;
+    }
+
+    button.disabled = true;
+    button.textContent = 'Updating...';
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    alertBox.className = error ? 'alert alert-error' : 'alert alert-success';
+    alertBox.textContent = error ? error.message : 'Password updated successfully.';
+    alertBox.style.display = 'block';
+    if (!error) (e.target as HTMLFormElement).reset();
+    button.disabled = false;
+    button.textContent = 'Update Password';
+  });
+
+  init();
+</script>
