@@ -3,11 +3,11 @@ import DashboardLayout from '../layouts/DashboardLayout.astro';
 import Button from '../components/Button.astro';
 
 const menu = [
-  { label: 'Overview', target: 'overview' },
   { label: 'My Program / Enrollments', target: 'my-program' },
   { label: 'Fees & Payments', target: 'fees-payments' },
   { label: 'Fee Receipts', target: 'receipts' },
   { label: 'Profile', target: 'profile' },
+  { label: 'Overview', target: 'overview' },
   { label: 'Security', target: 'security' },
 ];
 ---
@@ -17,18 +17,7 @@ const menu = [
     <h1 id="welcomeHeading">Welcome!</h1>
   </div>
 
-  <section class="dash-panel active" id="overview">
-    <h2>Overview</h2>
-    <p class="dash-muted">A quick summary of your program and fee status.</p>
-    <div class="summary-grid" id="overviewSummary">
-      <div class="summary-tile"><div class="value">—</div><div class="label">Program</div></div>
-      <div class="summary-tile"><div class="value">—</div><div class="label">Total Fee</div></div>
-      <div class="summary-tile"><div class="value">—</div><div class="label">Paid</div></div>
-      <div class="summary-tile"><div class="value">—</div><div class="label">Balance</div></div>
-    </div>
-  </section>
-
-  <section class="dash-panel" id="my-program">
+  <section class="dash-panel active" id="my-program">
     <h2>My Program / Enrollments</h2>
     <div class="course-grid" id="enrollmentsGrid"><p class="course-empty">Loading...</p></div>
   </section>
@@ -47,28 +36,51 @@ const menu = [
   <section class="dash-panel" id="profile">
     <h2>Profile</h2>
     <div id="profileDetails"><p class="course-empty">Loading...</p></div>
+    <p class="dash-muted" style="margin-top: 1rem;">
+      To correct any of these details, please contact the admissions team.
+    </p>
+  </section>
+
+  <section class="dash-panel" id="overview">
+    <h2>Overview</h2>
+    <p class="dash-muted">A quick summary of your program and fee status.</p>
+    <div class="summary-grid" id="overviewSummary">
+      <div class="summary-tile"><div class="value">—</div><div class="label">Program</div></div>
+      <div class="summary-tile"><div class="value">—</div><div class="label">Total Fee</div></div>
+      <div class="summary-tile"><div class="value">—</div><div class="label">Paid</div></div>
+      <div class="summary-tile"><div class="value">—</div><div class="label">Balance</div></div>
+    </div>
   </section>
 
   <section class="dash-panel" id="security">
     <h2>Security</h2>
-    <p class="dash-muted" style="margin-bottom: 1.25rem;">Replace your temporary password with a private password.</p>
-    <div id="passwordAlert" class="alert"></div>
-    <form id="changePasswordForm">
-      <div class="form-group">
-        <label for="newPassword">New Password</label>
-        <input type="password" id="newPassword" minlength="6" required />
-      </div>
-      <div class="form-group">
-        <label for="confirmPassword">Confirm New Password</label>
-        <input type="password" id="confirmPassword" minlength="6" required />
-      </div>
-      <Button type="submit" variant="accent" id="changePasswordBtn">Update Password</Button>
-    </form>
+    <div id="passwordChangeAvailable" hidden>
+      <p class="dash-muted" style="margin-bottom: 1.25rem;">
+        Replace your temporary password with a private one. You can only do this once — after
+        that, contact the admissions team for a reset.
+      </p>
+      <div id="passwordAlert" class="alert"></div>
+      <form id="changePasswordForm">
+        <div class="form-group">
+          <label for="newPassword">New Password</label>
+          <input type="password" id="newPassword" minlength="6" required />
+        </div>
+        <div class="form-group">
+          <label for="confirmPassword">Confirm New Password</label>
+          <input type="password" id="confirmPassword" minlength="6" required />
+        </div>
+        <Button type="submit" variant="accent" id="changePasswordBtn">Update Password</Button>
+      </form>
+    </div>
+
+    <div id="passwordChangeUsed" class="alert alert-success" hidden>
+      You have already changed your password once. Contact the admissions team if you need it reset.
+    </div>
   </section>
 </DashboardLayout>
 
 <script>
-  import { supabase, requireRole, type TrustedProfile } from '../lib/supabase';
+  import { supabase, requireRole, markPasswordChanged, type TrustedProfile } from '../lib/supabase';
   import { downloadReceipt, viewReceipt, printReceipt } from '../lib/receipt';
 
   let currentStudent: { id: string } | null = null;
@@ -80,10 +92,28 @@ const menu = [
     currentStudent = result.session.user;
     currentProfile = result.profile;
 
-    document.getElementById('welcomeHeading')!.textContent = `Welcome, ${currentProfile.full_name || 'Student'}!`;
+    const firstName = (currentProfile.full_name || '').trim().split(/\s+/)[0] || 'Student';
+    document.getElementById('welcomeHeading')!.textContent = `Welcome, ${firstName}!`;
 
     await loadEnrollmentsAndFees();
     renderProfile();
+    renderPasswordChangeState();
+  }
+
+  function renderPasswordChangeState() {
+    const available = document.getElementById('passwordChangeAvailable') as HTMLElement;
+    const used = document.getElementById('passwordChangeUsed') as HTMLElement;
+    if (currentProfile!.must_change_password === false) {
+      available.hidden = true;
+      available.style.display = 'none';
+      used.hidden = false;
+      used.style.display = 'block';
+    } else {
+      available.hidden = false;
+      available.style.display = 'block';
+      used.hidden = true;
+      used.style.display = 'none';
+    }
   }
 
   function formatCurrency(n: number) {
@@ -252,12 +282,22 @@ const menu = [
     button.disabled = true;
     button.textContent = 'Updating...';
     const { error } = await supabase.auth.updateUser({ password: newPassword });
-    alertBox.className = error ? 'alert alert-error' : 'alert alert-success';
-    alertBox.textContent = error ? error.message : 'Password updated successfully.';
-    alertBox.style.display = 'block';
-    if (!error) (e.target as HTMLFormElement).reset();
-    button.disabled = false;
-    button.textContent = 'Update Password';
+
+    if (error) {
+      alertBox.className = 'alert alert-error';
+      alertBox.textContent = error.message;
+      alertBox.style.display = 'block';
+      button.disabled = false;
+      button.textContent = 'Update Password';
+      return;
+    }
+
+    const { error: markError } = await markPasswordChanged();
+    if (markError) console.error('Failed to record one-time password change:', markError);
+
+    currentProfile!.must_change_password = false;
+    (e.target as HTMLFormElement).reset();
+    renderPasswordChangeState();
   });
 
   init();

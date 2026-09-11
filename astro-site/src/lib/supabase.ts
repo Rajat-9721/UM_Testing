@@ -32,6 +32,7 @@ export interface TrustedProfile {
   full_name: string | null;
   email: string | null;
   phone: string | null;
+  must_change_password: boolean;
 }
 
 export async function getTrustedSession() {
@@ -42,7 +43,7 @@ export async function getTrustedSession() {
 
   const { data: profile, error } = await supabase
     .from('profiles')
-    .select('id, role, student_id, full_name, email, phone')
+    .select('id, role, student_id, full_name, email, phone, must_change_password')
     .eq('id', session.user.id)
     .single();
 
@@ -76,4 +77,12 @@ export async function requireRole(expectedRole: Role) {
 
 export function redirectToDashboard(role: Role | null) {
   window.location.href = dashboardPath(role);
+}
+
+// Records that a student has used their one-time self-service password
+// change (see phase4_password_policy.sql). profiles has no client-
+// writable UPDATE policy, so this goes through a SECURITY DEFINER RPC
+// like every other write to that table.
+export async function markPasswordChanged() {
+  return supabase.rpc('mark_password_changed');
 }
