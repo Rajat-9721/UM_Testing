@@ -199,7 +199,7 @@ join public.profiles pr on pr.id = e.student_id;
 
 -- ---------------------------------------------------------------------
 -- 4. Student ID scheme change: {year}{course code}-{per-course
---    sequence}, e.g. 2026100-001 — the AI course becomes code 100 (the
+--    sequence}, e.g. 2026100001 — the AI course becomes code 100 (the
 --    first course, in creation order), the next distinct course would
 --    become 200, and so on. Replaces the old "UM2026-0004" format so
 --    the ID itself encodes which course a student registered under,
@@ -270,7 +270,9 @@ begin
   execute format('create sequence if not exists public.%I', v_seq_name);
   execute format('select nextval(%L)', 'public.' || v_seq_name) into v_seq;
 
-  return v_year || v_code || '-' || lpad(v_seq::text, 3, '0');
+  -- Purely numerical, no separators: {year}{course code}{sequence},
+  -- e.g. 2026100001.
+  return v_year || v_code || lpad(v_seq::text, 3, '0');
 end;
 $$;
 

@@ -330,12 +330,11 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
             </div>
           </div>
           <div class="form-group">
-            <label for="programCode">Course Code (optional)</label>
-            <input type="text" id="programCode" placeholder="Leave blank to auto-assign the next available code" />
+            <label for="programCode">Course Code</label>
+            <input type="text" id="programCode" required inputmode="numeric" pattern="[0-9]+" placeholder="e.g. 100" />
             <p class="dash-muted" style="margin-top: 4px; font-size: 0.75rem;">
               This number is embedded in every student ID registered under this program (e.g. code
-              100 → student IDs like 2026100-001). Leave blank on a new program to auto-assign the
-              next free number.
+              100 → student IDs like 2026100001). Must be unique across all programs.
             </p>
           </div>
           <div class="form-row">
@@ -1118,18 +1117,13 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
     const payload: Record<string, any> = {
       title: (document.getElementById('programTitle') as HTMLInputElement).value.trim(),
       category: (document.getElementById('programCategory') as HTMLInputElement).value.trim(),
+      code: (document.getElementById('programCode') as HTMLInputElement).value.trim(),
       price: priceRaw ? parseFloat(priceRaw) : null,
       faculty: (document.getElementById('programFaculty') as HTMLInputElement).value.trim() || null,
       mode: (document.getElementById('programMode') as HTMLInputElement).value.trim() || null,
       badge: (document.getElementById('programBadge') as HTMLInputElement).value.trim() || null,
       description: (document.getElementById('programDescription') as HTMLTextAreaElement).value.trim() || null,
     };
-
-    // Blank means "auto-assign" on a new program (the DB trigger fills
-    // it in), or "leave unchanged" on an existing one — either way,
-    // that's expressed by omitting the key entirely, not sending null.
-    const codeRaw = (document.getElementById('programCode') as HTMLInputElement).value.trim();
-    if (codeRaw) payload.code = codeRaw;
 
     btn.disabled = true;
     btn.textContent = 'Saving...';
