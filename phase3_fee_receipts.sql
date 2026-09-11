@@ -195,3 +195,129 @@ from public.payments p
 join public.enrollments e on e.id = p.enrollment_id
 join public.courses c on c.id = e.course_id
 join public.profiles pr on pr.id = e.student_id;
+
+
+-- ---------------------------------------------------------------------
+-- 4. Student ID scheme change: {year}{course code}-{per-course
+--    sequence}, e.g. 2026100-001 — the AI course becomes code 100 (the
+--    first course, in creation order), the next distinct course would
+--    become 200, and so on. Replaces the old "UM2026-0004" format so
+--    the ID itself encodes which course a student registered under,
+--    and doubles as the receipt's "Roll No. (UID)" field (see below —
+--    the separate "Student PRN" row is being dropped from the receipt
+--    in favour of this single identifier).
+-- ---------------------------------------------------------------------
+alter table public.courses
+  add column if not exists code text;
+
+-- Backfill any existing courses without a code, oldest first, so the
+-- course actually in use (the AI certification) lands on 100.
+do $$
+declare
+  r record;
+  v_next int := 100;
+begin
+  for r in select id from public.courses where code is null order by created_at loop
+    update public.courses set code = v_next::text where id = r.id;
+    v_next := v_next + 100;
+  end loop;
+end $$;
+
+-- Every new course gets the next multiple of 100 automatically —
+-- no manual code assignment needed when adding a program.
+create or replace function public.assign_course_code()
+returns trigger
+language plpgsql
+as $$
+declare
+  v_max int;
+begin
+  if new.code is null then
+    select coalesce(max(code::int), 0) into v_max from public.courses where code ~ '^[0-9]+$';
+    new.code := (v_max + 100)::text;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_assign_course_code on public.courses;
+create trigger trg_assign_course_code
+  before insert on public.courses
+  for each row execute function public.assign_course_code();
+
+-- A dedicated sequence per (year, course code) is created on first
+-- use — nextval() is atomic, so two assistants registering students
+-- for the same course at the same moment can never collide the way a
+-- plain "count existing rows" approach could.
+drop function if exists public.generate_student_id();
+
+create or replace function public.generate_student_id(p_course_id uuid)
+returns text
+language plpgsql
+as $$
+declare
+  v_code text;
+  v_year text := to_char(now(), 'YYYY');
+  v_seq_name text;
+  v_seq bigint;
+begin
+  if p_course_id is not null then
+    select code into v_code from public.courses where id = p_course_id;
+  end if;
+  v_code := coalesce(v_code, '000');
+
+  v_seq_name := 'student_seq_' || v_year || '_' || v_code;
+  execute format('create sequence if not exists public.%I', v_seq_name);
+  execute format('select nextval(%L)', 'public.' || v_seq_name) into v_seq;
+
+  return v_year || v_code || '-' || lpad(v_seq::text, 3, '0');
+end;
+$$;
+
+-- register_student_full re-created (same signature — CREATE OR REPLACE
+-- is a true replace here, not an overload) to call the course-coded
+-- generator instead of the old one.
+create or replace function public.register_student_full(
+  p_user_id uuid,
+  p_email text,
+  p_full_name text,
+  p_phone text,
+  p_course_id uuid,
+  p_total_fee numeric
+)
+returns table (student_id text, enrollment_id uuid)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_student_id text;
+  v_enrollment_id uuid;
+begin
+  if public.current_role() <> 'assistant' then
+    raise exception 'Only assistants can register students';
+  end if;
+
+  insert into public.profiles as pr (id, email, full_name, phone, role, student_id, created_by)
+  values (
+    p_user_id, lower(p_email), p_full_name, p_phone, 'student',
+    public.generate_student_id(p_course_id), auth.uid()
+  )
+  on conflict (id) do update set
+    email = excluded.email,
+    full_name = excluded.full_name,
+    phone = excluded.phone
+  returning pr.student_id into v_student_id;
+
+  if p_course_id is not null then
+    insert into public.enrollments (student_id, course_id, total_fee)
+    values (p_user_id, p_course_id, coalesce(p_total_fee, 0))
+    on conflict (student_id, course_id) do update set total_fee = excluded.total_fee
+    returning id into v_enrollment_id;
+  end if;
+
+  return query select v_student_id, v_enrollment_id;
+end;
+$$;
+
+grant execute on function public.register_student_full(uuid, text, text, text, uuid, numeric) to authenticated;

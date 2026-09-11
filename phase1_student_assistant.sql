@@ -72,6 +72,9 @@ alter table public.profiles
 
 create sequence if not exists public.student_id_seq;
 
+-- Superseded by phase3_fee_receipts.sql's course-coded version — kept
+-- here only so this file still reflects the object's real history;
+-- phase3 drops this 0-arg overload and replaces every caller.
 create or replace function public.generate_student_id()
 returns text
 language plpgsql
@@ -329,7 +332,7 @@ begin
   insert into public.profiles as pr (id, email, full_name, phone, role, student_id, created_by)
   values (
     p_user_id, lower(p_email), p_full_name, p_phone, 'student',
-    public.generate_student_id(), auth.uid()
+    public.generate_student_id(p_course_id), auth.uid()
   )
   on conflict (id) do update set
     email = excluded.email,

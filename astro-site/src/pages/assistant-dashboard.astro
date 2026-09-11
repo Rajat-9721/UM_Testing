@@ -370,15 +370,9 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
               <input type="text" id="receiptCourseDisplay" disabled placeholder="Select a student first" />
             </div>
 
-            <div class="form-row">
-              <div class="form-group">
-                <label for="receiptRollNo">Roll No. (optional)</label>
-                <input type="text" id="receiptRollNo" />
-              </div>
-              <div class="form-group">
-                <label for="receiptDate">Payment / Receipt Date</label>
-                <input type="date" id="receiptDate" required />
-              </div>
+            <div class="form-group">
+              <label for="receiptDate">Payment / Receipt Date</label>
+              <input type="date" id="receiptDate" required />
             </div>
 
             <div class="form-row">
@@ -464,15 +458,16 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
                 <div class="rp-field"><span>Receipt No.</span><span id="rpReceiptNo">—</span></div>
                 <div class="rp-field"><span>Student Name</span><span id="rpStudentName">—</span></div>
                 <div class="rp-field"><span>Email Id</span><span id="rpEmail">—</span></div>
-                <div class="rp-field"><span>Student PRN</span><span id="rpPrn">—</span></div>
                 <div class="rp-field"><span>Academic Year</span><span id="rpAcademicYear">—</span></div>
                 <div class="rp-field"><span>Program Name</span><span id="rpProgram">—</span></div>
+                <div class="rp-field"><span>Payment Mode</span><span id="rpPaymentMode">—</span></div>
               </div>
               <div class="rp-col">
                 <div class="rp-field"><span>Receipt Date</span><span id="rpDate">—</span></div>
-                <div class="rp-field"><span>Roll No.</span><span id="rpRollNo">—</span></div>
+                <div class="rp-field"><span>Roll No. (UID)</span><span id="rpRollNoUid">—</span></div>
                 <div class="rp-field"><span>Financial Year</span><span id="rpFinancialYear">—</span></div>
                 <div class="rp-field"><span>Mobile</span><span id="rpMobile">—</span></div>
+                <div class="rp-field"><span>Transaction ID</span><span id="rpTransactionId">—</span></div>
               </div>
             </div>
             <table class="rp-table">
@@ -1212,22 +1207,32 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
   }
   document.getElementById('receiptPaymentMethod')!.addEventListener('change', updateReceiptMethodFields);
 
+  function receiptMethodLabel(method: string) {
+    return ({ cash: 'Cash', upi: 'UPI', netbanking: 'Net Banking', bank_transfer: 'Bank Transfer', cheque: 'Cheque' } as Record<string, string>)[method] || method;
+  }
+
   function updateReceiptPreview() {
     const total = recalcReceiptTotal();
     const particulars = getFeeParticulars();
 
     document.getElementById('rpStudentName')!.textContent = selectedReceiptStudent?.full_name || '—';
     document.getElementById('rpEmail')!.textContent = selectedReceiptStudent?.email || '—';
-    document.getElementById('rpPrn')!.textContent = selectedReceiptStudent?.student_id || '—';
+    document.getElementById('rpRollNoUid')!.textContent = selectedReceiptStudent?.student_id || '—';
     document.getElementById('rpProgram')!.textContent = (document.getElementById('receiptCourseDisplay') as HTMLInputElement).value || '—';
     document.getElementById('rpMobile')!.textContent = selectedReceiptStudent?.phone || '—';
 
     const dateVal = (document.getElementById('receiptDate') as HTMLInputElement).value;
     document.getElementById('rpDate')!.textContent = dateVal ? formatDateDisplay(dateVal) : '—';
-    document.getElementById('rpRollNo')!.textContent = (document.getElementById('receiptRollNo') as HTMLInputElement).value || '—';
     document.getElementById('rpAcademicYear')!.textContent = (document.getElementById('receiptAcademicYear') as HTMLInputElement).value || '—';
     document.getElementById('rpFinancialYear')!.textContent = (document.getElementById('receiptFinancialYear') as HTMLInputElement).value || '—';
     document.getElementById('rpReceiptNo')!.textContent = 'Assigned on generation';
+
+    const method = (document.getElementById('receiptPaymentMethod') as HTMLSelectElement).value;
+    document.getElementById('rpPaymentMode')!.textContent = receiptMethodLabel(method);
+    const txnId = method === 'cheque'
+      ? (document.getElementById('receiptChequeNumber') as HTMLInputElement).value
+      : (document.getElementById('receiptReference') as HTMLInputElement).value;
+    document.getElementById('rpTransactionId')!.textContent = txnId || (method === 'cash' ? 'Cash' : '—');
 
     const body = document.getElementById('rpParticularsBody')!;
     const rows = particulars.length ? particulars : [{ particular: '', amount: 0 }];
@@ -1242,11 +1247,12 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
     document.getElementById('rpWords')!.textContent = total > 0 ? amountToWords(total) : '—';
   }
 
-  ['receiptDate', 'receiptRollNo', 'receiptAcademicYear', 'receiptFinancialYear'].forEach((id) => {
+  ['receiptDate', 'receiptAcademicYear', 'receiptFinancialYear', 'receiptReference', 'receiptChequeNumber'].forEach((id) => {
     document.getElementById(id)!.addEventListener('input', updateReceiptPreview);
   });
+  document.getElementById('receiptPaymentMethod')!.addEventListener('change', updateReceiptPreview);
 
-  document.getElementById('receiptStudentInput')!.addEventListener('input', async (e) => {
+  document.getElementById('receiptStudentInput')!.addEventListener('input', (e) => {
     const value = (e.target as HTMLInputElement).value;
     const match = studentOptionMap.get(value);
     if (!match) return;
@@ -1254,9 +1260,6 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
     selectedReceiptStudent = match;
     const courseDisplay = document.getElementById('receiptCourseDisplay') as HTMLInputElement;
     courseDisplay.value = match.program || 'No program assigned — use "Assign Program" in Student Management first';
-
-    const { data: profileRow } = await supabase.from('profiles').select('roll_no').eq('id', match.profile_id).single();
-    (document.getElementById('receiptRollNo') as HTMLInputElement).value = profileRow?.roll_no || '';
 
     updateReceiptPreview();
   });
@@ -1337,7 +1340,6 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
       p_academic_year: (document.getElementById('receiptAcademicYear') as HTMLInputElement).value.trim() || null,
       p_financial_year: (document.getElementById('receiptFinancialYear') as HTMLInputElement).value.trim() || null,
       p_fee_particulars: particulars,
-      p_roll_no: (document.getElementById('receiptRollNo') as HTMLInputElement).value.trim() || null,
     });
 
     btn.disabled = false;

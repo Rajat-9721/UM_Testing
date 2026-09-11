@@ -6,6 +6,14 @@
 // line. Only the dynamic data changes — the layout itself is not a
 // redesign, it's a reproduction of the supplied template.
 //
+// Two deliberate departures from the original blank template, per
+// client direction after seeing the first generated receipt: the
+// separate "Student PRN" field was dropped in favour of a single
+// "Roll No. (UID)" field (profiles/enrollment student_id, now in the
+// {year}{course code}-{sequence} format — see phase3_fee_receipts.sql
+// section 4), and Payment Mode / Transaction ID were added since the
+// original template had no way to show how a payment was made.
+//
 // NOTE: built without the ability to render/inspect the PDF visually
 // in this environment — coordinates are a best-effort match to the
 // reference image's proportions. Treat spacing as a first pass; flag
@@ -25,16 +33,27 @@ interface ReceiptRow {
   payment_id: string;
   receipt_number: string;
   payment_date: string;
+  payment_method: string;
+  reference_number: string | null;
   student_name: string | null;
-  student_code: string | null; // reused as "Student PRN" on the receipt
+  student_code: string | null; // shown as "Roll No. (UID)" — the one unique student identifier
   student_email: string | null;
   student_phone: string | null;
-  student_roll_no: string | null;
   program_title: string | null;
   amount: number;
   academic_year: string | null;
   financial_year: string | null;
   fee_particulars: FeeParticular[] | null;
+}
+
+function methodLabel(method: string): string {
+  return ({
+    cash: 'Cash',
+    upi: 'UPI',
+    netbanking: 'Net Banking',
+    bank_transfer: 'Bank Transfer',
+    cheque: 'Cheque',
+  } as Record<string, string>)[method] || method;
 }
 
 async function fetchReceiptData(paymentId: string): Promise<ReceiptRow> {
@@ -161,23 +180,24 @@ async function renderReceiptPdf(data: ReceiptRow): Promise<jsPDF> {
   }
 
   const leftLabelW = 92;
-  const rightLabelW = 82;
+  const rightLabelW = 95;
 
   field(leftColX, y, 'Receipt No.', data.receipt_number, leftLabelW);
   field(rightColX, y, 'Receipt Date', formatReceiptDate(data.payment_date), rightLabelW);
 
   field(leftColX, y + rowH, 'Student Name', data.student_name || '-', leftLabelW);
+  field(rightColX, y + rowH, 'Roll No. (UID)', data.student_code || '-', rightLabelW);
 
   field(leftColX, y + rowH * 2, 'Email Id', data.student_email || '-', leftLabelW);
-  field(rightColX, y + rowH * 2, 'Roll No.', data.student_roll_no || '-', rightLabelW);
+  field(rightColX, y + rowH * 2, 'Financial Year', data.financial_year || '-', rightLabelW);
 
-  field(leftColX, y + rowH * 3, 'Student PRN', data.student_code || '-', leftLabelW);
-  field(rightColX, y + rowH * 3, 'Financial Year', data.financial_year || '-', rightLabelW);
+  field(leftColX, y + rowH * 3, 'Academic Year', data.academic_year || '-', leftLabelW);
+  field(rightColX, y + rowH * 3, 'Mobile', data.student_phone || '-', rightLabelW);
 
-  field(leftColX, y + rowH * 4, 'Academic Year', data.academic_year || '-', leftLabelW);
-  field(rightColX, y + rowH * 4, 'Mobile', data.student_phone || '-', rightLabelW);
+  field(leftColX, y + rowH * 4, 'Program Name', data.program_title || '-', leftLabelW);
+  field(rightColX, y + rowH * 4, 'Payment Mode', methodLabel(data.payment_method), rightLabelW);
 
-  field(leftColX, y + rowH * 5, 'Program Name', data.program_title || '-', leftLabelW);
+  field(rightColX, y + rowH * 5, 'Transaction ID', data.reference_number || '-', rightLabelW);
 
   y += rowH * 6 + 16;
 
