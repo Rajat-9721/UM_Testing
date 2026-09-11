@@ -332,11 +332,13 @@ table.data-table {
   gap: var(--space-4);
 }
 
-.method-fields {
+.method-fields,
+.receipt-method-fields {
   display: none;
 }
 
-.method-fields.active {
+.method-fields.active,
+.receipt-method-fields.active {
   display: block;
 }
 
@@ -460,5 +462,217 @@ table.data-table {
   .summary-grid,
   .form-row {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Fee Receipt module: a wider modal (form + live preview side by side)
+   and a plain HTML/CSS reproduction of the SPIT receipt template for
+   the preview. The preview is a visual approximation for live editing
+   only — the actual PDF (lib/receipt.ts) is the source of truth for
+   what gets downloaded/printed/stored.
+--------------------------------------------------------------------- */
+
+.modal.modal-xwide {
+  max-width: 980px;
+}
+
+.receipt-modal-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-8);
+  align-items: start;
+}
+
+.fp-particular-row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  margin-bottom: var(--space-2);
+}
+
+.fp-particular-row input[type='text'] {
+  flex: 2;
+}
+
+.fp-particular-row input[type='number'] {
+  flex: 1;
+}
+
+.fp-particular-row .fp-remove {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--color-border);
+  background: #fff;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--color-danger);
+}
+
+.fp-add-btn {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-primary);
+  background: none;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  cursor: pointer;
+}
+
+.fp-add-btn:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent-dark);
+}
+
+.receipt-success-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+}
+
+.receipt-success-actions button {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--color-border);
+  background: #fff;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--color-text);
+}
+
+.receipt-success-actions button:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent-dark);
+}
+
+/* ---- Receipt preview: plain reproduction of the SPIT template ---- */
+.receipt-preview {
+  border: 2px solid #14203c;
+  padding: var(--space-4);
+  font-family: 'Times New Roman', Times, serif;
+  color: #14203c;
+  background: #fff;
+  font-size: 0.72rem;
+}
+
+.rp-header {
+  display: flex;
+  border: 1px solid #14203c;
+  margin-bottom: var(--space-3);
+}
+
+.rp-logo {
+  width: 90px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid #14203c;
+  padding: var(--space-2);
+}
+
+.rp-logo img {
+  width: 100%;
+  height: auto;
+}
+
+.rp-institute {
+  flex: 1;
+  text-align: center;
+  padding: var(--space-3) var(--space-2);
+}
+
+.rp-bhavan {
+  font-size: 0.75rem;
+  margin: 0;
+}
+
+.rp-institute-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 2px 0;
+}
+
+.rp-address {
+  font-size: 0.68rem;
+  margin: 0;
+}
+
+.rp-banner {
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  background: #deebf6;
+  border: 1px solid #14203c;
+  width: 220px;
+  margin: 0 auto var(--space-3);
+  padding: var(--space-1) 0;
+}
+
+.rp-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.rp-field {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  border-bottom: 1px dotted #9aa5c0;
+  padding-bottom: 2px;
+}
+
+.rp-field span:first-child {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.rp-field span:last-child {
+  text-align: right;
+  word-break: break-word;
+}
+
+.rp-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: var(--space-3);
+}
+
+.rp-table th,
+.rp-table td {
+  border: 1px solid #14203c;
+  padding: 4px 6px;
+  font-size: 0.7rem;
+}
+
+.rp-table thead th {
+  background: #deebf6;
+  font-weight: 700;
+}
+
+.rp-table tfoot td {
+  font-weight: 700;
+}
+
+.rp-table tfoot td:last-child,
+.rp-table td:last-child {
+  text-align: right;
+}
+
+.rp-words {
+  font-size: 0.72rem;
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .receipt-modal-body {
+    grid-template-columns: 1fr;
   }
 }

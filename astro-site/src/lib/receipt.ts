@@ -1,37 +1,40 @@
-// Client-side receipt PDF generation.
+// Fee receipt PDF — built to match the official SPIT "Payment Receipt"
+// template (client-supplied image) as closely as jsPDF's drawing
+// primitives allow: double-line outer border, logo + institute header,
+// "PAYMENT RECEIPT" banner, a two-column field block, a bordered
+// particulars-of-fees table with a Total row, and an Amount in Words
+// line. Only the dynamic data changes — the layout itself is not a
+// redesign, it's a reproduction of the supplied template.
 //
-// Data is fetched fresh from Supabase (the `payment_receipts` view —
-// authoritative, derived from real payment rows) every time a receipt
-// is downloaded; nothing here is a static/fake template. Rendering is
-// deliberately a pure function of that data, separate from the fetch,
-// so the layout can be swapped for the official Utkarsh Minds receipt
-// design later without touching data-fetching or auth logic.
-//
-// The original architecture plan called for a Supabase Edge Function
-// to do this server-side; that was adjusted for Phase 1 because no
-// Supabase CLI/deploy tooling is available in this environment. The
-// data model (the payment_receipts view) is unchanged either way, so
-// moving generation server-side later is a template/transport swap,
-// not a redesign.
+// NOTE: built without the ability to render/inspect the PDF visually
+// in this environment — coordinates are a best-effort match to the
+// reference image's proportions. Treat spacing as a first pass; flag
+// anything that needs nudging once it's been seen on a real printout.
 
 import { jsPDF } from 'jspdf';
 import { supabase } from './supabase';
+import { amountToWords } from './numberToWords';
+import spitLogoUrl from '../assets/brand/spit-logo.png?url';
+
+export interface FeeParticular {
+  particular: string;
+  amount: number;
+}
 
 interface ReceiptRow {
+  payment_id: string;
   receipt_number: string;
   payment_date: string;
-  student_code: string | null;
   student_name: string | null;
+  student_code: string | null; // reused as "Student PRN" on the receipt
+  student_email: string | null;
+  student_phone: string | null;
+  student_roll_no: string | null;
   program_title: string | null;
   amount: number;
-  payment_method: string;
-  reference_number: string | null;
-  cheque_bank_name: string | null;
-  cheque_date: string | null;
-  total_fee: number;
-  cumulative_paid_at_payment: number;
-  balance_after_payment: number;
-  status_after_payment: string;
+  academic_year: string | null;
+  financial_year: string | null;
+  fee_particulars: FeeParticular[] | null;
 }
 
 async function fetchReceiptData(paymentId: string): Promise<ReceiptRow> {
@@ -47,124 +50,220 @@ async function fetchReceiptData(paymentId: string): Promise<ReceiptRow> {
   return data as ReceiptRow;
 }
 
-function formatMoney(n: number) {
-  return 'Rs. ' + Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+let logoDataUrlPromise: Promise<string | null> | null = null;
+function getLogoDataUrl(): Promise<string | null> {
+  if (!logoDataUrlPromise) {
+    logoDataUrlPromise = fetch(spitLogoUrl)
+      .then((res) => res.blob())
+      .then(
+        (blob) =>
+          new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          })
+      )
+      .catch(() => null);
+  }
+  return logoDataUrlPromise;
 }
 
-function methodLabel(method: string) {
-  return ({
-    cash: 'Cash',
-    upi: 'UPI',
-    netbanking: 'Net Banking',
-    bank_transfer: 'Bank Transfer',
-    cheque: 'Cheque',
-  } as Record<string, string>)[method] || method;
+function formatReceiptDate(dateStr: string): string {
+  const d = new Date(dateStr + 'T00:00:00');
+  if (Number.isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, ' ');
 }
 
-function statusLabel(status: string) {
-  return ({ PARTIALLY_PAID: 'Partially Paid', PAID: 'Paid', UNPAID: 'Unpaid' } as Record<string, string>)[status] || status;
+function formatMoney(n: number): string {
+  return Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-// TEMPORARY receipt layout — replace this function with the official
-// Utkarsh Minds format once available. Everything it needs comes in
-// through `data` (one row from payment_receipts).
-function renderReceiptPdf(data: ReceiptRow) {
+async function renderReceiptPdf(data: ReceiptRow): Promise<jsPDF> {
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-  const marginX = 56;
-  let y = 64;
+  const pageW = 595.28;
+  const margin = 32;
 
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(18);
-  doc.text('UTKARSH MINDS', marginX, y);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.text('Empower . Educate . Innovate', marginX, y + 16);
+  // ---- Outer double-line border ----
+  doc.setDrawColor(20, 30, 60);
+  doc.setLineWidth(1.2);
+  doc.rect(margin, margin, pageW - margin * 2, 778);
+  doc.setLineWidth(0.6);
+  doc.rect(margin + 4, margin + 4, pageW - margin * 2 - 8, 770);
 
-  doc.setFontSize(9);
-  doc.text('TEMPORARY RECEIPT FORMAT', 595 - marginX, y, { align: 'right' });
-  doc.text('(pending official design)', 595 - marginX, y + 12, { align: 'right' });
+  const left = margin + 16;
+  const right = pageW - margin - 16;
+  const contentW = right - left;
 
-  y += 40;
-  doc.setDrawColor(180);
-  doc.line(marginX, y, 595 - marginX, y);
-  y += 28;
+  // ---- Header box: logo cell | institute text cell ----
+  let y = margin + 20;
+  const headerH = 96;
+  doc.setLineWidth(0.75);
+  doc.rect(left, y, contentW, headerH);
+  const logoColW = 120;
+  doc.line(left + logoColW, y, left + logoColW, y + headerH);
 
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
-  doc.text('Payment Receipt', marginX, y);
-  y += 26;
-
-  const rows: [string, string][] = [
-    ['Receipt No.', data.receipt_number],
-    ['Payment Date', data.payment_date],
-    ['Student ID', data.student_code || '-'],
-    ['Student Name', data.student_name || '-'],
-    ['Program', data.program_title || '-'],
-    ['Amount Received', formatMoney(data.amount)],
-    ['Payment Mode', methodLabel(data.payment_method)],
-  ];
-
-  if (data.reference_number) {
-    rows.push(['Reference / Transaction ID', data.reference_number]);
-  }
-  if (data.payment_method === 'cheque') {
-    rows.push(['Cheque Bank', data.cheque_bank_name || '-']);
-    rows.push(['Cheque Date', data.cheque_date || '-']);
+  const logoDataUrl = await getLogoDataUrl();
+  if (logoDataUrl) {
+    try {
+      doc.addImage(logoDataUrl, 'PNG', left + (logoColW - 76) / 2, y + (headerH - 76) / 2, 76, 76);
+    } catch {
+      // If the logo can't be embedded for any reason, the header text
+      // alone still renders — never let a PDF fail over the logo.
+    }
   }
 
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(11);
-  rows.forEach(([label, value]) => {
-    doc.setFont('helvetica', 'bold');
-    doc.text(label + ':', marginX, y);
-    doc.setFont('helvetica', 'normal');
-    doc.text(String(value), marginX + 190, y);
-    y += 20;
-  });
-
-  y += 12;
-  doc.setDrawColor(180);
-  doc.line(marginX, y, 595 - marginX, y);
-  y += 28;
-
-  doc.setFont('helvetica', 'bold');
+  const textCenterX = left + logoColW + (contentW - logoColW) / 2;
+  doc.setFont('times', 'normal');
+  doc.setFontSize(13);
+  doc.text("Bharatiya Vidhya Bhavan's", textCenterX, y + 28, { align: 'center' });
+  doc.setFont('times', 'bold');
+  doc.setFontSize(20);
+  doc.text('Sardar Patel Institute of Technology', textCenterX, y + 54, { align: 'center' });
+  doc.setFont('times', 'normal');
   doc.setFontSize(12);
-  doc.text('Fee Status (as of this payment)', marginX, y);
-  y += 22;
+  doc.text('Munshi Nagar, Andheri (West), Mumbai 400 058', textCenterX, y + 76, { align: 'center' });
 
-  const summaryRows: [string, string][] = [
-    ['Total Program Fee', formatMoney(data.total_fee)],
-    ['Total Paid', formatMoney(data.cumulative_paid_at_payment)],
-    ['Outstanding Balance', formatMoney(data.balance_after_payment)],
-    ['Status', statusLabel(data.status_after_payment)],
-  ];
+  y += headerH + 22;
 
-  doc.setFontSize(11);
-  summaryRows.forEach(([label, value]) => {
+  // ---- "PAYMENT RECEIPT" banner ----
+  const bannerW = 260;
+  const bannerH = 26;
+  const bannerX = left + (contentW - bannerW) / 2;
+  doc.setFillColor(222, 233, 246);
+  doc.setDrawColor(20, 30, 60);
+  doc.setLineWidth(0.75);
+  doc.rect(bannerX, y, bannerW, bannerH, 'FD');
+  doc.setFont('times', 'bold');
+  doc.setFontSize(15);
+  doc.setTextColor(20, 30, 60);
+  doc.text('PAYMENT RECEIPT', bannerX + bannerW / 2, y + bannerH / 2 + 5, { align: 'center' });
+  doc.setTextColor(0, 0, 0);
+
+  y += bannerH + 26;
+
+  // ---- Two-column field block ----
+  const colGap = 24;
+  const leftColX = left;
+  const rightColX = left + contentW / 2 + colGap / 2;
+  const rowH = 22;
+  const labelFont = 11;
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(labelFont);
+
+  function field(x: number, rowY: number, label: string, value: string, labelW: number) {
     doc.setFont('helvetica', 'bold');
-    doc.text(label + ':', marginX, y);
+    doc.text(label, x, rowY);
     doc.setFont('helvetica', 'normal');
-    doc.text(String(value), marginX + 190, y);
-    y += 20;
-  });
+    doc.text(':', x + labelW, rowY);
+    doc.text(value || '-', x + labelW + 10, rowY);
+  }
 
-  y += 30;
-  doc.setFontSize(8);
-  doc.setTextColor(120);
-  doc.text(
-    'This is a system-generated receipt reflecting authoritative payment records at the time of',
-    marginX, y
-  );
-  doc.text(
-    'generation. Format will be replaced with the official Utkarsh Minds receipt design.',
-    marginX, y + 11
-  );
+  const leftLabelW = 92;
+  const rightLabelW = 82;
+
+  field(leftColX, y, 'Receipt No.', data.receipt_number, leftLabelW);
+  field(rightColX, y, 'Receipt Date', formatReceiptDate(data.payment_date), rightLabelW);
+
+  field(leftColX, y + rowH, 'Student Name', data.student_name || '-', leftLabelW);
+
+  field(leftColX, y + rowH * 2, 'Email Id', data.student_email || '-', leftLabelW);
+  field(rightColX, y + rowH * 2, 'Roll No.', data.student_roll_no || '-', rightLabelW);
+
+  field(leftColX, y + rowH * 3, 'Student PRN', data.student_code || '-', leftLabelW);
+  field(rightColX, y + rowH * 3, 'Financial Year', data.financial_year || '-', rightLabelW);
+
+  field(leftColX, y + rowH * 4, 'Academic Year', data.academic_year || '-', leftLabelW);
+  field(rightColX, y + rowH * 4, 'Mobile', data.student_phone || '-', rightLabelW);
+
+  field(leftColX, y + rowH * 5, 'Program Name', data.program_title || '-', leftLabelW);
+
+  y += rowH * 6 + 16;
+
+  // ---- Particulars of Fees table ----
+  const srColW = 46;
+  const amtColW = 110;
+  const particularColW = contentW - srColW - amtColW;
+  const tableRowH = 24;
+  const tableHeaderH = 24;
+
+  doc.setDrawColor(20, 30, 60);
+  doc.setLineWidth(0.75);
+  doc.setFillColor(222, 233, 246);
+  doc.rect(left, y, contentW, tableHeaderH, 'FD');
+  doc.line(left + srColW, y, left + srColW, y + tableHeaderH);
+  doc.line(left + srColW + particularColW, y, left + srColW + particularColW, y + tableHeaderH);
+
+  doc.setFont('times', 'bold');
+  doc.setFontSize(11);
+  doc.text('Sr.No', left + srColW / 2, y + tableHeaderH / 2 + 4, { align: 'center' });
+  doc.text('Particulars of the Fees', left + srColW + particularColW / 2, y + tableHeaderH / 2 + 4, { align: 'center' });
+  doc.text('Amount (Rs.)', left + srColW + particularColW + amtColW / 2, y + tableHeaderH / 2 + 4, { align: 'center' });
+
+  y += tableHeaderH;
+
+  const particulars: FeeParticular[] = data.fee_particulars && data.fee_particulars.length
+    ? data.fee_particulars
+    : [{ particular: 'Tuition Fees', amount: data.amount }];
+
+  const rowCount = Math.max(particulars.length, 5);
+  doc.setFont('times', 'normal');
+  doc.setFontSize(11);
+
+  for (let i = 0; i < rowCount; i++) {
+    doc.rect(left, y, contentW, tableRowH);
+    doc.line(left + srColW, y, left + srColW, y + tableRowH);
+    doc.line(left + srColW + particularColW, y, left + srColW + particularColW, y + tableRowH);
+
+    doc.text(String(i + 1), left + srColW / 2, y + tableRowH / 2 + 4, { align: 'center' });
+
+    const item = particulars[i];
+    if (item) {
+      doc.text(item.particular, left + srColW + 8, y + tableRowH / 2 + 4);
+      doc.text(formatMoney(item.amount), left + srColW + particularColW + amtColW - 8, y + tableRowH / 2 + 4, { align: 'right' });
+    }
+    y += tableRowH;
+  }
+
+  // Total row
+  doc.rect(left, y, contentW, tableRowH);
+  doc.line(left + srColW + particularColW, y, left + srColW + particularColW, y + tableRowH);
+  doc.setFont('times', 'bold');
+  doc.text('Total:', left + srColW + particularColW - 8, y + tableRowH / 2 + 4, { align: 'right' });
+  doc.text(formatMoney(data.amount), left + srColW + particularColW + amtColW - 8, y + tableRowH / 2 + 4, { align: 'right' });
+  y += tableRowH + 28;
+
+  // ---- Amount in Words ----
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text('Amount in Words :', left, y);
+  doc.setFont('helvetica', 'normal');
+  const wordsText = amountToWords(data.amount);
+  const wrapped = doc.splitTextToSize(wordsText, contentW - 130);
+  doc.text(wrapped, left + 128, y);
 
   return doc;
 }
 
-export async function downloadReceipt(paymentId: string) {
+async function buildReceiptDocForPayment(paymentId: string): Promise<{ doc: jsPDF; data: ReceiptRow }> {
   const data = await fetchReceiptData(paymentId);
-  const doc = renderReceiptPdf(data);
+  const doc = await renderReceiptPdf(data);
+  return { doc, data };
+}
+
+export async function downloadReceipt(paymentId: string) {
+  const { doc, data } = await buildReceiptDocForPayment(paymentId);
   doc.save(`${data.receipt_number}.pdf`);
+}
+
+export async function viewReceipt(paymentId: string) {
+  const { doc } = await buildReceiptDocForPayment(paymentId);
+  window.open(doc.output('bloburl'), '_blank');
+}
+
+export async function printReceipt(paymentId: string) {
+  const { doc } = await buildReceiptDocForPayment(paymentId);
+  doc.autoPrint();
+  window.open(doc.output('bloburl'), '_blank');
 }

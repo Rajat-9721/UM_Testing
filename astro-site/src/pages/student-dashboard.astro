@@ -6,7 +6,7 @@ const menu = [
   { label: 'Overview', target: 'overview' },
   { label: 'My Program / Enrollments', target: 'my-program' },
   { label: 'Fees & Payments', target: 'fees-payments' },
-  { label: 'Receipts', target: 'receipts' },
+  { label: 'Fee Receipts', target: 'receipts' },
   { label: 'Profile', target: 'profile' },
   { label: 'Security', target: 'security' },
 ];
@@ -39,7 +39,7 @@ const menu = [
   </section>
 
   <section class="dash-panel" id="receipts">
-    <h2>My Receipts</h2>
+    <h2>My Fee Receipts</h2>
     <p class="dash-muted">Every recorded payment has its own receipt.</p>
     <div id="receiptsList"><p class="course-empty">Loading...</p></div>
   </section>
@@ -69,7 +69,7 @@ const menu = [
 
 <script>
   import { supabase, requireRole, type TrustedProfile } from '../lib/supabase';
-  import { downloadReceipt } from '../lib/receipt';
+  import { downloadReceipt, viewReceipt, printReceipt } from '../lib/receipt';
 
   let currentStudent: { id: string } | null = null;
   let currentProfile: TrustedProfile | null = null;
@@ -194,24 +194,32 @@ const menu = [
               <td>${p.payment_method}</td>
               <td>${p.receipt_number}</td>
               <td><span class="status-pill status-${p.status_after_payment}">${statusLabel(p.status_after_payment)}</span></td>
-              <td><button class="row-actions" style="padding:6px 12px; font-size:0.85rem; border:1px solid var(--color-border); background:#fff; border-radius:6px; cursor:pointer;" data-download="${p.payment_id}">Download PDF</button></td>
+              <td class="row-actions">
+                <button data-receipt-action="view" data-id="${p.payment_id}">View</button>
+                <button data-receipt-action="download" data-id="${p.payment_id}">Download PDF</button>
+                <button data-receipt-action="print" data-id="${p.payment_id}">Print</button>
+              </td>
             </tr>
           `).join('')}
         </tbody>
       </table>
     `;
 
-    wrap.querySelectorAll<HTMLButtonElement>('[data-download]').forEach((btn) => {
+    wrap.querySelectorAll<HTMLButtonElement>('[data-receipt-action]').forEach((btn) => {
       btn.addEventListener('click', async () => {
+        const action = btn.dataset.receiptAction;
+        const paymentId = btn.dataset.id as string;
+        const original = btn.textContent;
         btn.disabled = true;
-        btn.textContent = 'Generating...';
         try {
-          await downloadReceipt(btn.dataset.download as string);
+          if (action === 'view') await viewReceipt(paymentId);
+          if (action === 'download') await downloadReceipt(paymentId);
+          if (action === 'print') await printReceipt(paymentId);
         } catch (err) {
-          alert('Failed to generate receipt: ' + (err as Error).message);
+          alert('Failed to open receipt: ' + (err as Error).message);
         } finally {
           btn.disabled = false;
-          btn.textContent = 'Download PDF';
+          btn.textContent = original;
         }
       });
     });

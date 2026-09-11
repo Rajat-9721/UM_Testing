@@ -2,8 +2,10 @@
 /**
  * Primary site navigation. Data-driven so the link set can grow
  * (Courses submenu, Journal, etc.) without touching Header markup.
- * Routes below don't all exist yet during the Step A foundation —
- * they'll resolve as each page is built in later steps.
+ * "Contact" is an anchor to the "Ready to start? Talk to us." CTA
+ * band (CTASection.astro, id="enquire") rather than a separate page —
+ * that section already has phone/WhatsApp/email, and lands higher on
+ * the page than scrolling all the way to the footer would.
  */
 interface NavItem {
   label: string;
@@ -14,7 +16,7 @@ const navItems: NavItem[] = [
   { label: 'Home', href: '/' },
   { label: 'About', href: '/about' },
   { label: 'Courses', href: '/courses' },
-  { label: 'Contact', href: '/contact' },
+  { label: 'Contact', href: '/#enquire' },
   { label: 'FAQ', href: '/faq' },
 ];
 ---

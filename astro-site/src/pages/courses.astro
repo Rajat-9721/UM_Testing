@@ -1,0 +1,335 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Container from '../components/Container.astro';
+import Section from '../components/Section.astro';
+import BrochureModal from '../components/BrochureModal.astro';
+import StickyProgramPanel from '../components/home/StickyProgramPanel.astro';
+import CTASection from '../components/home/CTASection.astro';
+
+/**
+ * Source of truth: "Professional_Certification_AI_Agentic_AI_FAQ.pdf" —
+ * "Course at a Glance", "Revised Curriculum – 200 Hours" and "Dedicated
+ * Agentic AI Component" tables. Same figures used in ProgramSpotlight.astro
+ * on the homepage — kept in sync module-for-module.
+ *
+ * Fee amount deliberately not listed here (or anywhere public-facing) —
+ * shared only via a call with admissions or the brochure (email-verified
+ * download), per client direction.
+ */
+const glance = [
+  { label: 'Course', value: 'Professional Certification in Artificial Intelligence and Agentic AI' },
+  { label: 'Duration', value: '200 hours' },
+  { label: 'Mode', value: 'Hybrid — offline classroom training at SPIT, or live online via Google Meet' },
+  { label: 'Venue', value: "Bhartiya Vidya Bhavan – Sardar Patel Institute of Technology (SPIT), Andheri West Campus, Mumbai – 400058" },
+  { label: 'Schedule', value: 'Saturday & Sunday, 9:00 AM to 1:00 PM' },
+  { label: 'Eligibility', value: 'Students pursuing graduation, diploma holders, graduates, postgraduates/PGDM, PhD scholars and working professionals' },
+  { label: 'Prerequisite', value: 'No prior programming knowledge required; basic computer knowledge is sufficient' },
+  { label: 'Certification', value: 'Bhartiya Vidya Bhavan – Sardar Patel Institute of Technology (SPIT)' },
+  { label: 'Internship & Placement', value: '100% Internship and Placement Assistance through SPIT for all eligible participants who successfully complete the training' },
+];
+
+const modules = [
+  { name: 'Python Programming', hours: 20 },
+  { name: 'Statistics in Python', hours: 20 },
+  { name: 'Machine Learning', hours: 30 },
+  { name: 'Deep Learning', hours: 20 },
+  { name: 'Natural Language Processing', hours: 20 },
+  { name: 'Generative AI + Agentic AI', hours: 25 },
+  { name: 'Computer Vision', hours: 20 },
+  { name: 'Power BI', hours: 20 },
+  { name: 'Big Data', hours: 20 },
+  { name: 'Interview Preparation + Resume Building + Soft Skills Training', hours: 5 },
+];
+const totalHours = modules.reduce((sum, m) => sum + m.hours, 0);
+
+const agenticTopics = [
+  'AI Agents and Agentic Workflows',
+  'LLM-based Agents',
+  'Tool Calling',
+  'Function Calling',
+  'Planning and Reasoning',
+  'Memory',
+  'Multi-Agent Systems',
+  'Retrieval-Augmented Generation (RAG)',
+  'Agent Orchestration',
+  'Building Practical AI Agents',
+  'Agent Evaluation and Responsible AI',
+];
+
+const panelFacts = [
+  { label: 'Delivery', value: 'Hybrid — offline or online (Google Meet)' },
+  { label: 'Offline center', value: 'SPIT, Andheri (West), Mumbai' },
+  { label: 'Eligibility', value: 'Diploma / Graduation / PG / PhD' },
+  { label: 'Academic partner', value: 'SPIT, Mumbai' },
+];
+---
+
+<BaseLayout
+  title="Courses"
+  description="Professional Certification in Artificial Intelligence and Agentic AI — a 200-hour program delivered in academic partnership with Sardar Patel Institute of Technology (SPIT), Mumbai."
+>
+  <Section theme="subtle" class="courses-hero-section">
+    <Container>
+      <div class="hero-card" data-reveal>
+        <p class="kicker">Flagship Program</p>
+        <h1>Professional Certification in Artificial Intelligence and Agentic AI</h1>
+        <p class="intro">
+          In academic partnership with <strong>Sardar Patel Institute of Technology (SPIT)</strong>,
+          Bhavan's Campus, Mumbai.
+        </p>
+      </div>
+    </Container>
+  </Section>
+
+  <Section theme="light" id="glance" class="courses-tight-section">
+    <Container>
+      <div class="course-layout">
+        <div class="course-main">
+          <h2>Course at a Glance</h2>
+          <dl class="glance-list" data-reveal-group>
+            {
+              glance.map((g) => (
+                <div class="glance-row" data-reveal>
+                  <dt>{g.label}</dt>
+                  <dd>{g.value}</dd>
+                </div>
+              ))
+            }
+          </dl>
+        </div>
+
+        <StickyProgramPanel name="Professional Certification in AI" facts={panelFacts} />
+      </div>
+    </Container>
+  </Section>
+
+  <Section theme="subtle" id="curriculum" class="courses-tight-section">
+    <Container>
+      <h2 data-reveal>Curriculum — 200 Hours</h2>
+      <ul class="module-list" data-reveal-group>
+        {
+          modules.map((m) => (
+            <li data-reveal>
+              <span class="module-name">{m.name}</span>
+              <span class="module-hours">{m.hours} hrs</span>
+            </li>
+          ))
+        }
+        <li class="module-total">
+          <span class="module-name">Total</span>
+          <span class="module-hours">{totalHours} hrs</span>
+        </li>
+      </ul>
+    </Container>
+  </Section>
+
+  <Section theme="light" id="agentic-ai" class="courses-tight-section">
+    <Container>
+      <p class="kicker" data-reveal>Dedicated Component</p>
+      <h2 data-reveal>What's covered under Agentic AI</h2>
+      <p class="agentic-lede" data-reveal>
+        Generative AI + Agentic AI is a dedicated 25-hour component of the 200-hour program,
+        extending learners' understanding beyond conventional AI applications toward practical
+        AI-agent workflows.
+      </p>
+      <ul class="topic-grid" data-reveal-group>
+        {agenticTopics.map((t) => <li data-reveal>{t}</li>)}
+      </ul>
+    </Container>
+  </Section>
+
+  <CTASection />
+
+  <BrochureModal />
+</BaseLayout>
+
+<style>
+  :global(.section.courses-hero-section) {
+    padding-block: var(--space-10);
+  }
+
+  :global(.section.courses-tight-section) {
+    padding-block: var(--space-12);
+  }
+
+  @media (max-width: 768px) {
+    :global(.section.courses-hero-section),
+    :global(.section.courses-tight-section) {
+      padding-block: var(--space-8);
+    }
+  }
+
+  .hero-card {
+    background-color: #fff;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-6) var(--space-8);
+  }
+
+  .kicker {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-accent-dark);
+    margin-bottom: var(--space-2);
+  }
+
+  h1 {
+    font-size: var(--text-2xl);
+    max-width: 30ch;
+    margin-bottom: var(--space-3);
+    color: var(--color-primary-light);
+  }
+
+  .intro {
+    font-size: var(--text-base);
+    max-width: 60ch;
+    color: var(--color-text-muted);
+  }
+
+  .course-layout {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: var(--space-12);
+    align-items: start;
+  }
+
+  .course-main h2 {
+    font-size: var(--text-xl);
+    margin-bottom: var(--space-4);
+  }
+
+  .glance-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .glance-row {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: var(--space-4);
+    padding-block: var(--space-3);
+    border-bottom: 1px solid var(--color-border);
+    font-size: var(--text-sm);
+  }
+
+  .glance-row:first-child {
+    border-top: 1px solid var(--color-border);
+  }
+
+  .glance-row dt {
+    color: var(--color-text-muted);
+    font-weight: 600;
+  }
+
+  .glance-row dd {
+    margin: 0;
+    color: var(--color-text);
+  }
+
+  section h2 {
+    font-size: var(--text-xl);
+    margin-bottom: var(--space-4);
+  }
+
+  section .kicker {
+    color: var(--color-secondary);
+  }
+
+  .module-list {
+    display: flex;
+    flex-direction: column;
+    max-width: 760px;
+  }
+
+  .module-list li {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding-block: var(--space-3);
+    border-bottom: 1px solid var(--color-border);
+    font-size: var(--text-sm);
+    background: var(--color-bg);
+    padding-inline: var(--space-5);
+  }
+
+  .module-list li:first-child {
+    border-top: 1px solid var(--color-border);
+  }
+
+  .module-total {
+    border-bottom: none !important;
+  }
+
+  .module-total .module-name,
+  .module-total .module-hours {
+    color: var(--color-primary-dark);
+    font-weight: 700;
+  }
+
+  .module-name {
+    color: var(--color-text);
+    font-weight: 600;
+  }
+
+  .module-hours {
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    font-family: var(--font-display);
+  }
+
+  .agentic-lede {
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+    max-width: 62ch;
+    margin-bottom: var(--space-5);
+  }
+
+  .topic-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border-top: 1px solid var(--color-border);
+    border-left: 1px solid var(--color-border);
+    max-width: 900px;
+  }
+
+  .topic-grid li {
+    padding: var(--space-3) var(--space-5);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-primary);
+    border-right: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  @media (max-width: 900px) {
+    .course-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .glance-row {
+      grid-template-columns: 1fr;
+      gap: var(--space-1);
+    }
+
+    .topic-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .hero-card {
+      padding: var(--space-5) var(--space-4);
+    }
+
+    h1 {
+      font-size: var(--text-xl);
+    }
+
+    .topic-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

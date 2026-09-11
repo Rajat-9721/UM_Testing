@@ -1,0 +1,297 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Container from '../components/Container.astro';
+import Section from '../components/Section.astro';
+import Button from '../components/Button.astro';
+import CTASection from '../components/home/CTASection.astro';
+
+/**
+ * All copy here is drawn from facts already established elsewhere in
+ * this project (Footer.astro, WhyUtkarsh.astro, Certification.astro,
+ * Hero.astro stats, and FAQ #42 in the source FAQ PDF) — nothing new is
+ * introduced. See CLAUDE.md rule 4: never invent business facts.
+ */
+const stats = [
+  { value: '2012', label: 'Training since' },
+  { value: '90%', label: 'Exam success rate' },
+  { value: '60%', label: 'Hands-on practical time' },
+];
+
+const approach = [
+  {
+    title: 'Practice over theory',
+    detail: '60% of course time is hands-on practical work — live projects and case studies, not just lectures.',
+  },
+  {
+    title: 'Career-ready, not just certified',
+    detail: 'Interview preparation, resume building and soft-skills training are built into every program alongside the technical curriculum.',
+  },
+  {
+    title: 'Backed by placement support',
+    detail: 'Internship and placement assistance is part of the program, connecting learners to real opportunities after training.',
+  },
+];
+---
+
+<BaseLayout
+  title="About Us"
+  description="Utkarsh Minds has been training students and professionals in Data Science, Artificial Intelligence and related digital skills since 2012, in academic partnership with Sardar Patel Institute of Technology (SPIT), Mumbai."
+>
+  <Section theme="subtle" class="about-hero-section">
+    <Container>
+      <div class="hero-card" data-reveal>
+        <p class="kicker">About Us</p>
+        <h1>Empower. Educate. Innovate.</h1>
+        <p class="intro">
+          Utkarsh Minds Technologies partners with leading enterprises and top-tier academic
+          institutions to co-create industry-relevant learning experiences that drive high-impact
+          outcomes.
+        </p>
+      </div>
+    </Container>
+  </Section>
+
+  <Section theme="light" class="about-tight-section">
+    <Container>
+      <div class="who-we-are">
+        <div>
+          <p class="kicker" data-reveal>Who We Are</p>
+          <h2 data-reveal>A decade of hands-on tech education</h2>
+          <p class="body-text" data-reveal>
+            Utkarsh Minds has been training students and working professionals in Data Science,
+            Artificial Intelligence and related digital skills since 2012. Our focus stays on
+            quality education and expert guidance — helping learners build practical, job-ready
+            skills rather than just collecting a certificate.
+          </p>
+          <p class="body-text" data-reveal>
+            Our flagship program, the Professional Certification in Artificial Intelligence and
+            Agentic AI, is delivered in academic partnership with Sardar Patel Institute of
+            Technology (SPIT), Mumbai — combining structured classroom learning with hands-on
+            implementation, projects, and career preparation.
+          </p>
+        </div>
+
+        <dl class="stat-strip" data-reveal-group>
+          {
+            stats.map((s) => (
+              <div class="stat" data-reveal>
+                <dt>{s.value}</dt>
+                <dd>{s.label}</dd>
+              </div>
+            ))
+          }
+        </dl>
+      </div>
+    </Container>
+  </Section>
+
+  <Section theme="subtle" class="about-tight-section">
+    <Container>
+      <p class="kicker" data-reveal>Our Goal</p>
+      <h2 class="goal-title" data-reveal>Making advanced AI education practical and accessible</h2>
+      <p class="goal-lede" data-reveal>
+        Our goal is to make industry-relevant AI and Data Science education genuinely accessible —
+        equipping learners with real, hands-on skills under experienced guidance, backed by strong
+        placement support, so they leave truly job-ready.
+      </p>
+
+      <div class="approach-grid" data-reveal-group>
+        {
+          approach.map((a) => (
+            <div class="approach-card" data-reveal>
+              <h3>{a.title}</h3>
+              <p>{a.detail}</p>
+            </div>
+          ))
+        }
+      </div>
+    </Container>
+  </Section>
+
+  <Section theme="dark" class="about-tight-section">
+    <Container>
+      <div class="partner">
+        <div data-reveal>
+          <p class="kicker">Academic Partner</p>
+          <h2>Sardar Patel Institute of Technology (SPIT), Mumbai</h2>
+          <p class="partner-lede">
+            Learners who complete the Professional Certification in Artificial Intelligence and
+            Agentic AI receive a certificate issued by SPIT. The program is delivered at
+            Bhartiya Vidya Bhavan – Sardar Patel Institute of Technology, Andheri West Campus,
+            Mumbai, with 100% internship and placement assistance provided through SPIT for all
+            eligible participants who successfully complete the training.
+          </p>
+          <Button href="/courses" variant="accent">Explore the Program</Button>
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <CTASection />
+</BaseLayout>
+
+<style>
+  :global(.section.about-hero-section) {
+    padding-block: var(--space-10);
+  }
+
+  :global(.section.about-tight-section) {
+    padding-block: var(--space-12);
+  }
+
+  @media (max-width: 768px) {
+    :global(.section.about-hero-section),
+    :global(.section.about-tight-section) {
+      padding-block: var(--space-8);
+    }
+  }
+
+  .hero-card {
+    background-color: #fff;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-6) var(--space-8);
+  }
+
+  .kicker {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-accent-dark);
+    margin-bottom: var(--space-2);
+  }
+
+  h1 {
+    font-size: var(--text-3xl);
+    max-width: 24ch;
+    margin-bottom: var(--space-3);
+    color: var(--color-primary-light);
+  }
+
+  .intro {
+    font-size: var(--text-base);
+    max-width: 62ch;
+    color: var(--color-text-muted);
+  }
+
+  section .kicker {
+    color: var(--color-secondary);
+  }
+
+  .who-we-are {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: var(--space-10);
+    align-items: center;
+  }
+
+  .who-we-are h2 {
+    font-size: var(--text-2xl);
+    max-width: 20ch;
+    margin-bottom: var(--space-3);
+  }
+
+  .body-text {
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+    max-width: 58ch;
+    margin-bottom: var(--space-3);
+  }
+
+  .stat-strip {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-6);
+    background: var(--color-bg-subtle);
+    border-top: 3px solid var(--color-accent);
+  }
+
+  .stat dt {
+    font-family: var(--font-display);
+    font-size: var(--text-2xl);
+    font-weight: 600;
+    color: var(--color-primary-dark);
+  }
+
+  .stat dd {
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+
+  .goal-title {
+    font-size: var(--text-2xl);
+    max-width: 26ch;
+    margin-bottom: var(--space-3);
+  }
+
+  .goal-lede {
+    color: var(--color-text-muted);
+    font-size: var(--text-base);
+    max-width: 64ch;
+    margin-bottom: var(--space-6);
+  }
+
+  .approach-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-5);
+  }
+
+  .approach-card {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    padding: var(--space-5);
+  }
+
+  .approach-card h3 {
+    font-size: var(--text-base);
+    margin-bottom: var(--space-2);
+    color: var(--color-primary);
+  }
+
+  .approach-card p {
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+  }
+
+  .partner h2 {
+    font-size: var(--text-2xl);
+    color: #fff;
+    max-width: 22ch;
+    margin-bottom: var(--space-3);
+  }
+
+  .partner .kicker {
+    color: var(--color-accent);
+  }
+
+  .partner-lede {
+    color: var(--color-dark-text-muted);
+    font-size: var(--text-sm);
+    max-width: 62ch;
+    margin-bottom: var(--space-5);
+  }
+
+  @media (max-width: 900px) {
+    .who-we-are {
+      grid-template-columns: 1fr;
+    }
+
+    .approach-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .hero-card {
+      padding: var(--space-5) var(--space-4);
+    }
+
+    h1 {
+      font-size: var(--text-2xl);
+    }
+  }
+</style>

@@ -4,7 +4,7 @@ import Section from '../Section.astro';
 import Button from '../Button.astro';
 ---
 
-<Section theme="dark" id="enquire">
+<Section theme="dark" id="enquire" class="cta-tight-section">
   <Container>
     <div class="cta" data-reveal>
       <div>
@@ -31,31 +31,42 @@ import Button from '../Button.astro';
 </Section>
 
 <style>
+  :global(.section.cta-tight-section) {
+    padding-block: var(--space-12);
+  }
+
+  @media (max-width: 768px) {
+    :global(.section.cta-tight-section) {
+      padding-block: var(--space-8);
+    }
+  }
+
   h2 {
     color: #fff;
-    margin-bottom: var(--space-4);
+    font-size: var(--text-2xl);
+    margin-bottom: var(--space-3);
   }
 
   .cta p {
     color: var(--color-dark-text-muted);
     max-width: 56ch;
-    font-size: var(--text-lg);
-    margin-bottom: var(--space-10);
+    font-size: var(--text-base);
+    margin-bottom: var(--space-6);
   }
 
   .cta-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-4);
-    margin-bottom: var(--space-8);
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
   }
 
   .cta-address {
     font-style: normal;
     color: var(--color-dark-text-muted);
-    font-size: var(--text-sm);
+    font-size: var(--text-xs);
     border-top: 1px solid var(--color-dark-border);
-    padding-top: var(--space-6);
+    padding-top: var(--space-4);
     max-width: 56ch;
   }
 </style>
