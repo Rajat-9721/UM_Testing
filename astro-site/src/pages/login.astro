@@ -155,7 +155,14 @@ import Button from '../components/Button.astro';
         return;
       }
 
-      const { role } = await getTrustedSession();
+      const { session, role } = await getTrustedSession();
+      if (!session) {
+        errorMsg.textContent = 'This account is no longer active. Contact the admissions team if you believe this is a mistake.';
+        errorMsg.style.display = 'block';
+        loginBtn.textContent = 'Login';
+        loginBtn.disabled = false;
+        return;
+      }
       redirectToDashboard(role);
     } catch (err) {
       errorMsg.textContent = 'An unexpected error occurred: ' + (err as Error).message;

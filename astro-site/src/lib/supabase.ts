@@ -33,8 +33,13 @@ export interface TrustedProfile {
   email: string | null;
   phone: string | null;
   must_change_password: boolean;
+  withdrawn_at: string | null;
 }
 
+// A withdrawn student is treated as not logged in at all, everywhere
+// this is called from (login page, requireRole, dashboard init) — one
+// policy, enforced in one place, rather than remembering to check
+// withdrawn_at at every call site.
 export async function getTrustedSession() {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) {
@@ -43,13 +48,18 @@ export async function getTrustedSession() {
 
   const { data: profile, error } = await supabase
     .from('profiles')
-    .select('id, role, student_id, full_name, email, phone, must_change_password')
+    .select('id, role, student_id, full_name, email, phone, must_change_password, withdrawn_at')
     .eq('id', session.user.id)
     .single();
 
   if (error || !profile) {
     console.error('Failed to load trusted profile/role:', error);
     return { session, role: null as Role | null, profile: null as TrustedProfile | null };
+  }
+
+  if (profile.role === 'student' && profile.withdrawn_at) {
+    await supabase.auth.signOut();
+    return { session: null, role: null as Role | null, profile: null as TrustedProfile | null };
   }
 
   return { session, role: profile.role as Role, profile: profile as TrustedProfile };

@@ -21,6 +21,10 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
   <section class="dash-panel active" id="student-management">
     <div class="toolbar">
       <input type="text" id="studentSearch" class="search-input" placeholder="Search by name, student ID or email..." />
+      <label class="toggle-label">
+        <input type="checkbox" id="showWithdrawnToggle" />
+        Show deleted students
+      </label>
       <Button variant="accent" id="openAddStudentBtn">+ Add Student</Button>
     </div>
 
@@ -325,6 +329,15 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
               <input type="number" id="programPrice" min="0" step="0.01" />
             </div>
           </div>
+          <div class="form-group">
+            <label for="programCode">Course Code (optional)</label>
+            <input type="text" id="programCode" placeholder="Leave blank to auto-assign the next available code" />
+            <p class="dash-muted" style="margin-top: 4px; font-size: 0.75rem;">
+              This number is embedded in every student ID registered under this program (e.g. code
+              100 → student IDs like 2026100-001). Leave blank on a new program to auto-assign the
+              next free number.
+            </p>
+          </div>
           <div class="form-row">
             <div class="form-group">
               <label for="programFaculty">Faculty (optional)</label>
@@ -527,6 +540,23 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
         </div>
       </div>
     </div>
+
+    <!-- Shared confirmation dialog — used before any destructive or
+         identity-changing action (delete, archive, edit). See
+         confirmAction() in the script below. -->
+    <div class="modal-backdrop" id="confirmModal">
+      <div class="modal" style="max-width: 420px;">
+        <div class="modal-header">
+          <h2 id="confirmTitle">Are you sure?</h2>
+          <button class="modal-close" data-close="confirmModal" id="confirmCancelX">&times;</button>
+        </div>
+        <p id="confirmMessage" class="dash-muted" style="margin-bottom: 1.5rem;"></p>
+        <div class="receipt-success-actions">
+          <button type="button" id="confirmCancelBtn">Cancel</button>
+          <Button type="button" variant="primary" id="confirmOkBtn">Confirm</Button>
+        </div>
+      </div>
+    </div>
   </Fragment>
 </DashboardLayout>
 
@@ -547,6 +577,45 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
 
   function openModal(id: string) { document.getElementById(id)?.classList.add('active'); }
   function closeModal(id: string) { document.getElementById(id)?.classList.remove('active'); }
+
+  // Promise-based "are you sure?" gate used before any destructive or
+  // identity-changing action, so every such click gets one deliberate
+  // extra step instead of firing immediately.
+  function confirmAction(title: string, message: string, confirmLabel = 'Confirm'): Promise<boolean> {
+    return new Promise((resolve) => {
+      document.getElementById('confirmTitle')!.textContent = title;
+      document.getElementById('confirmMessage')!.textContent = message;
+      const okBtn = document.getElementById('confirmOkBtn') as HTMLButtonElement;
+      const cancelBtn = document.getElementById('confirmCancelBtn') as HTMLButtonElement;
+      const cancelX = document.getElementById('confirmCancelX') as HTMLButtonElement;
+      const backdrop = document.getElementById('confirmModal') as HTMLElement;
+      okBtn.textContent = confirmLabel;
+
+      let settled = false;
+      const finish = (result: boolean) => {
+        if (settled) return;
+        settled = true;
+        okBtn.removeEventListener('click', onOk);
+        cancelBtn.removeEventListener('click', onCancel);
+        cancelX.removeEventListener('click', onCancel);
+        backdrop.removeEventListener('click', onBackdropClick);
+        closeModal('confirmModal');
+        resolve(result);
+      };
+      const onOk = () => finish(true);
+      const onCancel = () => finish(false);
+      // The layout's generic backdrop handler hides the modal but has
+      // no idea a promise is waiting on it — this makes a backdrop
+      // click resolve as Cancel instead of leaving confirmAction() hung.
+      const onBackdropClick = (e: MouseEvent) => { if (e.target === backdrop) finish(false); };
+
+      okBtn.addEventListener('click', onOk);
+      cancelBtn.addEventListener('click', onCancel);
+      cancelX.addEventListener('click', onCancel);
+      backdrop.addEventListener('click', onBackdropClick);
+      openModal('confirmModal');
+    });
+  }
 
   // Active-only course list, used by the two enrollment-facing dropdowns
   // (Add Student, Manage Enrollment). Archived programs still show up
@@ -580,26 +649,49 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
       body.innerHTML = '<tr><td colspan="7" class="empty-state">No students found.</td></tr>';
       return;
     }
-    body.innerHTML = rows.map((r) => `
-      <tr>
+    body.innerHTML = rows.map((r) => {
+      const withdrawn = Boolean(r.withdrawn_at);
+      return `
+      <tr${withdrawn ? ' style="opacity:0.6;"' : ''}>
         <td>${r.student_id || '—'}</td>
         <td class="wrap-cell">${r.full_name || '—'}</td>
         <td class="wrap-cell">${r.program || 'No program assigned'}</td>
         <td>${formatCurrency(r.total_paid)}</td>
         <td>${formatCurrency(r.balance)}</td>
-        <td><span class="status-pill status-${r.status}">${statusLabel(r.status)}</span></td>
+        <td>${withdrawn
+          ? '<span class="status-pill status-WITHDRAWN">Deleted</span>'
+          : `<span class="status-pill status-${r.status}">${statusLabel(r.status)}</span>`}</td>
         <td class="row-actions">
-          <button data-action="view" data-id="${r.profile_id}">View</button>
-          <button data-action="edit" data-id="${r.profile_id}">Edit</button>
-          ${r.enrollment_id ? `
-            <button data-action="pay" data-enrollment="${r.enrollment_id}">Record Payment</button>
-            <button data-action="enroll" data-enrollment="${r.enrollment_id}" data-course="${r.course_id || ''}" data-fee="${r.total_fee}">Manage Enrollment</button>
+          ${withdrawn ? `
+            <button data-action="restore" data-id="${r.profile_id}" data-name="${r.full_name || 'this student'}">Restore</button>
           ` : `
-            <button data-action="assign" data-student="${r.profile_id}">Assign Program</button>
+            <button data-action="view" data-id="${r.profile_id}">View</button>
+            <button data-action="edit" data-id="${r.profile_id}">Edit</button>
+            ${r.enrollment_id ? `
+              <button data-action="pay" data-enrollment="${r.enrollment_id}">Record Payment</button>
+              <button data-action="enroll" data-enrollment="${r.enrollment_id}" data-course="${r.course_id || ''}" data-fee="${r.total_fee}">Manage Enrollment</button>
+            ` : `
+              <button data-action="assign" data-student="${r.profile_id}">Assign Program</button>
+            `}
+            <button data-action="delete" data-id="${r.profile_id}" data-name="${r.full_name || 'this student'}">Delete</button>
           `}
         </td>
       </tr>
-    `).join('');
+    `;
+    }).join('');
+  }
+
+  function getVisibleStudents() {
+    const showWithdrawn = (document.getElementById('showWithdrawnToggle') as HTMLInputElement).checked;
+    const term = (document.getElementById('studentSearch') as HTMLInputElement).value.trim().toLowerCase();
+    return studentsCache
+      .filter((r) => showWithdrawn || !r.withdrawn_at)
+      .filter((r) => !term ||
+        (r.full_name || '').toLowerCase().includes(term) ||
+        (r.student_id || '').toLowerCase().includes(term) ||
+        (r.email || '').toLowerCase().includes(term) ||
+        (r.program || '').toLowerCase().includes(term)
+      );
   }
 
   async function loadStudents() {
@@ -615,22 +707,18 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
       return;
     }
     studentsCache = data || [];
-    renderStudentsTable(studentsCache);
+    renderStudentsTable(getVisibleStudents());
   }
 
-  document.getElementById('studentSearch')!.addEventListener('input', (e) => {
-    const term = (e.target as HTMLInputElement).value.trim().toLowerCase();
-    if (!term) { renderStudentsTable(studentsCache); return; }
-    const filtered = studentsCache.filter((r) =>
-      (r.full_name || '').toLowerCase().includes(term) ||
-      (r.student_id || '').toLowerCase().includes(term) ||
-      (r.email || '').toLowerCase().includes(term) ||
-      (r.program || '').toLowerCase().includes(term)
-    );
-    renderStudentsTable(filtered);
+  document.getElementById('studentSearch')!.addEventListener('input', () => {
+    renderStudentsTable(getVisibleStudents());
   });
 
-  document.getElementById('studentsTableBody')!.addEventListener('click', (e) => {
+  document.getElementById('showWithdrawnToggle')!.addEventListener('change', () => {
+    renderStudentsTable(getVisibleStudents());
+  });
+
+  document.getElementById('studentsTableBody')!.addEventListener('click', async (e) => {
     const btn = (e.target as HTMLElement).closest('button[data-action]') as HTMLButtonElement | null;
     if (!btn) return;
     const action = btn.dataset.action;
@@ -639,6 +727,30 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
     if (action === 'pay') openRecordPayment(btn.dataset.enrollment as string);
     if (action === 'enroll') openManageEnrollment(btn.dataset.enrollment as string, btn.dataset.course as string, btn.dataset.fee as string);
     if (action === 'assign') openAssignEnrollment(btn.dataset.student as string);
+
+    if (action === 'delete') {
+      const ok = await confirmAction(
+        'Delete this student?',
+        `This removes ${btn.dataset.name} from the active list and blocks their login. Their payment history and receipts are kept, and this can be undone from "Show deleted students".`,
+        'Delete'
+      );
+      if (!ok) return;
+      const { error } = await supabase.rpc('withdraw_student', { p_student_id: btn.dataset.id });
+      if (error) { alert('Failed to delete student: ' + error.message); return; }
+      await loadStudents();
+    }
+
+    if (action === 'restore') {
+      const ok = await confirmAction(
+        'Restore this student?',
+        `${btn.dataset.name} will reappear in the active list and be able to log in again.`,
+        'Restore'
+      );
+      if (!ok) return;
+      const { error } = await supabase.rpc('restore_student', { p_student_id: btn.dataset.id });
+      if (error) { alert('Failed to restore student: ' + error.message); return; }
+      await loadStudents();
+    }
   });
 
   document.getElementById('openAddStudentBtn')!.addEventListener('click', () => openModal('addStudentModal'));
@@ -710,6 +822,14 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
     const btn = document.getElementById('saveEditStudentBtn') as HTMLButtonElement;
     const alertBox = document.getElementById('edit-student-alert')!;
     alertBox.style.display = 'none';
+
+    const ok = await confirmAction(
+      'Save these changes?',
+      'This updates the student\'s name, email and phone on record.',
+      'Save'
+    );
+    if (!ok) return;
+
     btn.disabled = true;
     btn.textContent = 'Saving...';
 
@@ -982,6 +1102,7 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
     (document.getElementById('programMode') as HTMLInputElement).value = program.mode || '';
     (document.getElementById('programBadge') as HTMLInputElement).value = program.badge || '';
     (document.getElementById('programDescription') as HTMLTextAreaElement).value = program.description || '';
+    (document.getElementById('programCode') as HTMLInputElement).value = program.code || '';
     document.getElementById('programModalTitle')!.textContent = 'Edit Program';
     document.getElementById('program-alert')!.style.display = 'none';
     openModal('programModal');
@@ -994,7 +1115,7 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
     const id = (document.getElementById('programId') as HTMLInputElement).value;
     const priceRaw = (document.getElementById('programPrice') as HTMLInputElement).value;
 
-    const payload = {
+    const payload: Record<string, any> = {
       title: (document.getElementById('programTitle') as HTMLInputElement).value.trim(),
       category: (document.getElementById('programCategory') as HTMLInputElement).value.trim(),
       price: priceRaw ? parseFloat(priceRaw) : null,
@@ -1003,6 +1124,12 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
       badge: (document.getElementById('programBadge') as HTMLInputElement).value.trim() || null,
       description: (document.getElementById('programDescription') as HTMLTextAreaElement).value.trim() || null,
     };
+
+    // Blank means "auto-assign" on a new program (the DB trigger fills
+    // it in), or "leave unchanged" on an existing one — either way,
+    // that's expressed by omitting the key entirely, not sending null.
+    const codeRaw = (document.getElementById('programCode') as HTMLInputElement).value.trim();
+    if (codeRaw) payload.code = codeRaw;
 
     btn.disabled = true;
     btn.textContent = 'Saving...';
@@ -1029,6 +1156,14 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
   });
 
   async function toggleProgramActive(id: string, currentlyActive: boolean) {
+    if (currentlyActive) {
+      const ok = await confirmAction(
+        'Archive this program?',
+        'It will disappear from the "Add Student" course picker. Students already enrolled in it are unaffected, and you can reactivate it any time.',
+        'Archive'
+      );
+      if (!ok) return;
+    }
     const { error } = await supabase.from('courses').update({ is_active: !currentlyActive }).eq('id', id);
     if (error) {
       alert('Failed to update program: ' + error.message);

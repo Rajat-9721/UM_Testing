@@ -305,6 +305,25 @@ table.data-table {
   font-size: var(--text-sm);
 }
 
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.toggle-label input {
+  cursor: pointer;
+}
+
+.status-pill.status-WITHDRAWN {
+  background: #e6e3db;
+  color: var(--color-text-muted);
+}
+
 /* Forms */
 .form-group {
   margin-bottom: var(--space-5);
