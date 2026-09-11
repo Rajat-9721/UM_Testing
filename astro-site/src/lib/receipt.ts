@@ -202,14 +202,14 @@ async function renderReceiptPdf(data: ReceiptRow): Promise<jsPDF> {
   field(leftColX, y + rowH * 3, 'Academic Year', data.academic_year || '-', leftLabelW, leftValueMaxW);
   field(rightColX, y + rowH * 3, 'Mobile', data.student_phone || '-', rightLabelW);
 
-  field(rightColX, y + rowH * 4, 'Payment Mode', methodLabel(data.payment_method), rightLabelW);
-  field(rightColX, y + rowH * 5, 'Transaction ID', data.reference_number || '-', rightLabelW);
+  field(leftColX, y + rowH * 4, 'Payment Mode', methodLabel(data.payment_method), leftLabelW, leftValueMaxW);
+  field(rightColX, y + rowH * 4, 'Transaction ID', data.reference_number || '-', rightLabelW);
 
   // Program Name gets its own full-width row below the two columns —
   // it's routinely the longest value on the receipt (e.g. "Professional
   // Certification in Artificial Intelligence"), so it's never safe to
   // share a row with anything on the right.
-  const programRowY = y + rowH * 6;
+  const programRowY = y + rowH * 5;
   field(leftColX, programRowY, 'Program Name', data.program_title || '-', leftLabelW, contentW - leftLabelW - 10);
 
   y = programRowY + rowH + 10;
@@ -276,12 +276,21 @@ async function renderReceiptPdf(data: ReceiptRow): Promise<jsPDF> {
   const wrapped = doc.splitTextToSize(wordsText, contentW - 130);
   doc.text(wrapped, left + 128, y);
 
-  y += 22 * Math.max(wrapped.length, 1);
-
-  // ---- Disclaimer ----
+  // ---- Disclaimer: a highlighted footer bar, pinned near the bottom
+  // of the receipt rather than trailing right after Amount in Words. ----
+  const footerBarH = 22;
+  const footerY = margin + 4 + 770 - footerBarH - 14; // 14pt above the inner border's bottom edge
+  doc.setFillColor(235, 235, 235);
+  doc.rect(left, footerY, contentW, footerBarH, 'F');
   doc.setFont('helvetica', 'italic');
   doc.setFontSize(9.5);
-  doc.text('*This is a computer generated receipt and does not require signature or stamp.', left, y);
+  doc.setTextColor(0, 0, 0);
+  doc.text(
+    '*This is a computer generated receipt and does not require signature or stamp.',
+    left + contentW / 2,
+    footerY + footerBarH / 2 + 3,
+    { align: 'center' }
+  );
 
   return doc;
 }
