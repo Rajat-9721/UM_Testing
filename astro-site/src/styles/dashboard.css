@@ -245,6 +245,18 @@ table.data-table {
   border-bottom: 1px solid var(--color-border);
 }
 
+/* A long student name or program title wraps within its own column
+   instead of stretching the row or crowding the Actions buttons. */
+.data-table td.wrap-cell {
+  white-space: normal;
+  word-break: break-word;
+  max-width: 220px;
+}
+
+.data-table .row-actions {
+  white-space: normal;
+}
+
 .data-table th {
   color: var(--color-text-muted);
   font-size: var(--text-xs);

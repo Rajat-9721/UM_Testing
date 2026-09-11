@@ -30,7 +30,6 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
           <th>Student ID</th>
           <th>Name</th>
           <th>Program</th>
-          <th>Total Fee</th>
           <th>Paid</th>
           <th>Balance</th>
           <th>Status</th>
@@ -38,7 +37,7 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
         </tr>
       </thead>
       <tbody id="studentsTableBody">
-        <tr><td colspan="8" class="empty-state">Loading students...</td></tr>
+        <tr><td colspan="7" class="empty-state">Loading students...</td></tr>
       </tbody>
     </table>
   </section>
@@ -165,6 +164,39 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
             </div>
           </div>
           <Button type="submit" variant="accent" id="createStudentBtn">Create Student</Button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Edit Student Modal -->
+    <div class="modal-backdrop" id="editStudentModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>Edit Student Details</h2>
+          <button class="modal-close" data-close="editStudentModal">&times;</button>
+        </div>
+        <p class="dash-muted" style="margin-bottom: 1rem;">
+          Changing the email here updates their profile record only — it does not change their
+          login email. Contact support if a student needs different login credentials.
+        </p>
+        <div id="edit-student-alert" class="alert"></div>
+        <form id="editStudentForm">
+          <input type="hidden" id="editStudentId" />
+          <div class="form-group">
+            <label for="editStudentFullName">Full Name</label>
+            <input type="text" id="editStudentFullName" required />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="editStudentEmail">Email</label>
+              <input type="email" id="editStudentEmail" required />
+            </div>
+            <div class="form-group">
+              <label for="editStudentPhone">Mobile Number</label>
+              <input type="tel" id="editStudentPhone" required />
+            </div>
+          </div>
+          <Button type="submit" variant="accent" id="saveEditStudentBtn">Save Changes</Button>
         </form>
       </div>
     </div>
@@ -545,20 +577,20 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
   function renderStudentsTable(rows: any[]) {
     const body = document.getElementById('studentsTableBody')!;
     if (!rows.length) {
-      body.innerHTML = '<tr><td colspan="8" class="empty-state">No students found.</td></tr>';
+      body.innerHTML = '<tr><td colspan="7" class="empty-state">No students found.</td></tr>';
       return;
     }
     body.innerHTML = rows.map((r) => `
       <tr>
         <td>${r.student_id || '—'}</td>
-        <td>${r.full_name || '—'}</td>
-        <td>${r.program || 'No program assigned'}</td>
-        <td>${formatCurrency(r.total_fee)}</td>
+        <td class="wrap-cell">${r.full_name || '—'}</td>
+        <td class="wrap-cell">${r.program || 'No program assigned'}</td>
         <td>${formatCurrency(r.total_paid)}</td>
         <td>${formatCurrency(r.balance)}</td>
         <td><span class="status-pill status-${r.status}">${statusLabel(r.status)}</span></td>
         <td class="row-actions">
           <button data-action="view" data-id="${r.profile_id}">View</button>
+          <button data-action="edit" data-id="${r.profile_id}">Edit</button>
           ${r.enrollment_id ? `
             <button data-action="pay" data-enrollment="${r.enrollment_id}">Record Payment</button>
             <button data-action="enroll" data-enrollment="${r.enrollment_id}" data-course="${r.course_id || ''}" data-fee="${r.total_fee}">Manage Enrollment</button>
@@ -579,7 +611,7 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
     if (error) {
       console.error('Failed to load students:', error);
       document.getElementById('studentsTableBody')!.innerHTML =
-        `<tr><td colspan="8" class="empty-state">Failed to load students: ${error.message}</td></tr>`;
+        `<tr><td colspan="7" class="empty-state">Failed to load students: ${error.message}</td></tr>`;
       return;
     }
     studentsCache = data || [];
@@ -603,6 +635,7 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
     if (!btn) return;
     const action = btn.dataset.action;
     if (action === 'view') openViewStudent(btn.dataset.id as string);
+    if (action === 'edit') openEditStudent(btn.dataset.id as string);
     if (action === 'pay') openRecordPayment(btn.dataset.enrollment as string);
     if (action === 'enroll') openManageEnrollment(btn.dataset.enrollment as string, btn.dataset.course as string, btn.dataset.fee as string);
     if (action === 'assign') openAssignEnrollment(btn.dataset.student as string);
@@ -659,6 +692,47 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
       btn.disabled = false;
       btn.textContent = 'Create Student';
     }
+  });
+
+  function openEditStudent(profileId: string) {
+    const student = studentsCache.find((s) => s.profile_id === profileId);
+    if (!student) return;
+    (document.getElementById('editStudentId') as HTMLInputElement).value = student.profile_id;
+    (document.getElementById('editStudentFullName') as HTMLInputElement).value = student.full_name || '';
+    (document.getElementById('editStudentEmail') as HTMLInputElement).value = student.email || '';
+    (document.getElementById('editStudentPhone') as HTMLInputElement).value = student.phone || '';
+    document.getElementById('edit-student-alert')!.style.display = 'none';
+    openModal('editStudentModal');
+  }
+
+  document.getElementById('editStudentForm')!.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('saveEditStudentBtn') as HTMLButtonElement;
+    const alertBox = document.getElementById('edit-student-alert')!;
+    alertBox.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    const { error } = await supabase.rpc('update_student_profile', {
+      p_student_id: (document.getElementById('editStudentId') as HTMLInputElement).value,
+      p_full_name: (document.getElementById('editStudentFullName') as HTMLInputElement).value.trim(),
+      p_email: (document.getElementById('editStudentEmail') as HTMLInputElement).value.trim(),
+      p_phone: (document.getElementById('editStudentPhone') as HTMLInputElement).value.trim(),
+    });
+
+    if (error) {
+      alertBox.className = 'alert alert-error';
+      alertBox.textContent = error.message;
+      alertBox.style.display = 'block';
+    } else {
+      alertBox.className = 'alert alert-success';
+      alertBox.textContent = 'Student details updated.';
+      alertBox.style.display = 'block';
+      await loadStudents();
+      setTimeout(() => closeModal('editStudentModal'), 900);
+    }
+    btn.disabled = false;
+    btn.textContent = 'Save Changes';
   });
 
   async function openViewStudent(profileId: string) {
