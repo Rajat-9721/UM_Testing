@@ -171,35 +171,48 @@ async function renderReceiptPdf(data: ReceiptRow): Promise<jsPDF> {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(labelFont);
 
-  function field(x: number, rowY: number, label: string, value: string, labelW: number) {
+  // maxW clips (never wraps) a value so a long name/email on the left
+  // column can never run into the right column's text on the same row.
+  function field(x: number, rowY: number, label: string, value: string, labelW: number, maxW?: number) {
     doc.setFont('helvetica', 'bold');
     doc.text(label, x, rowY);
     doc.setFont('helvetica', 'normal');
     doc.text(':', x + labelW, rowY);
-    doc.text(value || '-', x + labelW + 10, rowY);
+    let text = value || '-';
+    if (maxW) {
+      const lines = doc.splitTextToSize(text, maxW);
+      text = lines[0] + (lines.length > 1 ? '…' : '');
+    }
+    doc.text(text, x + labelW + 10, rowY);
   }
 
   const leftLabelW = 92;
   const rightLabelW = 95;
+  const leftValueMaxW = rightColX - (leftColX + leftLabelW + 10) - 10;
 
-  field(leftColX, y, 'Receipt No.', data.receipt_number, leftLabelW);
+  field(leftColX, y, 'Receipt No.', data.receipt_number, leftLabelW, leftValueMaxW);
   field(rightColX, y, 'Receipt Date', formatReceiptDate(data.payment_date), rightLabelW);
 
-  field(leftColX, y + rowH, 'Student Name', data.student_name || '-', leftLabelW);
+  field(leftColX, y + rowH, 'Student Name', data.student_name || '-', leftLabelW, leftValueMaxW);
   field(rightColX, y + rowH, 'Roll No. (UID)', data.student_code || '-', rightLabelW);
 
-  field(leftColX, y + rowH * 2, 'Email Id', data.student_email || '-', leftLabelW);
+  field(leftColX, y + rowH * 2, 'Email Id', data.student_email || '-', leftLabelW, leftValueMaxW);
   field(rightColX, y + rowH * 2, 'Financial Year', data.financial_year || '-', rightLabelW);
 
-  field(leftColX, y + rowH * 3, 'Academic Year', data.academic_year || '-', leftLabelW);
+  field(leftColX, y + rowH * 3, 'Academic Year', data.academic_year || '-', leftLabelW, leftValueMaxW);
   field(rightColX, y + rowH * 3, 'Mobile', data.student_phone || '-', rightLabelW);
 
-  field(leftColX, y + rowH * 4, 'Program Name', data.program_title || '-', leftLabelW);
   field(rightColX, y + rowH * 4, 'Payment Mode', methodLabel(data.payment_method), rightLabelW);
-
   field(rightColX, y + rowH * 5, 'Transaction ID', data.reference_number || '-', rightLabelW);
 
-  y += rowH * 6 + 16;
+  // Program Name gets its own full-width row below the two columns —
+  // it's routinely the longest value on the receipt (e.g. "Professional
+  // Certification in Artificial Intelligence"), so it's never safe to
+  // share a row with anything on the right.
+  const programRowY = y + rowH * 6;
+  field(leftColX, programRowY, 'Program Name', data.program_title || '-', leftLabelW, contentW - leftLabelW - 10);
+
+  y = programRowY + rowH + 10;
 
   // ---- Particulars of Fees table ----
   const srColW = 46;
@@ -262,6 +275,13 @@ async function renderReceiptPdf(data: ReceiptRow): Promise<jsPDF> {
   const wordsText = amountToWords(data.amount);
   const wrapped = doc.splitTextToSize(wordsText, contentW - 130);
   doc.text(wrapped, left + 128, y);
+
+  y += 22 * Math.max(wrapped.length, 1);
+
+  // ---- Disclaimer ----
+  doc.setFont('helvetica', 'italic');
+  doc.setFontSize(9.5);
+  doc.text('*This is a computer generated receipt and does not require signature or stamp.', left, y);
 
   return doc;
 }
