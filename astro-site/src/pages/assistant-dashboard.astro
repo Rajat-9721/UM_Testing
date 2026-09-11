@@ -774,12 +774,36 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
 
     try {
       const { data, error } = await supabaseSignup.auth.signUp({ email, password });
+      let userId: string;
+
       if (error || !data || !data.user) {
-        throw new Error(error ? error.message : 'Supabase did not return a new user.');
+        // If a previous attempt got this far (auth account created)
+        // but failed on the step below (e.g. a transient RPC error),
+        // signUp on the same email now fails with "already registered"
+        // — that's not a real conflict, it's an unfinished registration.
+        // Resume it instead of dead-ending every retry.
+        const message = (error?.message || '').toLowerCase();
+        if (message.includes('already registered') || message.includes('already exists')) {
+          const { data: orphaned } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('email', email.toLowerCase())
+            .is('student_id', null)
+            .maybeSingle();
+
+          if (!orphaned) {
+            throw new Error(error!.message + ' (and no incomplete registration was found to resume — this email may belong to an existing, fully set-up account).');
+          }
+          userId = orphaned.id;
+        } else {
+          throw new Error(error ? error.message : 'Supabase did not return a new user.');
+        }
+      } else {
+        userId = data.user.id;
       }
 
       const { error: rpcError } = await supabase.rpc('register_student_full', {
-        p_user_id: data.user.id,
+        p_user_id: userId,
         p_email: email,
         p_full_name: fullName,
         p_phone: phone,
