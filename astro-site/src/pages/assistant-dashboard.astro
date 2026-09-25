@@ -8,7 +8,7 @@ const menu = [
   { label: 'Fee Receipts', target: 'fee-receipts' },
   { label: 'Programs', target: 'programs' },
   { label: 'Team', target: 'team' },
-  { label: 'LinkedIn Post Generator', target: 'linkedin-post' },
+  { label: 'LinkedIn Post Generator', href: '/assistant-linkedin-generator' },
 ];
 const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
 ---
@@ -111,22 +111,6 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
         <tr><td colspan="4" class="empty-state">Loading team...</td></tr>
       </tbody>
     </table>
-  </section>
-
-  <section class="dash-panel" id="linkedin-post">
-    <h2>LinkedIn Post Generator</h2>
-    <p class="dash-muted" style="margin-bottom: 1.25rem;">
-      This is a placeholder tool for drafting announcement text. It is not connected to LinkedIn
-      and does not use AI generation — a real content-generation module is a future module.
-    </p>
-    <form id="linkedinPostForm">
-      <div class="form-group">
-        <label for="postTopic">Topic / Key Points</label>
-        <textarea id="postTopic" rows="4" required placeholder="e.g., New course launch for Python programming..."></textarea>
-      </div>
-      <Button type="submit" variant="accent">Generate Draft Text</Button>
-    </form>
-    <div id="generatedPost" style="margin-top: 20px; padding: 20px; background: var(--color-bg-subtle); border-radius: 8px; white-space: pre-wrap; display: none;"></div>
   </section>
 
   <Fragment slot="modals">
@@ -1053,15 +1037,6 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
       await loadStudents();
       setTimeout(() => closeModal('manageEnrollmentModal'), 1000);
     }
-  });
-
-  document.getElementById('linkedinPostForm')!.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const topic = (document.getElementById('postTopic') as HTMLTextAreaElement).value;
-    const postText = `Draft text (not AI-generated):\n\n${topic}\n\n#UtkarshMinds #Education`;
-    const output = document.getElementById('generatedPost')!;
-    output.textContent = postText;
-    output.style.display = 'block';
   });
 
   // ---- Programs (course catalog) ----

@@ -12,7 +12,10 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",
     "astro": "^5.18.2",
-    "jspdf": "^4.2.1"
+    "dictionary-en": "^4.0.0",
+    "docx": "^9.7.2",
+    "jspdf": "^4.2.1",
+    "nspell": "^2.1.5"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",

@@ -1,15 +1,9 @@
 ---
 import DashboardLayout from '../layouts/DashboardLayout.astro';
 import Button from '../components/Button.astro';
+import { studentMenu } from '../lib/studentNav';
 
-const menu = [
-  { label: 'My Program / Enrollments', target: 'my-program' },
-  { label: 'Fees & Payments', target: 'fees-payments' },
-  { label: 'Fee Receipts', target: 'receipts' },
-  { label: 'Profile', target: 'profile' },
-  { label: 'Overview', target: 'overview' },
-  { label: 'Security', target: 'security' },
-];
+const menu = studentMenu('dashboard');
 ---
 
 <DashboardLayout title="Student Dashboard" portalLabel="Student Portal" menu={menu}>

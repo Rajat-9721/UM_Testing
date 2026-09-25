@@ -1,0 +1,98 @@
+---
+/**
+ * Student portal: Resume Generator — a 9-step wizard with the live resume
+ * preview always on the right (desktop) or one tap away (mobile).
+ * Logic lives in src/lib/resume/wizard.ts; resume rendering/export in
+ * src/lib/resume/*. Opens an existing resume with ?id=<id>[&step=<n>].
+ */
+import DashboardLayout from '../layouts/DashboardLayout.astro';
+import Button from '../components/Button.astro';
+import { studentMenu } from '../lib/studentNav';
+import '../styles/resume.css';
+import '../styles/resume-templates.css';
+
+const menu = studentMenu('resume-generator');
+const steps = ['Template', 'Personal', 'Education', 'Skills', 'Projects', 'Experience', 'Certifications', 'AI', 'Review'];
+---
+
+<DashboardLayout title="Resume Generator" portalLabel="Student Portal" menu={menu}>
+  <div class="rg-page" id="rgPage" hidden>
+    <header class="rg-top">
+      <div class="rg-top__title">
+        <h1>Resume Generator</h1>
+        <p class="dash-muted">Build an ATS-friendly resume step by step. Your preview updates as you type.</p>
+      </div>
+      <div class="rg-top__meta">
+        <label class="rg-name">
+          <span class="rg-sr-only">Resume name</span>
+          <input type="text" id="resumeName" maxlength="120" placeholder="Untitled Resume" autocomplete="off" />
+        </label>
+        <span class="rg-save" id="saveStatus" role="status" aria-live="polite">Not saved yet</span>
+        <a href="/student-my-resumes" class="rg-link">My Resumes</a>
+      </div>
+    </header>
+
+    <nav class="rg-steps" aria-label="Resume steps">
+      <ol id="stepper">
+        {steps.map((label, i) => (
+          <li>
+            <button type="button" class="rg-step" data-step={i} disabled={i > 0}>
+              <span class="rg-step__num">{i + 1}</span>
+              <span class="rg-step__label">{label}</span>
+            </button>
+          </li>
+        ))}
+      </ol>
+    </nav>
+
+    <div class="rg-mobile-tabs" role="tablist" aria-label="Edit or preview">
+      <button type="button" role="tab" data-pane="edit" aria-selected="true">Edit</button>
+      <button type="button" role="tab" data-pane="preview" aria-selected="false">Preview</button>
+    </div>
+
+    <div class="rg-work" id="work" data-pane="edit">
+      <section class="rg-form" aria-label="Current step">
+        <div class="rg-card" id="stepPanel" tabindex="-1"></div>
+        <div class="rg-nav" id="stepNav">
+          <button type="button" class="rg-btn rg-btn--ghost" id="backBtn">Back</button>
+          <Button type="button" variant="primary" id="nextBtn" class="rg-next">Next</Button>
+        </div>
+      </section>
+
+      <aside class="rg-preview" aria-label="Live resume preview">
+        <div class="rg-preview__bar">
+          <span class="rg-preview__title">Live Preview</span>
+          <label class="rg-preview__tpl">
+            <span>Template</span>
+            <select id="templateSelect"></select>
+          </label>
+        </div>
+        <p class="rg-preview__note" id="previewNote" hidden>Sample content — your details replace it as you type.</p>
+        <div class="rg-preview__page" id="previewHost"></div>
+      </aside>
+    </div>
+  </div>
+
+  <Fragment slot="modals">
+    <div class="modal-backdrop" id="templateModal">
+      <div class="modal rg-modal">
+        <div class="modal-header">
+          <h2 id="templateModalTitle">Template preview</h2>
+          <button class="modal-close" data-close="templateModal" aria-label="Close">&times;</button>
+        </div>
+        <div class="rg-modal__page" id="templateModalHost"></div>
+        <div class="rg-modal__actions">
+          <button type="button" class="rg-btn rg-btn--ghost" data-close="templateModal">Close</button>
+          <Button type="button" variant="primary" id="templateModalUse">Use Template</Button>
+        </div>
+      </div>
+    </div>
+  </Fragment>
+
+  <div class="rg-toasts" id="toasts" aria-live="polite"></div>
+</DashboardLayout>
+
+<script>
+  import { initWizard } from '../lib/resume/wizard';
+  initWizard();
+</script>

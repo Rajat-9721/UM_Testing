@@ -1,0 +1,12 @@
+---
+/** Student portal: LinkedIn Post Generator. */
+import DashboardLayout from '../layouts/DashboardLayout.astro';
+import LinkedInStudio from '../components/linkedin/LinkedInStudio.astro';
+import { studentMenu } from '../lib/studentNav';
+
+const menu = studentMenu('linkedin');
+---
+
+<DashboardLayout title="LinkedIn Studio" portalLabel="Student Portal" menu={menu}>
+  <LinkedInStudio role="student" />
+</DashboardLayout>

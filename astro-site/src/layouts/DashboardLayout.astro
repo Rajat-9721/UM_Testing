@@ -2,9 +2,14 @@
 import '../styles/global.css';
 import '../styles/dashboard.css';
 
+// An item either switches an in-page panel (`target`) or navigates to
+// another page (`href`). `active` marks the current item explicitly;
+// otherwise the first panel item starts active.
 interface MenuItem {
   label: string;
-  target: string;
+  target?: string;
+  href?: string;
+  active?: boolean;
 }
 
 interface Props {
@@ -15,6 +20,7 @@ interface Props {
 }
 
 const { title, portalLabel, menu, comingSoon = [] } = Astro.props;
+const activeIndex = menu.some((item) => item.active) ? menu.findIndex((item) => item.active) : menu.findIndex((item) => item.target);
 ---
 
 <!doctype html>
@@ -36,7 +42,14 @@ const { title, portalLabel, menu, comingSoon = [] } = Astro.props;
 
         <ul class="dash-nav">
           {menu.map((item, i) => (
-            <li><a href="#" data-target={item.target} class={i === 0 ? 'active' : ''}>{item.label}</a></li>
+            <li>
+              <a
+                href={item.href ?? '#'}
+                data-target={item.target}
+                class={i === activeIndex ? 'active' : ''}
+                aria-current={i === activeIndex ? 'page' : undefined}
+              >{item.label}</a>
+            </li>
           ))}
         </ul>
 
@@ -66,15 +79,35 @@ const { title, portalLabel, menu, comingSoon = [] } = Astro.props;
     <script>
       import { supabase } from '../lib/supabase';
 
-      document.querySelectorAll<HTMLAnchorElement>('.dash-nav a[data-target]').forEach((link) => {
+      function activatePanel(link: HTMLAnchorElement) {
+        document.querySelectorAll('.dash-nav a').forEach((l) => {
+          l.classList.remove('active');
+          l.removeAttribute('aria-current');
+        });
+        document.querySelectorAll('.dash-panel').forEach((c) => c.classList.remove('active'));
+        link.classList.add('active');
+        link.setAttribute('aria-current', 'page');
+        document.getElementById(link.dataset.target as string)?.classList.add('active');
+      }
+
+      const panelLinks = document.querySelectorAll<HTMLAnchorElement>('.dash-nav a[data-target]');
+      panelLinks.forEach((link) => {
         link.addEventListener('click', (e) => {
           e.preventDefault();
-          document.querySelectorAll('.dash-nav a').forEach((l) => l.classList.remove('active'));
-          document.querySelectorAll('.dash-panel').forEach((c) => c.classList.remove('active'));
-          link.classList.add('active');
-          document.getElementById(link.dataset.target as string)?.classList.add('active');
+          activatePanel(link);
+          history.replaceState(null, '', `#${link.dataset.target}`);
         });
       });
+
+      // Deep links (e.g. /assistant-dashboard#programs) — on load, and when
+      // only the hash changes while already on the page.
+      const openFromHash = () => {
+        const hashTarget = decodeURIComponent(window.location.hash.slice(1));
+        const hashLink = Array.from(panelLinks).find((l) => l.dataset.target === hashTarget);
+        if (hashLink) activatePanel(hashLink);
+      };
+      openFromHash();
+      window.addEventListener('hashchange', openFromHash);
 
       document.getElementById('logoutBtn')?.addEventListener('click', async (e) => {
         e.preventDefault();

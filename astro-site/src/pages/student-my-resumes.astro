@@ -1,0 +1,64 @@
+---
+/**
+ * Student portal: My Resumes — every resume the student created, with
+ * edit, preview, download, rename, duplicate, change template and delete.
+ * Logic in src/lib/resume/myResumes.ts.
+ */
+import DashboardLayout from '../layouts/DashboardLayout.astro';
+import Button from '../components/Button.astro';
+import { studentMenu } from '../lib/studentNav';
+import '../styles/resume.css';
+import '../styles/resume-templates.css';
+
+const menu = studentMenu('my-resumes');
+---
+
+<DashboardLayout title="My Resumes" portalLabel="Student Portal" menu={menu}>
+  <div class="rg-page" id="mrPage" hidden>
+    <header class="mr-head">
+      <div>
+        <h1>My Resumes</h1>
+        <p class="dash-muted">Manage, edit and download your generated resumes.</p>
+      </div>
+      <Button href="/student-resume-generator" variant="primary">+ Create New Resume</Button>
+    </header>
+    <p class="rg-hint" id="storageNote" hidden>
+      Resumes are currently saved on this device only. They will sync to your account once saving is enabled by the academy.
+    </p>
+    <div id="resumeList"><p class="dash-muted">Loading your resumes…</p></div>
+  </div>
+
+  <Fragment slot="modals">
+    <div class="modal-backdrop" id="previewModal">
+      <div class="modal rg-modal">
+        <div class="modal-header">
+          <h2 id="previewModalTitle">Resume preview</h2>
+          <button class="modal-close" data-close="previewModal" aria-label="Close">&times;</button>
+        </div>
+        <div class="rg-modal__page" id="previewModalHost"></div>
+        <div class="rg-modal__actions" id="previewModalActions"></div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="deleteModal">
+      <div class="modal" style="max-width: 440px;">
+        <div class="modal-header">
+          <h2>Delete resume?</h2>
+          <button class="modal-close" data-close="deleteModal" aria-label="Close">&times;</button>
+        </div>
+        <p class="dash-muted" id="deleteMessage" style="margin-bottom: 1.25rem;"></p>
+        <div class="rg-modal__actions">
+          <button type="button" class="rg-btn rg-btn--ghost" data-close="deleteModal">Cancel</button>
+          <button type="button" class="rg-btn rg-btn--primary" id="deleteConfirm" style="background: var(--color-danger);">Delete</button>
+        </div>
+      </div>
+    </div>
+  </Fragment>
+
+  <div class="rg-toasts" id="toasts" aria-live="polite"></div>
+</DashboardLayout>
+
+<script>
+  import { initMyResumes } from '../lib/resume/myResumes';
+  initMyResumes();
+</script>

@@ -1,0 +1,11 @@
+# Never commit real secrets (API keys) — only the .env.example templates.
+.env
+.env.*
+!.env.example
+functions/**/.env
+functions/**/.env.*
+!functions/**/.env.example
+
+# Supabase CLI local state
+.temp/
+.branches/
