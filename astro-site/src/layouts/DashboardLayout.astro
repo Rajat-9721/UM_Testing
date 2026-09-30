@@ -109,10 +109,31 @@ const activeIndex = menu.some((item) => item.active) ? menu.findIndex((item) => 
       openFromHash();
       window.addEventListener('hashchange', openFromHash);
 
+      // Blank the page before leaving so the browser's back/forward cache
+      // never holds a snapshot of the signed-in dashboard, and replace()
+      // the history entry so Back from /login doesn't land here. Local
+      // sign-out is cleared even if the network call fails.
       document.getElementById('logoutBtn')?.addEventListener('click', async (e) => {
         e.preventDefault();
-        await supabase.auth.signOut();
-        window.location.href = '/login';
+        document.body.style.visibility = 'hidden';
+        try {
+          await supabase.auth.signOut();
+        } catch {
+          await supabase.auth.signOut({ scope: 'local' });
+        }
+        window.location.replace('/login');
+      });
+
+      // Pages restored from the back/forward cache don't re-run their auth
+      // check, so re-verify the session whenever one is shown that way
+      // (e.g. Back after logging out, or after logging out in another tab).
+      window.addEventListener('pageshow', async (e) => {
+        if (!e.persisted) return;
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          document.body.style.visibility = 'hidden';
+          window.location.replace('/login');
+        }
       });
 
       document.querySelectorAll<HTMLElement>('[data-close]').forEach((btn) => {
