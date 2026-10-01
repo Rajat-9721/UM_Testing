@@ -1,0 +1,255 @@
+/*
+  Resume templates (preview + thumbnails). One A4 page is 794px wide at
+  96 dpi; the page is drawn at full size and scaled with a transform so
+  proportions match the PDF/DOCX exactly.
+
+  ATS-friendly by design: text only, standard headings, no icons, images,
+  charts or skill bars. Colours are per-template accents (resume paper,
+  not the portal theme) and are the same values the PDF/DOCX use.
+*/
+
+.rs-host {
+  width: 100%;
+  overflow: hidden;
+}
+
+.rs-frame {
+  position: relative;
+  margin: 0 auto;
+}
+
+.rs {
+  --rs-accent: #1f2937;
+  --rs-ink: #1f2328;
+  --rs-muted: #555b63;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+  box-sizing: border-box;
+  width: 794px;
+  min-height: 1123px;
+  padding: 56px 60px;
+  background: #fff;
+  color: var(--rs-ink);
+  font-size: 14px;
+  line-height: 1.45;
+  text-align: left;
+}
+
+.rs *,
+.rs *::before,
+.rs *::after {
+  box-sizing: border-box;
+}
+
+.rs--sans {
+  font-family: Calibri, Carlito, 'Segoe UI', Arial, Helvetica, sans-serif;
+}
+
+.rs--serif {
+  font-family: Georgia, 'Times New Roman', Times, serif;
+}
+
+.rs p,
+.rs ul,
+.rs h1,
+.rs h2 {
+  margin: 0;
+  padding: 0;
+}
+
+.rs a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ---- Header ---- */
+.rs-head {
+  margin-bottom: 18px;
+}
+
+.rs--align-center .rs-head {
+  text-align: center;
+}
+
+.rs-name {
+  font-size: 30px;
+  line-height: 1.15;
+  font-weight: 700;
+  color: var(--rs-ink);
+  font-family: inherit;
+  letter-spacing: 0.005em;
+}
+
+.rs-name--upper {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 27px;
+}
+
+.rs-role {
+  margin-top: 4px !important;
+  font-size: 15.5px;
+  color: var(--rs-accent);
+  font-weight: 600;
+}
+
+.rs-contacts {
+  margin-top: 8px !important;
+  font-size: 12.5px;
+  color: var(--rs-muted);
+}
+
+.rs-sep {
+  color: #a0a4aa;
+}
+
+.rs--placeholder .rs-name,
+.rs--placeholder .rs-role,
+.rs--placeholder .rs-contacts {
+  color: #b7bcc3;
+}
+
+/* ---- Sections ---- */
+.rs-sec {
+  margin-top: 16px;
+}
+
+.rs-h {
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--rs-accent);
+  margin-bottom: 8px !important;
+  line-height: 1.3;
+}
+
+.rs--h-rule .rs-h {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 13.5px;
+  padding-bottom: 4px;
+  border-bottom: 1.2px solid var(--rs-accent);
+}
+
+.rs--h-bar .rs-h {
+  font-size: 15px;
+  padding-left: 9px;
+  border-left: 3px solid var(--rs-accent);
+}
+
+.rs--h-caps .rs-h {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 13px;
+}
+
+.rs--h-underline .rs-h {
+  display: inline-block;
+  font-size: 15px;
+  padding-bottom: 2px;
+  border-bottom: 2px solid var(--rs-accent);
+}
+
+.rs-text {
+  font-size: 14px;
+}
+
+.rs-entry + .rs-entry {
+  margin-top: 10px;
+}
+
+.rs-entry-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+}
+
+.rs-entry-h {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.rs-meta {
+  flex-shrink: 0;
+  font-size: 12.5px;
+  color: var(--rs-muted);
+  white-space: nowrap;
+}
+
+.rs-sub {
+  font-size: 13px;
+  font-style: italic;
+  color: var(--rs-muted);
+}
+
+.rs-links {
+  font-size: 12.5px;
+  color: var(--rs-muted);
+}
+
+.rs-bullets {
+  margin-top: 3px !important;
+  padding-left: 18px !important;
+  list-style: disc;
+}
+
+.rs-bullets li {
+  font-size: 13.5px;
+  margin-bottom: 2px;
+}
+
+.rs-skill {
+  font-size: 13.5px;
+}
+
+.rs-skill + .rs-skill {
+  margin-top: 2px;
+}
+
+.rs-skill strong {
+  font-weight: 700;
+}
+
+.rs-empty {
+  margin-top: 40px !important;
+  text-align: center;
+  color: #b7bcc3;
+  font-size: 14px;
+}
+
+/* ---- Sidebar layout ---- */
+.rs-cols {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 26px;
+}
+
+.rs-side {
+  padding-right: 18px;
+  border-right: 1px solid #d9dde2;
+}
+
+.rs-side .rs-sec:first-child,
+.rs-main .rs-sec:first-child {
+  margin-top: 0;
+}
+
+.rs-side .rs-entry-top {
+  display: block;
+}
+
+.rs-side .rs-meta {
+  display: block;
+  white-space: normal;
+}
+
+.rs-side .rs-skill strong {
+  display: block;
+}
+
+.rs-side .rs-skill + .rs-skill {
+  margin-top: 6px;
+}

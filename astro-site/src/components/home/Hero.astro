@@ -2,7 +2,7 @@
 import { Image } from 'astro:assets';
 import Container from '../Container.astro';
 import Button from '../Button.astro';
-import emblem from '../../assets/brand/brand-emblem-card.png';
+import spitLogo from '../../assets/brand/spit-logo-hero.png';
 
 import pythonIcon from '../../assets/logos/python.svg?raw';
 import tensorflowIcon from '../../assets/logos/tensorflow.svg?raw';
@@ -18,41 +18,42 @@ const stats = [
 ];
 
 /**
- * Positions are percentages on the 0–100 square that the stage/SVG share,
- * pushed outward from center (clamped to an 8–92 safe margin so a chip
- * never touches the stage edge) for more breathing room around the core.
- * Real official brand marks (Simple Icons, CC0) for Python/TensorFlow/
- * PyTorch/OpenAI; the ML and Data Science entries are generic in-house
- * glyphs, not a real company logo, since neither names one.
+ * Satellites sit evenly on one orbit (radius 40 on the 0–100 square the
+ * stage and SVG share), 60° apart, so every chip is equidistant from the
+ * logo and the orbit ring passes straight through them. Real official
+ * brand marks (Simple Icons, CC0) for Python/TensorFlow/PyTorch/OpenAI;
+ * the ML and Data Science entries are generic in-house glyphs.
  */
 const HUB = { x: 50, y: 50 };
+const ORBIT_R = 40;
 
 const rawSatellites = [
-  { key: 'python', label: 'Python', icon: pythonIcon, x: 34, y: 8, tint: '#3776AB' },
-  { key: 'tensorflow', label: 'TensorFlow', icon: tensorflowIcon, x: 85, y: 8, tint: '#FF6F00' },
-  { key: 'pytorch', label: 'PyTorch', icon: pytorchIcon, x: 92, y: 58, tint: '#EE4C2C' },
-  { key: 'openai', label: 'Generative AI', icon: openaiIcon, x: 69, y: 92, tint: '#412991' },
-  { key: 'ml', label: 'Machine Learning', icon: mlIcon, x: 22, y: 84, tint: 'var(--color-accent)' },
-  { key: 'data', label: 'Data Science', icon: dataIcon, x: 8, y: 41, tint: 'var(--color-primary-light)' },
+  { key: 'python', label: 'Python', icon: pythonIcon, angle: -120, tint: '#3776AB' },
+  { key: 'tensorflow', label: 'TensorFlow', icon: tensorflowIcon, angle: -60, tint: '#FF6F00' },
+  { key: 'pytorch', label: 'PyTorch', icon: pytorchIcon, angle: 0, tint: '#EE4C2C' },
+  { key: 'openai', label: 'Generative AI', icon: openaiIcon, angle: 60, tint: '#412991' },
+  { key: 'ml', label: 'Machine Learning', icon: mlIcon, angle: 120, tint: 'var(--color-accent)' },
+  { key: 'data', label: 'Data Science', icon: dataIcon, angle: 180, tint: 'var(--color-primary-light)' },
 ];
 
 /**
- * Each connection is a gentle quadratic curve, not a straight line — the
- * control point is offset perpendicular to the hub->node vector, sign
- * alternating per node so neighbouring paths bow in different directions
- * (organic "knowledge pathway" feel, per the reference composition).
+ * Each connection is a gentle quadratic curve from the hub to its chip —
+ * the control point is offset perpendicular to the hub->node vector, sign
+ * alternating per node so neighbouring paths bow in different directions.
  */
 const satellites = rawSatellites.map((s, i) => {
-  const dx = s.x - HUB.x;
-  const dy = s.y - HUB.y;
-  const len = Math.sqrt(dx * dx + dy * dy) || 1;
-  const perpX = -dy / len;
-  const perpY = dx / len;
-  const bow = (i % 2 === 0 ? 1 : -1) * 6;
-  const midX = (HUB.x + s.x) / 2 + perpX * bow;
-  const midY = (HUB.y + s.y) / 2 + perpY * bow;
-  const path = `M ${HUB.x} ${HUB.y} Q ${midX.toFixed(2)} ${midY.toFixed(2)} ${s.x} ${s.y}`;
-  return { ...s, path };
+  const rad = (s.angle * Math.PI) / 180;
+  const x = HUB.x + ORBIT_R * Math.cos(rad);
+  const y = HUB.y + ORBIT_R * Math.sin(rad);
+  const perpX = -Math.sin(rad);
+  const perpY = Math.cos(rad);
+  const bow = (i % 2 === 0 ? 1 : -1) * 5;
+  const midX = (HUB.x + x) / 2 + perpX * bow;
+  const midY = (HUB.y + y) / 2 + perpY * bow;
+  const path = `M ${HUB.x} ${HUB.y} Q ${midX.toFixed(2)} ${midY.toFixed(2)} ${x.toFixed(2)} ${y.toFixed(2)}`;
+  // Negative delays: every loop is already mid-flight on first paint, so
+  // there is no initial wait or synchronized "pop" when the page loads.
+  return { ...s, x, y, path, delay: `${-i}s` };
 });
 ---
 
@@ -61,7 +62,7 @@ const satellites = rawSatellites.map((s, i) => {
     <div class="hero-copy">
       <p class="eyebrow hero-reveal" style="--d: 0">A Program Driven by Sardar Patel Institute of Technology</p>
       <h1 class="hero-reveal" style="--d: 1">
-        Master Data Science, AI &amp; Generative AI — with real mentors and real projects.
+        Master Artificial Intelligence &amp; Agentic AI — with real mentors and real projects.
       </h1>
       <p class="lede hero-reveal" style="--d: 2">
         Utkarsh Minds delivers hands-on, industry-oriented training in Data Science, Machine
@@ -88,45 +89,45 @@ const satellites = rawSatellites.map((s, i) => {
       </dl>
     </div>
 
-    <div class="hero-visual hero-reveal" style="--d: 2" aria-hidden="true">
+    <div class="hero-visual hero-reveal" style="--d: 2">
       <div class="logo-stage">
-        <svg class="stage-lines" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+        <svg class="stage-lines" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+          <circle class="stage-orbit" cx="50" cy="50" r={ORBIT_R} />
+          {satellites.map((s) => <path d={s.path} class="stage-link" />)}
           {
-            satellites.map((s, i) => (
-              <path d={s.path} class="stage-link" style={`animation-delay: calc(${i} * 150ms);`} />
-            ))
-          }
-          {
-            /* Small travelling waveform (not a dot): a tiny sine-like
-               squiggle riding the same curve, oriented to the curve's own
-               tangent via offset-rotate so it reads as a signal moving
-               through the path rather than a particle floating past it. */
-            satellites.map((s, i) => (
-              <path
-                d="M -2.6 0 C -1.9 -1.6 -1 1.6 -0.3 0 C 0.4 -1.6 1.3 1.6 2 0 C 2.3 -0.8 2.5 0.4 2.6 0"
-                class="stage-signal"
-                style={`offset-path: path('${s.path}'); animation-delay: calc(${i} * 150ms);`}
-              />
+            /* Signal pulse: a short dash travelling hub -> chip along the
+               same curve via stroke-dashoffset (pathLength-normalised).
+               Starts hidden under the logo and ends hidden under the chip,
+               so it never pops in or out. */
+            satellites.map((s) => (
+              <path d={s.path} class="stage-signal" pathLength="100" style={`animation-delay: ${s.delay};`} />
             ))
           }
         </svg>
 
         <div class="logo-core">
-          <div class="logo-core-frame">
-            <Image src={emblem} alt="" width={640} loading="eager" fetchpriority="high" />
+          <span class="logo-halo" aria-hidden="true"></span>
+          <div class="logo-core-disc">
+            <Image
+              src={spitLogo}
+              alt="Sardar Patel Institute of Technology (SPIT) logo"
+              width={240}
+              densities={[1, 2]}
+              loading="eager"
+              fetchpriority="high"
+            />
           </div>
         </div>
 
         {
-          satellites.map((s, i) => (
-            <div
-              class="satellite"
-              style={`left:${s.x}%; top:${s.y}%; animation-delay: calc(${i} * 150ms);`}
-            >
-              <span class="satellite-chip">
-                <span class="satellite-icon" style={`color:${s.tint};`} set:html={s.icon} />
-              </span>
-              <span class="satellite-label">{s.label}</span>
+          satellites.map((s) => (
+            <div class:list={['satellite', { 'satellite--top': s.angle < 0 }]} style={`left:${s.x.toFixed(2)}%; top:${s.y.toFixed(2)}%;`} aria-hidden="true">
+              <div class="satellite-float" style={`animation-delay: ${s.delay};`}>
+                <span class="satellite-chip" style={`animation-delay: ${s.delay};`}>
+                  <span class="satellite-icon" style={`color:${s.tint};`} set:html={s.icon} />
+                </span>
+                <span class="satellite-label">{s.label}</span>
+              </div>
             </div>
           ))
         }
@@ -211,13 +212,14 @@ const satellites = rawSatellites.map((s, i) => {
     justify-content: center;
   }
 
-  /* ---- Logo stage: clean hero logo that periodically "powers up" an
-     ecosystem of real technology marks around it, then settles back. ---- */
+  /* ---- Logo stage: the SPIT emblem at the centre of a calm, continuously
+     running technology orbit. Every loop's first and last keyframes are
+     identical, so nothing ever jumps, resets or blinks between cycles. ---- */
 
   .logo-stage {
     position: relative;
     width: 100%;
-    max-width: 360px;
+    max-width: 380px;
     aspect-ratio: 1 / 1;
   }
 
@@ -230,76 +232,56 @@ const satellites = rawSatellites.map((s, i) => {
     overflow: visible;
   }
 
-  .stage-link {
-    stroke: var(--color-golden-subtle);
-    stroke-width: 0.2;
-    stroke-dasharray: 1 1.6;
+  .stage-orbit {
     fill: none;
-    stroke-linecap: round;
-    animation: link-cycle 18s cubic-bezier(0.45, 0.05, 0.15, 1) infinite;
-  }
-
-  @keyframes link-cycle {
-    0%,
-    13% {
-      opacity: 0;
-      stroke-dashoffset: 6;
-    }
-    28% {
-      opacity: 0.35;
-    }
-    34% {
-      opacity: 0.4;
-      stroke-dashoffset: 0;
-    }
-    50% {
-      stroke-dashoffset: -5;
-    }
-    65% {
-      stroke-dashoffset: -10;
-    }
-    78% {
-      opacity: 0.4;
-      stroke-dashoffset: -15;
-    }
-    90%,
-    100% {
-      opacity: 0;
-      stroke-dashoffset: -18;
-    }
-  }
-
-  /* Neural signal: a tiny travelling waveform (not a dot) riding each
-     path, oriented to the curve's tangent so it reads as a pulse of
-     information moving through the connection — core -> node, once per
-     cycle, only once that connection is actually established. */
-  .stage-signal {
     stroke: var(--color-accent);
-    stroke-width: 0.32;
+    stroke-width: 0.35;
+    stroke-dasharray: 0.8 2;
     stroke-linecap: round;
+    opacity: 0.75;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: orbit-spin 90s linear infinite;
+  }
+
+  @keyframes orbit-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Brass (not the pale gold) so the connections read clearly over both
+     the dark-green and the cream end of the hero gradient. */
+  .stage-link {
     fill: none;
-    opacity: 0;
-    offset-rotate: auto;
-    animation: signal-travel 18s cubic-bezier(0.45, 0.05, 0.15, 1) infinite;
+    stroke: var(--color-accent);
+    stroke-width: 0.45;
+    stroke-dasharray: 1.4 1.2;
+    stroke-linecap: round;
+    opacity: 0.85;
+  }
+
+  /* Dash of 8 then a 200 gap (on a pathLength of 100): exactly one pulse is
+     ever on the curve, travelling from offset 8 (hidden before the start)
+     to -100 (just past the end), then resting until the next cycle. */
+  .stage-signal {
+    fill: none;
+    stroke: #f3d9a4;
+    stroke-width: 1.1;
+    stroke-linecap: round;
+    stroke-dasharray: 8 200;
+    filter: drop-shadow(0 0 1.2px rgba(190, 138, 61, 0.9));
+    stroke-dashoffset: 8;
+    animation: signal-travel 6s cubic-bezier(0.45, 0, 0.25, 1) infinite;
   }
 
   @keyframes signal-travel {
-    0%,
-    36% {
-      opacity: 0;
-      offset-distance: 0%;
+    0% {
+      stroke-dashoffset: 8;
     }
-    41% {
-      opacity: 0.9;
-    }
-    69% {
-      opacity: 0.9;
-      offset-distance: 100%;
-    }
-    75%,
+    55%,
     100% {
-      opacity: 0;
-      offset-distance: 100%;
+      stroke-dashoffset: -100;
     }
   }
 
@@ -308,92 +290,94 @@ const satellites = rawSatellites.map((s, i) => {
     left: 50%;
     top: 50%;
     z-index: 2;
-    transform: translate(-50%, -50%) scale(1);
-    animation: core-settle 18s cubic-bezier(0.45, 0.05, 0.15, 1) infinite;
+    width: 48%;
+    aspect-ratio: 1 / 1;
+    transform: translate(-50%, -50%);
   }
 
-  @keyframes core-settle {
-    0%,
-    13% {
-      transform: translate(-50%, -50%) scale(1);
-    }
-    30%,
-    80% {
-      /* A gentle settle, not a heavy shrink — keeps the logo's own
-         wordmark comfortably legible through the whole cycle. */
-      transform: translate(-50%, -50%) scale(0.88);
-    }
-    100% {
-      transform: translate(-50%, -50%) scale(1);
-    }
+  /* Soft brass glow that breathes behind the disc — opacity/scale only,
+     composited, so it stays smooth on low-end mobile GPUs. */
+  .logo-halo {
+    position: absolute;
+    inset: -14%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(217, 196, 143, 0.45) 0%, rgba(217, 196, 143, 0) 68%);
+    animation: halo-breathe 6s ease-in-out infinite;
   }
 
-  .logo-core-frame {
-    width: min(72vw, 320px);
-    border-radius: var(--radius-xl);
-    overflow: hidden;
-    box-shadow: var(--shadow-lg);
-    animation: core-breathe 5.5s ease-in-out infinite;
-  }
-
-  .logo-core-frame :global(img) {
-    width: 100%;
-    height: auto;
-    display: block;
-  }
-
-  @keyframes core-breathe {
+  @keyframes halo-breathe {
     0%,
     100% {
-      transform: scale(1);
+      opacity: 0.55;
+      transform: scale(0.94);
     }
     50% {
-      transform: scale(1.015);
+      opacity: 1;
+      transform: scale(1.04);
     }
   }
 
+  /* Warm white disc framing the transparent SPIT seal: a faint maroon
+     inner ring echoes the seal's own colour, a brass hairline and soft
+     outer glow tie it back to the site palette. */
+  .logo-core-disc {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 38%, #ffffff 0%, #fdfaf4 55%, #f3ead8 100%);
+    border: 1px solid var(--color-golden-subtle);
+    box-shadow:
+      inset 0 0 0 5px #fff,
+      inset 0 0 0 6px rgba(143, 38, 38, 0.18),
+      0 0 0 6px rgba(250, 246, 238, 0.14),
+      0 18px 40px rgba(10, 24, 18, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10%;
+  }
+
+  .logo-core-disc :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  /* Anchor the chip's centre (not the chip+label block) on the orbit point:
+     -28px is half the 56px chip, so lines end exactly under the chip. */
   .satellite {
     position: absolute;
     z-index: 1;
-    transform: translate(-50%, -50%) scale(0.5) translateY(4%);
-    opacity: 0;
+    transform: translate(-50%, -28px);
+  }
+
+  /* Top-row chips put their label above the chip, pointing away from the
+     logo, so a label never overlaps the disc on small screens. */
+  .satellite--top {
+    transform: translate(-50%, calc(-100% + 28px));
+  }
+
+  .satellite--top .satellite-float {
+    flex-direction: column-reverse;
+  }
+
+  .satellite-float {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: var(--space-2);
-    animation: satellite-cycle 18s cubic-bezier(0.45, 0.05, 0.15, 1) infinite;
+    animation: satellite-float 6s ease-in-out infinite;
   }
 
-  @keyframes satellite-cycle {
+  @keyframes satellite-float {
     0%,
-    13% {
-      opacity: 0;
-      transform: translate(-50%, -50%) scale(0.5) translateY(4%);
-    }
-    26% {
-      opacity: 1;
-      transform: translate(-50%, -50%) scale(1.08) translateY(0%);
-    }
-    32% {
-      transform: translate(-50%, -50%) scale(1) translateY(0%);
-    }
-    46% {
-      transform: translate(-50%, -50%) scale(1.035) translateY(0%);
-    }
-    60% {
-      transform: translate(-50%, -50%) scale(1) translateY(0%);
-    }
-    72% {
-      transform: translate(-50%, -50%) scale(1.03) translateY(0%);
-    }
-    82% {
-      opacity: 1;
-      transform: translate(-50%, -50%) scale(1) translateY(0%);
-    }
-    94%,
     100% {
-      opacity: 0;
-      transform: translate(-50%, -50%) scale(0.55) translateY(4%);
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-4px);
     }
   }
 
@@ -406,26 +390,20 @@ const satellites = rawSatellites.map((s, i) => {
     border-radius: var(--radius-full);
     background: var(--color-bg);
     box-shadow: var(--shadow-md);
-    animation: chip-receive 18s cubic-bezier(0.45, 0.05, 0.15, 1) infinite;
-    animation-delay: inherit;
+    animation: chip-receive 6s ease-in-out infinite;
   }
 
-  /* Brief brighten + 1–2% scale exactly when this node's signal arrives
-     (matches the end of signal-travel's window above), then eases back. */
+  /* Soft brass ring as this node's signal arrives (end of signal-travel's
+     travel window at ~55%), then eases back to rest. */
   @keyframes chip-receive {
     0%,
-    67% {
-      transform: scale(1);
-      box-shadow: var(--shadow-md);
-    }
-    70% {
-      transform: scale(1.02);
-      box-shadow: 0 0 0 6px rgba(190, 138, 61, 0.14), var(--shadow-md);
-    }
-    76%,
+    46%,
+    80%,
     100% {
-      transform: scale(1);
-      box-shadow: var(--shadow-md);
+      box-shadow: 0 0 0 0 rgba(190, 138, 61, 0), var(--shadow-md);
+    }
+    56% {
+      box-shadow: 0 0 0 6px rgba(190, 138, 61, 0.22), var(--shadow-md);
     }
   }
 
@@ -480,16 +458,13 @@ const satellites = rawSatellites.map((s, i) => {
       opacity: 1;
       transform: none;
     }
-    .logo-core,
-    .logo-core-frame,
-    .satellite,
-    .satellite-chip,
-    .stage-link,
-    .stage-signal {
+    .stage-orbit,
+    .stage-signal,
+    .logo-halo,
+    .satellite-float,
+    .satellite-chip {
       animation: none;
     }
-    .satellite,
-    .stage-link,
     .stage-signal {
       opacity: 0;
     }
@@ -526,6 +501,14 @@ const satellites = rawSatellites.map((s, i) => {
   @media (max-width: 640px) {
     .logo-stage {
       max-width: 280px;
+    }
+
+    .satellite {
+      transform: translate(-50%, -22px);
+    }
+
+    .satellite--top {
+      transform: translate(-50%, calc(-100% + 22px));
     }
 
     .satellite-chip {

@@ -73,7 +73,7 @@ export async function requireRole(expectedRole: Role) {
   const { session, role, profile } = await getTrustedSession();
 
   if (!session) {
-    window.location.href = '/login';
+    window.location.replace('/login');
     return null;
   }
 
@@ -85,8 +85,10 @@ export async function requireRole(expectedRole: Role) {
   return { session, profile: profile as TrustedProfile };
 }
 
+// replace(), not href: the login page shouldn't stay in history behind
+// the dashboard, and a signed-out dashboard shouldn't stay behind login.
 export function redirectToDashboard(role: Role | null) {
-  window.location.href = dashboardPath(role);
+  window.location.replace(dashboardPath(role));
 }
 
 // Records that a student has used their one-time self-service password

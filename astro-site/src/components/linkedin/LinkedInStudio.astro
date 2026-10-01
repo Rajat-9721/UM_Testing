@@ -1,0 +1,1057 @@
+---
+/**
+ * LinkedIn Studio — the LinkedIn Post Generator, shared by the assistant
+ * and student portals. The page that renders it supplies the dashboard
+ * shell and the role; this component renders the generator, and its
+ * script re-checks the signed-in user's trusted role (requireRole).
+ * The server enforces the same rule independently (linkedin-generate
+ * Edge Function + RLS on linkedin_generations).
+ *
+ * Layout (wide screens): form | generated posts | sticky editor/preview
+ * panel. Narrower screens stack the same three regions.
+ */
+import Button from '../Button.astro';
+import '../../styles/linkedin-studio.css';
+import brandCard from '../../assets/brand/brand-emblem-card.png';
+import {
+  ASSISTANT_PURPOSES,
+  AUDIENCES,
+  LANGUAGES,
+  LENGTHS,
+  MAX_DETAILS_LENGTH,
+  MAX_TOPIC_LENGTH,
+  STUDENT_POST_TYPES,
+  TONES,
+} from '../../lib/linkedin/options';
+
+interface Props {
+  role: 'assistant' | 'student';
+}
+
+const { role } = Astro.props;
+
+const copy = {
+  assistant: {
+    dashboard: '/assistant-dashboard',
+    subtitle: "Turn the academy's achievements, events and programs into professional LinkedIn posts.",
+    purposeLabel: 'Post purpose',
+    topicPlaceholder: 'e.g. 24 learners completed our 6-week Data Science program with a capstone project showcase',
+    defaultAudience: 'General LinkedIn Audience',
+    emptyTitle: "Turn your academy's moments into your next LinkedIn post.",
+    emptyText:
+      "Tell us what happened — an achievement, an event, a new program — and we'll write several distinct, professional versions for you to pick from, polish and share.",
+  },
+  student: {
+    dashboard: '/student-dashboard',
+    subtitle: 'Turn your achievements, learnings and experiences into professional LinkedIn posts.',
+    purposeLabel: 'Post type',
+    topicPlaceholder: 'e.g. Completed a 6-week Data Science program at Utkarsh Minds',
+    defaultAudience: 'Recruiters',
+    emptyTitle: 'Turn your experience into your next LinkedIn post.',
+    emptyText:
+      "Tell us what you achieved, learned or experienced and we'll create multiple professional versions for you.",
+  },
+}[role];
+
+const purposes = role === 'student' ? STUDENT_POST_TYPES : ASSISTANT_PURPOSES;
+---
+
+<div class="ls-page" id="lsPage" data-role={role} data-brand-card={brandCard.src} hidden>
+  <!-- ============ Header band ============ -->
+  <header class="ls-hero">
+    <div class="ls-hero__text">
+      <a href={copy.dashboard} class="ls-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
+        Back to Dashboard
+      </a>
+      <h1 class="ls-title">LinkedIn Post Generator</h1>
+      <p class="ls-subtitle">
+        {copy.subtitle}
+        Generate multiple post variations tailored to your audience and goals.
+      </p>
+      <span class="ls-mode-badge ls-hidden" id="mockBadge" title="Set PUBLIC_LINKEDIN_AI_PROVIDER=supabase once the linkedin-generate function is deployed.">
+        Preview mode · template drafts, not AI
+      </span>
+    </div>
+    <div class="ls-hero__art" aria-hidden="true">
+      <div class="ls-hero__tile"><span>in</span></div>
+      <p class="ls-hero__script">
+        Your story,<br /><span>your next opportunity</span>
+        <svg viewBox="0 0 160 14" fill="none"><path d="M3 10c30-6 80-9 154-4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" /></svg>
+      </p>
+    </div>
+  </header>
+
+  <div class="ls-workspace" id="workspace">
+    <!-- ============ Column 1: form + history ============ -->
+    <div class="ls-col-form">
+      <section class="ls-card" aria-labelledby="generatorTitle">
+        <h2 class="ls-card__title" id="generatorTitle">Create Your LinkedIn Post</h2>
+        <p class="ls-card__hint">Fill in the details below and we'll generate multiple post variations for you. Only what you share is used — nothing gets made up.</p>
+
+        <form id="generatorForm" class="ls-form" novalidate>
+          <div class="form-group" data-field="purpose">
+            <label for="purpose">{copy.purposeLabel} <abbr title="required">*</abbr></label>
+            <select id="purpose" name="purpose" required>
+              {purposes.map((p) => <option value={p}>{p}</option>)}
+            </select>
+            <p class="ls-field-error" role="alert"></p>
+          </div>
+
+          <div class="form-group" data-field="topic">
+            <label for="topic">Topic / what happened? <abbr title="required">*</abbr></label>
+            <textarea
+              id="topic"
+              name="topic"
+              rows="3"
+              required
+              maxlength={MAX_TOPIC_LENGTH}
+              placeholder={copy.topicPlaceholder}></textarea>
+            <div class="ls-field-foot">
+              <p class="ls-field-error" role="alert"></p>
+              <span class="ls-counter" id="topicCounter">0/{MAX_TOPIC_LENGTH}</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" data-field="tone">
+              <label for="tone">Tone <abbr title="required">*</abbr></label>
+              <select id="tone" name="tone" required>
+                {TONES.map((t) => <option value={t}>{t}</option>)}
+              </select>
+              <p class="ls-field-error" role="alert"></p>
+            </div>
+            <div class="form-group" data-field="language">
+              <label for="language">Language</label>
+              <select id="language" name="language">
+                {LANGUAGES.map((l) => <option value={l}>{l}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group" data-field="audience">
+            <label for="audience">Target audience <abbr title="required">*</abbr></label>
+            <select id="audience" name="audience" required>
+              {AUDIENCES.map((a) => <option value={a} selected={a === copy.defaultAudience}>{a}</option>)}
+            </select>
+            <p class="ls-field-error" role="alert"></p>
+          </div>
+
+          <div class="form-group" data-field="keywords">
+            <label for="keywords">Keywords <span class="ls-optional">(comma separated)</span></label>
+            <input type="text" id="keywords" name="keywords" placeholder="Python, Machine Learning, Data Science" autocomplete="off" />
+          </div>
+
+          <div class="form-group" data-field="details">
+            <label for="details">Additional context <span class="ls-optional">(optional)</span></label>
+            <textarea
+              id="details"
+              name="details"
+              rows="4"
+              maxlength={MAX_DETAILS_LENGTH}
+              placeholder="Names to mention, dates, what made it special, mentors to thank, what's next…"></textarea>
+            <div class="ls-field-foot">
+              <p class="ls-field-error" role="alert"></p>
+              <span class="ls-counter" id="detailsCounter">0/{MAX_DETAILS_LENGTH}</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <span class="ls-group-label" id="lengthLabel">Desired length</span>
+            <div class="ls-segmented" role="radiogroup" aria-labelledby="lengthLabel">
+              {LENGTHS.map((l) => (
+                <>
+                  <input type="radio" name="length" id={`length-${l.value}`} value={l.value} checked={l.value === 'medium'} />
+                  <label for={`length-${l.value}`}>{l.label}</label>
+                </>
+              ))}
+            </div>
+          </div>
+
+          <div class="ls-switches">
+            <label class="ls-switch">
+              <span>Hashtags</span>
+              <input type="checkbox" role="switch" id="includeHashtags" checked />
+            </label>
+            <label class="ls-switch">
+              <span>Call to action</span>
+              <input type="checkbox" role="switch" id="includeCta" checked />
+            </label>
+            <label class="ls-switch">
+              <span>Mention academy</span>
+              <input type="checkbox" role="switch" id="mentionAcademy" checked={role === 'assistant'} />
+            </label>
+          </div>
+
+          <Button type="submit" variant="accent" id="generateBtn" class="ls-generate">
+            <span class="ls-spinner" aria-hidden="true"></span>
+            <svg class="ls-sparkle" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.1 6.3L20 10l-5.9 1.7L12 18l-2.1-6.3L4 10l5.9-1.7zM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z" /></svg>
+            <span id="generateLabel">Generate LinkedIn Posts</span>
+          </Button>
+        </form>
+      </section>
+
+      <section class="ls-card" aria-labelledby="historyTitle" id="historyCard">
+        <h2 class="ls-card__title" id="historyTitle">Recent posts</h2>
+        <p class="ls-card__hint">Reopen something you generated earlier.</p>
+        <div class="ls-history" id="historyList">
+          <p class="ls-history__empty">Loading…</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- ============ Column 2: generated posts ============ -->
+    <section class="ls-col-posts ls-card ls-card--flush" aria-labelledby="postsTitle">
+      <div class="ls-posts-head">
+        <h2 id="postsTitle">Generated Posts <span id="postsCount"></span></h2>
+        <p class="ls-card__hint" id="postsHint">Your post variations will appear here.</p>
+      </div>
+
+      <div class="ls-corrections ls-hidden" id="correctionsBox" role="status">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7" /></svg>
+        <div>
+          <p class="ls-corrections__title" id="correctionsTitle"></p>
+          <p class="ls-corrections__list" id="correctionsList"></p>
+        </div>
+        <button type="button" class="ls-action" id="applyCorrections">Apply to form</button>
+      </div>
+
+      <div class="ls-error ls-hidden" id="errorBox" role="alert"></div>
+
+      <div class="ls-empty" id="emptyState">
+        <svg viewBox="0 0 168 120" fill="none" aria-hidden="true">
+          <rect x="30" y="20" width="118" height="84" rx="10" fill="#fff" stroke="var(--color-border)" transform="rotate(6 89 62)" />
+          <rect x="22" y="14" width="118" height="84" rx="10" fill="#fff" stroke="var(--color-golden-subtle)" />
+          <circle cx="42" cy="34" r="9" fill="var(--color-primary)" />
+          <rect x="58" y="28" width="46" height="5" rx="2.5" fill="var(--color-primary-light)" opacity=".7" />
+          <rect x="58" y="37" width="30" height="4" rx="2" fill="var(--color-border)" />
+          <rect x="34" y="54" width="94" height="4" rx="2" fill="var(--color-bg-subtle)" />
+          <rect x="34" y="63" width="86" height="4" rx="2" fill="var(--color-bg-subtle)" />
+          <rect x="34" y="72" width="62" height="4" rx="2" fill="var(--color-bg-subtle)" />
+          <rect x="34" y="84" width="28" height="6" rx="3" fill="var(--color-accent)" opacity=".35" />
+          <rect x="66" y="84" width="34" height="6" rx="3" fill="var(--color-accent)" opacity=".35" />
+          <path d="M146 8l2.2 5.8L154 16l-5.8 2.2L146 24l-2.2-5.8L138 16l5.8-2.2z" fill="var(--color-accent)" />
+        </svg>
+        <h3>{copy.emptyTitle}</h3>
+        <p>{copy.emptyText}</p>
+        <ol class="ls-empty__steps">
+          <li><span>1</span> Add the details</li>
+          <li><span>2</span> Generate variations</li>
+          <li><span>3</span> Edit, copy &amp; post</li>
+        </ol>
+      </div>
+
+      <div class="ls-hidden" id="loadingState">
+        <p class="ls-status" aria-live="polite">
+          <span class="ls-status__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span id="loadingMessage">Crafting your LinkedIn posts…</span>
+        </p>
+        <div class="ls-posts">
+          {[0, 1, 2].map(() => (
+            <div class="ls-skeleton" aria-hidden="true">
+              <div class="ls-skeleton__circle"></div>
+              <div>
+                <div class="ls-skeleton__line ls-skeleton__line--title"></div>
+                <div class="ls-skeleton__line"></div>
+                <div class="ls-skeleton__line"></div>
+                <div class="ls-skeleton__line ls-skeleton__line--short"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div class="ls-posts ls-hidden" id="postsList"></div>
+    </section>
+
+    <!-- ============ Column 3: editor / preview panel ============ -->
+    <aside class="ls-col-panel ls-card ls-card--flush" id="panel" aria-label="Selected post">
+      <div class="ls-view-toggle" role="group" aria-label="Panel view">
+        <button type="button" data-view="editor" aria-pressed="false">Editor</button>
+        <button type="button" data-view="preview" aria-pressed="true">LinkedIn Preview</button>
+      </div>
+
+      <p class="ls-panel__caption" id="panelCaption">Select a post to preview it here.</p>
+
+      <div id="panelPreview">
+        <div class="ls-panel__placeholder" id="panelPlaceholder">
+          <div class="ls-social ls-social--ghost" aria-hidden="true">
+            <div class="ls-social__head">
+              <div class="ls-avatar"></div>
+              <div class="ls-ghost-lines"><i></i><i></i></div>
+            </div>
+            <div class="ls-ghost-lines ls-ghost-lines--body"><i></i><i></i><i></i><i></i></div>
+          </div>
+          <p>Your LinkedIn preview will appear here after you generate posts.</p>
+        </div>
+        <div id="previewSlot"></div>
+      </div>
+
+      <div id="panelEditor" class="ls-hidden">
+        <div class="ls-editor">
+          <div class="ls-editor__bar">
+            <label for="editorText" class="ls-group-label">Post text</label>
+            <button type="button" class="ls-bold-btn" id="editorBold" title="Bold selected text (Ctrl+B)" aria-label="Bold selected text">B</button>
+          </div>
+          <textarea id="editorText" rows="14"></textarea>
+          <p class="ls-editor__hint">Select text and press <strong>B</strong> (or Ctrl+B) to make it bold. Bold text copies to LinkedIn as 𝗯𝗼𝗹𝗱 letters.</p>
+          <label for="editorTags" class="ls-group-label">Hashtags</label>
+          <input type="text" id="editorTags" placeholder="#DataScience #MachineLearning" autocomplete="off" />
+          <p class="ls-count" id="editorCount"></p>
+          <div class="ls-editor__actions">
+            <button type="button" class="ls-action" id="editorCancel">Cancel</button>
+            <button type="button" class="ls-action ls-action--primary" id="editorSave">Save Changes</button>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div class="ls-toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
+
+<script>
+  import { requireRole, type Role, type TrustedProfile } from '../../lib/supabase';
+  import {
+    composePostText,
+    generateLinkedInPosts,
+    isMockProvider,
+    LINKEDIN_CHAR_LIMIT,
+    parseKeywords,
+    postLength,
+    regenerateVariation,
+    validateInput,
+    type Correction,
+  } from '../../lib/linkedin/linkedinGenerator';
+  import { appendRichText, toggleBoldSelection } from '../../lib/linkedin/format';
+  import { listHistory, saveGeneration, updateGenerationPosts, isHistoryAvailable, type HistoryEntry } from '../../lib/linkedin/history';
+  import { GeneratorError, type GeneratedPost, type GeneratorInput, type PostLanguage, type PostLength } from '../../lib/linkedin/types';
+
+  // ---------- Icons (static markup only) ----------
+  const ICONS = {
+    copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+    edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+    refresh: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>',
+    share: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12ZM7.12 20.45H3.56V9h3.56v11.45Z"/></svg>',
+    eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12Z"/><circle cx="12" cy="12" r="3"/></svg>',
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>',
+    close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+    alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>',
+    globe: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>',
+    dots: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>',
+    like: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v12M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></svg>',
+    comment: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>',
+    repost: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>',
+    send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>',
+  };
+
+  // The variation that best matches the chosen tone gets a "Matches your
+  // tone" badge — a hint for where to start, not a ranking.
+  const TONE_MATCH: Record<string, string> = {
+    Professional: 'professional',
+    Storytelling: 'storytelling',
+    Inspirational: 'storytelling',
+    Friendly: 'engaging',
+    Confident: 'achievement',
+    Humble: 'achievement',
+    'Thought Leadership': 'thought-leadership',
+  };
+
+  // ---------- DOM helpers (all dynamic text goes through textContent) ----------
+  function el<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', text?: string): HTMLElementTagNameMap[K] {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+
+  function actionButton(label: string, icon: string, action: string, extraClass = ''): HTMLButtonElement {
+    const btn = el('button', `ls-action ${extraClass}`.trim());
+    btn.type = 'button';
+    btn.dataset.action = action;
+    btn.innerHTML = icon;
+    btn.append(document.createTextNode(label));
+    return btn;
+  }
+
+  const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+  // The page that renders this component decides the role; the server
+  // (Edge Function + RLS) enforces it independently.
+  const ROLE: Role = $('lsPage').dataset.role === 'student' ? 'student' : 'assistant';
+  const WIDE = window.matchMedia('(min-width: 1440px)');
+
+  // ---------- State ----------
+  interface State {
+    profile: TrustedProfile | null;
+    input: GeneratorInput | null; // the input that produced the current posts
+    posts: GeneratedPost[];
+    edited: Set<string>;
+    busy: Set<string>;
+    selectedKey: string | null;
+    panel: 'editor' | 'preview';
+    historyId: string | null;
+    generating: boolean;
+  }
+
+  const state: State = {
+    profile: null,
+    input: null,
+    posts: [],
+    edited: new Set(),
+    busy: new Set(),
+    selectedKey: null,
+    panel: 'preview',
+    historyId: null,
+    generating: false,
+  };
+
+  const selectedPost = () => state.posts.find((p) => p.key === state.selectedKey) ?? null;
+
+  // ---------- Toast ----------
+  function toast(message: string, kind: 'ok' | 'error' = 'ok') {
+    const region = $('toastRegion');
+    const node = el('div', `ls-toast${kind === 'error' ? ' is-error' : ''}`);
+    const mark = el('span', 'ls-toast__mark');
+    mark.innerHTML = kind === 'ok' ? ICONS.check : ICONS.alert;
+    const close = el('button', 'ls-toast__close');
+    close.type = 'button';
+    close.setAttribute('aria-label', 'Dismiss');
+    close.innerHTML = ICONS.close;
+    node.append(mark, el('span', 'ls-toast__text', message), close);
+    region.append(node);
+    const dismiss = () => {
+      if (!node.isConnected) return;
+      node.classList.add('is-leaving');
+      setTimeout(() => node.remove(), 220);
+    };
+    close.addEventListener('click', dismiss);
+    setTimeout(dismiss, 3200);
+  }
+
+  async function copyText(text: string): Promise<boolean> {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // Fallback for browsers/contexts without the async clipboard API.
+      const area = el('textarea');
+      area.value = text;
+      area.setAttribute('readonly', '');
+      area.style.position = 'fixed';
+      area.style.opacity = '0';
+      document.body.append(area);
+      area.select();
+      let ok = false;
+      try {
+        ok = document.execCommand('copy');
+      } catch {
+        ok = false;
+      }
+      area.remove();
+      return ok;
+    }
+  }
+
+  // ---------- Form ----------
+  const form = $<HTMLFormElement>('generatorForm');
+
+  function readForm(): GeneratorInput {
+    const value = (id: string) => ($(id) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).value;
+    const checked = (id: string) => ($(id) as HTMLInputElement).checked;
+    const length = (form.querySelector('input[name="length"]:checked') as HTMLInputElement | null)?.value ?? 'medium';
+    return {
+      role: ROLE,
+      purpose: value('purpose'),
+      topic: value('topic').trim(),
+      tone: value('tone'),
+      audience: value('audience'),
+      language: value('language') as PostLanguage,
+      keywords: parseKeywords(value('keywords')),
+      details: value('details').trim(),
+      length: length as PostLength,
+      includeHashtags: checked('includeHashtags'),
+      includeCta: checked('includeCta'),
+      mentionAcademy: checked('mentionAcademy'),
+    };
+  }
+
+  function fillForm(input: GeneratorInput) {
+    const set = (id: string, v: string) => (($(id) as HTMLInputElement).value = v);
+    set('purpose', input.purpose);
+    set('topic', input.topic);
+    set('tone', input.tone);
+    set('audience', input.audience);
+    set('language', input.language);
+    set('keywords', input.keywords.join(', '));
+    set('details', input.details);
+    const radio = form.querySelector<HTMLInputElement>(`input[name="length"][value="${input.length}"]`);
+    if (radio) radio.checked = true;
+    ($('includeHashtags') as HTMLInputElement).checked = input.includeHashtags;
+    ($('includeCta') as HTMLInputElement).checked = input.includeCta;
+    ($('mentionAcademy') as HTMLInputElement).checked = input.mentionAcademy;
+    updateCounters();
+  }
+
+  function showFieldErrors(errors: Record<string, string>) {
+    form.querySelectorAll<HTMLElement>('.form-group[data-field]').forEach((group) => {
+      const message = errors[group.dataset.field as string];
+      group.classList.toggle('has-error', !!message);
+      const slot = group.querySelector('.ls-field-error');
+      if (slot) slot.textContent = message ?? '';
+    });
+    const first = Object.keys(errors)[0];
+    if (first) ($(first) as HTMLElement)?.focus();
+  }
+
+  function updateCounters() {
+    for (const id of ['topic', 'details']) {
+      const area = $(id) as HTMLTextAreaElement;
+      $(`${id}Counter`).textContent = `${area.value.length}/${area.maxLength}`;
+    }
+  }
+
+  ['topic', 'details'].forEach((id) =>
+    $(id).addEventListener('input', () => {
+      updateCounters();
+      $(id).closest('.form-group')?.classList.remove('has-error');
+    }),
+  );
+
+  // ---------- Posts column states ----------
+  function showOnly(which: 'empty' | 'loading' | 'results') {
+    $('emptyState').classList.toggle('ls-hidden', which !== 'empty');
+    $('loadingState').classList.toggle('ls-hidden', which !== 'loading');
+    $('postsList').classList.toggle('ls-hidden', which !== 'results');
+    $('workspace').classList.toggle('has-results', which === 'results');
+  }
+
+  function showError(message: string, opts: { retry?: boolean; signIn?: boolean } = {}) {
+    const box = $('errorBox');
+    box.replaceChildren();
+    box.insertAdjacentHTML('afterbegin', ICONS.alert);
+    const text = el('div');
+    text.append(document.createTextNode(message + ' '));
+    if (opts.signIn) {
+      const link = el('a', '', 'Sign in again');
+      link.setAttribute('href', '/login');
+      text.append(link);
+    } else if (opts.retry) {
+      const retry = el('button', '', 'Try again');
+      retry.type = 'button';
+      retry.addEventListener('click', () => form.requestSubmit());
+      text.append(retry);
+    }
+    box.append(text);
+    box.classList.remove('ls-hidden');
+  }
+
+  function clearError() {
+    $('errorBox').classList.add('ls-hidden');
+  }
+
+  let loadingTimer: ReturnType<typeof setTimeout> | undefined;
+
+  function setGenerating(on: boolean) {
+    state.generating = on;
+    const btn = $<HTMLButtonElement>('generateBtn');
+    btn.disabled = on;
+    btn.classList.toggle('is-loading', on);
+    $('generateLabel').textContent = on ? 'Generating…' : 'Generate LinkedIn Posts';
+    clearTimeout(loadingTimer);
+    if (on) {
+      $('loadingMessage').textContent = 'Crafting your LinkedIn posts…';
+      loadingTimer = setTimeout(() => ($('loadingMessage').textContent = 'Creating multiple variations…'), 1800);
+    }
+  }
+
+  function renderPostsHead() {
+    if (!state.input || !state.posts.length) {
+      $('postsCount').textContent = '';
+      $('postsHint').textContent = 'Your post variations will appear here.';
+      return;
+    }
+    $('postsCount').textContent = `(${state.posts.length} variations)`;
+    const parts = [
+      `Here are ${state.posts.length} unique versions of your post. Copy, edit or regenerate any variation.`,
+      isMockProvider ? 'Template drafts — AI generation is not connected yet.' : '',
+    ];
+    $('postsHint').textContent = parts.filter(Boolean).join(' ');
+  }
+
+  // ---------- Post cards ----------
+  function renderCard(post: GeneratedPost, index: number): HTMLElement {
+    const card = el('article', 'ls-post');
+    card.dataset.key = post.key;
+    card.style.animationDelay = `${index * 70}ms`;
+    const busy = state.busy.has(post.key);
+    card.classList.toggle('is-busy', busy);
+    card.classList.toggle('is-selected', post.key === state.selectedKey);
+    card.setAttribute('aria-busy', String(busy));
+
+    const num = el('span', 'ls-post__num', String(index + 1));
+    num.setAttribute('aria-hidden', 'true');
+
+    const main = el('div', 'ls-post__main');
+    const titleRow = el('div', 'ls-post__title-row');
+    const title = el('h3', 'ls-post__title');
+    // The title doubles as the "select for preview" control.
+    const selectBtn = el('button', 'ls-post__select', post.title);
+    selectBtn.type = 'button';
+    selectBtn.dataset.action = 'select';
+    selectBtn.setAttribute('aria-pressed', String(post.key === state.selectedKey));
+    title.append(selectBtn);
+    titleRow.append(title);
+    if (state.input && TONE_MATCH[state.input.tone] === post.key) titleRow.append(el('span', 'ls-badge', 'Matches your tone'));
+    if (state.edited.has(post.key)) titleRow.append(el('span', 'ls-badge ls-badge--muted', 'Edited'));
+    const content = el('p', 'ls-post__content');
+    appendRichText(content, post.content);
+    main.append(titleRow, content);
+
+    if (post.hashtags.length) {
+      const tagWrap = el('p', 'ls-hashtags');
+      tagWrap.setAttribute('aria-label', 'Hashtags');
+      post.hashtags.forEach((t) => tagWrap.append(el('span', 'ls-hashtag', t)));
+      main.append(tagWrap);
+    }
+
+    const count = el('p', 'ls-count', `${post.characterCount.toLocaleString('en-IN')} characters`);
+    if (post.characterCount > LINKEDIN_CHAR_LIMIT) {
+      count.classList.add('is-over');
+      count.textContent += ` — over LinkedIn’s ${LINKEDIN_CHAR_LIMIT.toLocaleString('en-IN')} limit`;
+    }
+    main.append(count);
+    if (busy) main.append(el('div', 'ls-post__busy', 'Rewriting this version…'));
+
+    const actions = el('div', 'ls-actions');
+    const buttons = [
+      actionButton('Copy', ICONS.copy, 'copy', 'ls-action--primary'),
+      actionButton('Edit', ICONS.edit, 'edit'),
+      actionButton('Regenerate', ICONS.refresh, 'regenerate', 'ls-action--gold'),
+      actionButton('Share', ICONS.share, 'share'),
+      actionButton('Preview', ICONS.eye, 'preview', 'ls-action--narrow'),
+    ];
+    buttons[3].title = 'Copy the post and open LinkedIn';
+    buttons.forEach((b) => {
+      b.disabled = busy || state.generating;
+      actions.append(b);
+    });
+
+    card.append(num, main, actions);
+    return card;
+  }
+
+  function renderPosts() {
+    $('postsList').replaceChildren(...state.posts.map((p, i) => renderCard(p, i)));
+    renderPostsHead();
+    renderPanel();
+  }
+
+  function replaceCard(key: string) {
+    const index = state.posts.findIndex((p) => p.key === key);
+    const old = $('postsList').querySelector(`[data-key="${CSS.escape(key)}"]`);
+    if (index < 0 || !old) return renderPosts();
+    const fresh = renderCard(state.posts[index], index);
+    fresh.style.animation = 'none'; // no re-entrance animation on in-place updates
+    old.replaceWith(fresh);
+  }
+
+  function select(key: string) {
+    if (state.selectedKey === key) return;
+    state.selectedKey = key;
+    $('postsList').querySelectorAll<HTMLElement>('.ls-post').forEach((c) => {
+      const on = c.dataset.key === key;
+      c.classList.toggle('is-selected', on);
+      c.querySelector('.ls-post__select')?.setAttribute('aria-pressed', String(on));
+    });
+    renderPanel();
+  }
+
+  function revealPanel() {
+    // On wide screens the panel is sticky beside the posts; elsewhere it
+    // sits below them, so bring it into view.
+    if (!WIDE.matches) $('panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // ---------- Panel: editor + preview ----------
+  function initials(name: string) {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    return ((parts[0]?.[0] ?? 'U') + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+  }
+
+  function setPanel(view: 'editor' | 'preview') {
+    state.panel = view;
+    document.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === view)));
+    renderPanel();
+  }
+
+  function renderPanel() {
+    const post = selectedPost();
+    const hasPost = !!post;
+    $('panelCaption').textContent = hasPost
+      ? `${state.panel === 'editor' ? 'Editing' : 'Previewing'}: ${post.title}`
+      : 'Select a post to preview it here.';
+    $('panelPreview').classList.toggle('ls-hidden', state.panel !== 'preview' && hasPost);
+    $('panelEditor').classList.toggle('ls-hidden', state.panel !== 'editor' || !hasPost);
+    $('panelPlaceholder').classList.toggle('ls-hidden', hasPost);
+    if (!post) {
+      $('previewSlot').replaceChildren();
+      return;
+    }
+    if (state.panel === 'editor') fillEditor(post);
+    else renderPreview(post);
+  }
+
+  function fillEditor(post: GeneratedPost) {
+    const area = $<HTMLTextAreaElement>('editorText');
+    area.value = post.content;
+    $<HTMLInputElement>('editorTags').value = post.hashtags.join(' ');
+    updateEditorCount();
+  }
+
+  function parseHashtagInput(raw: string): string[] {
+    return Array.from(
+      new Set(
+        raw
+          .split(/[\s,]+/)
+          .map((t) => t.trim().replace(/^#+/, ''))
+          .filter(Boolean)
+          .map((t) => `#${t}`),
+      ),
+    ).slice(0, 10);
+  }
+
+  function updateEditorCount() {
+    const n = postLength({
+      content: $<HTMLTextAreaElement>('editorText').value.trim(),
+      hashtags: parseHashtagInput($<HTMLInputElement>('editorTags').value),
+    });
+    const count = $('editorCount');
+    count.textContent = `${n.toLocaleString('en-IN')} / ${LINKEDIN_CHAR_LIMIT.toLocaleString('en-IN')} characters`;
+    count.classList.toggle('is-over', n > LINKEDIN_CHAR_LIMIT);
+  }
+
+  $('editorText').addEventListener('input', updateEditorCount);
+  $('editorTags').addEventListener('input', updateEditorCount);
+
+  function boldSelection() {
+    const area = $<HTMLTextAreaElement>('editorText');
+    if (!toggleBoldSelection(area)) toast('Select some text first, then press B.', 'error');
+    area.focus();
+  }
+
+  // mousedown + preventDefault keeps the textarea's selection intact.
+  $('editorBold').addEventListener('mousedown', (e) => e.preventDefault());
+  $('editorBold').addEventListener('click', boldSelection);
+  $('editorText').addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+      e.preventDefault();
+      boldSelection();
+    }
+  });
+
+  $('editorCancel').addEventListener('click', () => {
+    const post = selectedPost();
+    if (post) fillEditor(post);
+    setPanel('preview');
+  });
+
+  $('editorSave').addEventListener('click', () => {
+    const post = selectedPost();
+    if (!post) return;
+    const content = $<HTMLTextAreaElement>('editorText').value.trim();
+    if (!content) {
+      toast('The post can’t be empty.', 'error');
+      return;
+    }
+    post.content = content;
+    post.hashtags = parseHashtagInput($<HTMLInputElement>('editorTags').value);
+    post.characterCount = postLength(post);
+    state.edited.add(post.key);
+    replaceCard(post.key);
+    persist();
+    setPanel('preview');
+    toast('Changes saved');
+  });
+
+  function renderPreview(post: GeneratedPost) {
+    const name = state.profile?.full_name?.trim() || 'Utkarsh Minds';
+    const card = el('article', 'ls-social');
+    card.setAttribute('aria-label', 'Post preview');
+
+    const head = el('div', 'ls-social__head');
+    const avatar = el('div', 'ls-avatar', initials(name));
+    avatar.setAttribute('aria-hidden', 'true');
+    const who = el('div', 'ls-social__who');
+    const time = el('p', 'ls-social__time', 'now · ');
+    time.insertAdjacentHTML('beforeend', ICONS.globe);
+    who.append(el('p', 'ls-social__name', name), el('p', 'ls-social__role', ROLE === 'student' ? 'Student at Utkarsh Minds' : 'Assistant at Utkarsh Minds'), time);
+    const menuDots = el('span', 'ls-social__menu');
+    menuDots.innerHTML = ICONS.dots;
+    head.append(avatar, who, menuDots);
+
+    const text = el('div', 'ls-social__text');
+    const FOLD = 360;
+    const full = post.content;
+    const needsFold = full.length > FOLD;
+    const bodySpan = el('span');
+    // Truncation can split a **bold** pair; appendRichText drops stray markers.
+    appendRichText(bodySpan, needsFold ? full.slice(0, FOLD).trimEnd() + '… ' : full);
+    text.append(bodySpan);
+    const tags = el('p', 'ls-social__tags', post.hashtags.join(' '));
+    if (needsFold) {
+      const more = el('button', 'ls-social__more', 'see more');
+      more.type = 'button';
+      more.addEventListener('click', () => {
+        bodySpan.replaceChildren();
+        appendRichText(bodySpan, full);
+        more.remove();
+      });
+      text.append(more);
+    }
+    card.append(head, text);
+    if (post.hashtags.length) card.append(tags);
+
+    // The academy's brand card stands in for an attached image when the
+    // post is written in the academy's name.
+    const brandSrc = $('lsPage').dataset.brandCard;
+    if (state.input?.mentionAcademy && brandSrc) {
+      const figure = el('figure', 'ls-social__media');
+      const img = el('img');
+      img.src = brandSrc;
+      img.alt = 'Utkarsh Minds brand card';
+      img.loading = 'lazy';
+      figure.append(img);
+      card.append(figure);
+    }
+
+    const bar = el('div', 'ls-social__bar');
+    bar.setAttribute('aria-hidden', 'true');
+    ([['Like', ICONS.like], ['Comment', ICONS.comment], ['Repost', ICONS.repost], ['Send', ICONS.send]] as const).forEach(([label, icon]) => {
+      const s = el('span');
+      s.innerHTML = icon;
+      s.append(document.createTextNode(label));
+      bar.append(s);
+    });
+    card.append(bar);
+
+    const note = el('p', 'ls-preview-note', 'Simplified preview — the layout on LinkedIn may differ slightly.');
+    $('previewSlot').replaceChildren(card, note);
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((b) =>
+    b.addEventListener('click', () => setPanel(b.dataset.view as 'editor' | 'preview')),
+  );
+
+  // ---------- Card actions ----------
+  function persist() {
+    if (state.historyId) void updateGenerationPosts(state.historyId, state.posts);
+  }
+
+  function messageFor(error: unknown): string {
+    return error instanceof GeneratorError ? error.message : 'Something went wrong. Please try again.';
+  }
+
+  $('postsList').addEventListener('click', async (e) => {
+    const target = e.target as HTMLElement;
+    const card = target.closest<HTMLElement>('.ls-post');
+    if (!card) return;
+    const key = card.dataset.key!;
+    const post = state.posts.find((p) => p.key === key);
+    if (!post) return;
+    const btn = target.closest<HTMLButtonElement>('button[data-action]');
+
+    // Clicking anywhere on a card (outside its buttons) selects it.
+    if (!btn) {
+      if (!window.getSelection()?.toString()) select(key);
+      return;
+    }
+
+    switch (btn.dataset.action) {
+      case 'select':
+        select(key);
+        break;
+      case 'copy': {
+        const ok = await copyText(composePostText(post));
+        toast(ok ? 'Post copied to clipboard!' : 'Couldn’t copy automatically — select the text and copy it manually.', ok ? 'ok' : 'error');
+        break;
+      }
+      case 'share': {
+        const ok = await copyText(composePostText(post));
+        window.open('https://www.linkedin.com/feed/?shareActive=true', '_blank', 'noopener');
+        toast(ok ? 'Post copied — paste it into your new LinkedIn post' : 'LinkedIn opened — copy the post text manually.', ok ? 'ok' : 'error');
+        break;
+      }
+      case 'preview':
+        select(key);
+        setPanel('preview');
+        revealPanel();
+        break;
+      case 'edit':
+        select(key);
+        setPanel('editor');
+        revealPanel();
+        requestAnimationFrame(() => $('editorText').focus({ preventScroll: !WIDE.matches }));
+        break;
+      case 'regenerate': {
+        if (!state.input || state.busy.has(key)) return;
+        state.busy.add(key);
+        replaceCard(key);
+        try {
+          const fresh = await regenerateVariation(state.input, key);
+          const i = state.posts.findIndex((p) => p.key === key);
+          if (i >= 0) state.posts[i] = fresh;
+          state.edited.delete(key);
+          toast(`${fresh.title} regenerated`);
+          persist();
+        } catch (error) {
+          toast(messageFor(error), 'error');
+        } finally {
+          state.busy.delete(key);
+          replaceCard(key);
+          if (state.selectedKey === key) renderPanel();
+        }
+        break;
+      }
+    }
+  });
+
+  // ---------- Spelling / capitalisation notice ----------
+  function renderCorrections(corrections: Correction[]) {
+    const box = $('correctionsBox');
+    if (!corrections.length) {
+      box.classList.add('ls-hidden');
+      return;
+    }
+    const n = corrections.length;
+    $('correctionsTitle').textContent = `We fixed ${n} spelling or capitalisation ${n === 1 ? 'issue' : 'issues'} in your text`;
+    const list = $('correctionsList');
+    list.replaceChildren();
+    corrections.slice(0, 12).forEach((c, i) => {
+      if (i) list.append(document.createTextNode(' · '));
+      list.append(el('s', '', c.from), document.createTextNode(' → '), el('strong', '', c.to));
+    });
+    if (n > 12) list.append(document.createTextNode(` · +${n - 12} more`));
+    box.classList.remove('ls-hidden');
+  }
+
+  // Writes the corrected text back into the form so the user keeps it.
+  $('applyCorrections').addEventListener('click', () => {
+    if (!state.input) return;
+    fillForm(state.input);
+    $('correctionsBox').classList.add('ls-hidden');
+    toast('Corrections applied to the form');
+  });
+
+  // ---------- Generate ----------
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (state.generating) return;
+    const input = readForm();
+    const errors = validateInput(input);
+    showFieldErrors(errors);
+    if (Object.keys(errors).length) return;
+
+    clearError();
+    setGenerating(true);
+    const hadResults = state.posts.length > 0;
+    showOnly('loading');
+    if (!WIDE.matches) $('loadingState').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    try {
+      const result = await generateLinkedInPosts(input);
+      // Keep the cleaned (spell-checked) input so regenerations match.
+      state.input = result.input;
+      state.posts = result.posts;
+      state.edited.clear();
+      state.selectedKey = result.posts[0]?.key ?? null;
+      state.historyId = null;
+      setGenerating(false);
+      showOnly('results');
+      state.panel = 'preview';
+      setPanel('preview');
+      renderPosts();
+      renderCorrections(result.corrections);
+      if (state.profile) {
+        state.historyId = await saveGeneration(state.profile.id, result.input, state.posts);
+        if (state.historyId) await renderHistory();
+      }
+    } catch (error) {
+      setGenerating(false);
+      showOnly(hadResults ? 'results' : 'empty');
+      if (hadResults) renderPosts();
+      const code = error instanceof GeneratorError ? error.code : 'server';
+      showError(messageFor(error), {
+        signIn: code === 'unauthorized',
+        retry: code === 'network' || code === 'server' || code === 'invalid_response',
+      });
+    }
+  });
+
+  // ---------- History ----------
+  let historyCache: HistoryEntry[] = [];
+
+  function formatDate(iso: string) {
+    return new Date(iso).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+  }
+
+  async function renderHistory() {
+    if (!state.profile) return;
+    historyCache = await listHistory(state.profile.id);
+    const list = $('historyList');
+    if (!isHistoryAvailable()) {
+      $('historyCard').classList.add('ls-hidden');
+      return;
+    }
+    if (!historyCache.length) {
+      list.replaceChildren(el('p', 'ls-history__empty', 'Posts you generate will appear here.'));
+      return;
+    }
+    list.replaceChildren(
+      ...historyCache.map((entry) => {
+        const item = el('button', 'ls-history__item');
+        item.type = 'button';
+        item.dataset.id = entry.id;
+        item.setAttribute('aria-current', String(entry.id === state.historyId));
+        const meta = el('span', 'ls-history__meta');
+        meta.append(el('span', 'ls-tag', entry.purpose), el('span', '', formatDate(entry.created_at)), el('span', '', entry.role === 'assistant' ? 'Assistant' : 'Student'));
+        item.append(el('span', 'ls-history__topic', entry.topic), meta);
+        return item;
+      }),
+    );
+  }
+
+  $('historyList').addEventListener('click', (e) => {
+    const item = (e.target as HTMLElement).closest<HTMLButtonElement>('.ls-history__item');
+    if (!item || state.generating) return;
+    const entry = historyCache.find((h) => h.id === item.dataset.id);
+    if (!entry || !Array.isArray(entry.posts) || !entry.posts.length) return;
+    state.input = entry.input;
+    state.posts = entry.posts;
+    state.historyId = entry.id;
+    state.edited.clear();
+    state.selectedKey = entry.posts[0].key;
+    fillForm(entry.input);
+    clearError();
+    renderCorrections([]);
+    showOnly('results');
+    state.panel = 'preview';
+    setPanel('preview');
+    renderPosts();
+    $('historyList').querySelectorAll('.ls-history__item').forEach((n) => n.setAttribute('aria-current', String((n as HTMLElement).dataset.id === entry.id)));
+    $('postsList').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+
+  // ---------- Init ----------
+  async function init() {
+    const result = await requireRole(ROLE);
+    if (!result) return;
+    state.profile = result.profile;
+    $('lsPage').hidden = false;
+    if (isMockProvider) $('mockBadge').classList.remove('ls-hidden');
+    updateCounters();
+    renderPanel();
+    await renderHistory();
+  }
+
+  init();
+</script>

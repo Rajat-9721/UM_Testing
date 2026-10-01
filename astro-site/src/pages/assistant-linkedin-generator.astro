@@ -1,0 +1,19 @@
+---
+/** Assistant portal: LinkedIn Post Generator. */
+import DashboardLayout from '../layouts/DashboardLayout.astro';
+import LinkedInStudio from '../components/linkedin/LinkedInStudio.astro';
+
+// Same sidebar as the assistant dashboard; panel items deep-link back to it.
+const menu = [
+  { label: 'Student Management', href: '/assistant-dashboard#student-management' },
+  { label: 'Fee Receipts', href: '/assistant-dashboard#fee-receipts' },
+  { label: 'Programs', href: '/assistant-dashboard#programs' },
+  { label: 'Team', href: '/assistant-dashboard#team' },
+  { label: 'LinkedIn Post Generator', href: '/assistant-linkedin-generator', active: true },
+];
+const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
+---
+
+<DashboardLayout title="LinkedIn Studio" portalLabel="Assistant Portal" menu={menu} comingSoon={comingSoon}>
+  <LinkedInStudio role="assistant" />
+</DashboardLayout>

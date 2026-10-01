@@ -1,0 +1,33 @@
+---
+/**
+ * /linkedin-generator — one shareable link for the LinkedIn Post
+ * Generator. Sends the signed-in user to their own portal's version
+ * (assistant or student) based on their trusted role, or to /login.
+ */
+import AppLayout from '../layouts/AppLayout.astro';
+---
+
+<AppLayout title="LinkedIn Studio">
+  <p class="redirect-note">Opening LinkedIn Studio…</p>
+</AppLayout>
+
+<script>
+  import { getTrustedSession } from '../lib/supabase';
+
+  async function route() {
+    const { session, role } = await getTrustedSession();
+    if (session && role === 'assistant') window.location.replace('/assistant-linkedin-generator');
+    else if (session && role === 'student') window.location.replace('/student-linkedin-generator');
+    else window.location.replace('/login');
+  }
+
+  route();
+</script>
+
+<style>
+  .redirect-note {
+    text-align: center;
+    padding: var(--space-16) var(--space-4);
+    color: var(--color-text-muted);
+  }
+</style>

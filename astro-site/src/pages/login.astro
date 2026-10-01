@@ -6,6 +6,13 @@ import Button from '../components/Button.astro';
 <AppLayout title="Login">
   <div class="login-page">
     <div class="login-card">
+      <a href="/" class="login-back">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M15 5L8 12L15 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        Back to home
+      </a>
+
       <a href="/" class="login-logo">Utkarsh <span>Minds</span></a>
 
       <div class="login-heading">
@@ -47,6 +54,22 @@ import Button from '../components/Button.astro';
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-lg);
     padding: var(--space-10) var(--space-8);
+  }
+
+  .login-back {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-6);
+    transition: var(--transition-fast);
+  }
+
+  .login-back:hover,
+  .login-back:focus-visible {
+    color: var(--color-primary);
   }
 
   .login-logo {
@@ -128,6 +151,12 @@ import Button from '../components/Button.astro';
     if (session) redirectToDashboard(role);
   }
   checkAuth();
+
+  // Login restored from the back/forward cache (e.g. Back from a
+  // dashboard) skips the check above, so run it again.
+  window.addEventListener('pageshow', (e) => {
+    if (e.persisted) checkAuth();
+  });
 
   const form = document.getElementById('loginForm') as HTMLFormElement;
   const errorMsg = document.getElementById('errorMsg') as HTMLElement;
