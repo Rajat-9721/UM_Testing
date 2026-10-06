@@ -1,0 +1,7 @@
+# Dependencies are installed with `npm install`, never committed.
+node_modules/
+
+# Secrets
+.env
+.env.*
+!.env.example
