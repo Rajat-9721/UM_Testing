@@ -91,9 +91,13 @@ class HttpError extends Error {
   }
 }
 
+// Best effort, used only for the per-IP rate limit (CAPTCHA and the
+// per-email limits don't depend on it). cf-connecting-ip is set by
+// Cloudflare and can't be faked by the visitor; the first entry of
+// x-forwarded-for can be, so it's the last resort.
 function clientIp(req: Request): string | null {
   const raw =
-    req.headers.get('x-forwarded-for')?.split(',')[0] ?? req.headers.get('cf-connecting-ip') ?? req.headers.get('x-real-ip');
+    req.headers.get('cf-connecting-ip') ?? req.headers.get('x-real-ip') ?? req.headers.get('x-forwarded-for')?.split(',')[0];
   const ip = raw?.trim();
   return ip && ip.length <= 64 ? ip : null;
 }

@@ -57,6 +57,12 @@ readiness · local SEO
   the existing phase-file header convention (HOW TO RUN / WHY, safe to re-run).
 - Edge Functions live in `supabase/functions/`. Their secrets are set as Supabase
   secrets, never committed.
+- Website enquiry forms (brochure, demo lecture, next-batch alert) all use
+  `LeadCaptureDialog.astro` and the `lead-otp` Edge Function (email OTP via Resend with
+  cPanel SMTP fallback, Turnstile CAPTCHA). Leads are managed in the Assistant
+  Dashboard's Leads tab. Setup: `docs/otp-and-leads-setup.md`; accounts/secrets map:
+  `HANDOVER.md`. Validation rules are shared: `supabase/functions/lead-otp/rules.ts`.
+- Tests for that feature: `deno test --allow-read --allow-env supabase/functions/lead-otp/`.
 - `DECISIONS.md` is the running log of non-obvious decisions — add to it.
 - `RESET_BEFORE_GO_LIVE.md` is a one-time, destructive pre-launch procedure — never run
   it casually.

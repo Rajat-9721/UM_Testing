@@ -4,6 +4,38 @@ Running record of non-obvious decisions made on this project — what was decide
 
 ---
 
+## 2026-10-07 — Email OTP for the enquiry forms + Leads tab
+
+**Context:** the brochure form's OTP only ever reached our own inbox, leads were invisible to non-technical staff, and the forms wrote to `marketing_leads` straight from the browser.
+
+### Decision: Our own `lead-otp` Edge Function instead of Supabase Auth's email OTP
+The old flow used `signInWithOtp`, which creates a real `auth.users` row for every visitor — and `handle_new_auth_user` gives each one a `profiles` row with role `student`. The "sign out afterwards" step ran in the browser, so anyone could skip it and keep a student session (student dashboard, AI resume/LinkedIn tools that spend our AI quota). The lead insert was also unverified: the public insert policy accepted anything, with or without a code.
+**Chosen:** a dedicated function that stores only a hash of a 6-digit code, keeps the visitor's details server-side with the code (so what was verified is exactly what is saved), allows 5 tries, and writes the lead with the service role. No login accounts are created for visitors.
+
+### Decision: Resend first, cPanel SMTP as automatic backup
+Both are free. Resend: HTTPS API (Supabase Edge Functions block SMTP ports 25/587), better inbox placement, a dashboard showing delivery per email, and its DNS records are new names only. cPanel alone would need editing the domain's main SPF record (risk to existing @utkarshminds.com mail) and has a weaker shared-server reputation. Resend's free plan is capped at 100 emails/day, so any Resend failure (quota or otherwise) falls through to the cPanel mailbox — nobody has to watch the limit.
+**Backup sends from `noreply@notify.utkarshminds.com`, not `@utkarshminds.com`:** a subdomain has its own SPF/DKIM records, so setting it up only *adds* DNS records and never touches the main domain's email settings.
+
+### Decision: Cloudflare Turnstile, invisible ("interaction-only")
+Without a CAPTCHA, a script could use our form to email codes to strangers and get the domain blacklisted. Turnstile is free, privacy-friendly and almost always invisible. Rate limits (per email, per IP, site-wide daily cap) back it up.
+
+### Decision: "Remember this browser" for 30 days after verifying
+A visitor who verified for the brochure and then books a demo isn't asked for a second code. The browser keeps a random token; the server stores only its hash and accepts it for the same email only. Saves emails against Resend's daily quota.
+
+### Decision: Leads tab in the existing Assistant Dashboard + CSV export (not a Google Sheet)
+Assistants already log in there; the data stays in one access-controlled place. A live Google Sheet would be a second copy of personal data with its own sharing risks and setup. The CSV opens in Excel (UTF-8 BOM for Indian-language names) and neutralises formula-like cells (`=`, `+`, `-`, `@`), since lead text comes from public forms.
+
+### Decision: Statuses are a table (`lead_statuses`), not a hard-coded list
+The institute can rename/reorder/hide statuses in the Table Editor without a code change. Assistant edits go through `update_marketing_lead(p_changes jsonb)`, which updates only the fields sent — so an inline status change never overwrites notes saved a moment earlier by someone else.
+
+### Decision: One validation file shared by the server and the website
+`supabase/functions/lead-otp/rules.ts` is imported by both (the site via `astro-site/src/lib/leads/rules.ts`), so they can't drift apart. It also fixed a bug: "+91 98765 43210" used to be rejected.
+
+### Decision: Closing the public insert is a separate step (`phase12`)
+Running it before the new forms are live would break the forms in use. Until then, phase 11 narrows the public insert to the old columns, so nobody can insert a lead marked as verified.
+
+---
+
 ## 2026-09-12 — Register New Student: ambiguous `student_id` bug, root cause + fix
 
 **Context:** Assistant Dashboard → Add Student was failing with `column reference "student_id" is ambiguous`, leaving a partial state (auth account created, profile with no name/ID).
