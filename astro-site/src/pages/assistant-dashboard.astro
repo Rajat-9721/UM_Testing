@@ -2,15 +2,17 @@
 import DashboardLayout from '../layouts/DashboardLayout.astro';
 import Button from '../components/Button.astro';
 import spitLogoUrl from '../assets/brand/spit-logo.png?url';
+import { LEAD_SOURCES } from '../lib/leads/rules';
 
 const menu = [
   { label: 'Student Management', target: 'student-management' },
+  { label: 'Leads', target: 'leads' },
   { label: 'Fee Receipts', target: 'fee-receipts' },
   { label: 'Programs', target: 'programs' },
   { label: 'Team', target: 'team' },
   { label: 'LinkedIn Post Generator', href: '/assistant-linkedin-generator' },
 ];
-const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
+const comingSoon = ['Communication Tools', 'Analytics'];
 ---
 
 <DashboardLayout title="Assistant Dashboard" portalLabel="Assistant Portal" menu={menu} comingSoon={comingSoon}>
@@ -44,6 +46,57 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
         <tr><td colspan="7" class="empty-state">Loading students...</td></tr>
       </tbody>
     </table>
+  </section>
+
+  <section class="dash-panel" id="leads">
+    <p class="dash-muted" style="margin:0;">Enquiries from the website forms (brochure download, demo lecture, next batch alert), newest first. "Verified" means the visitor confirmed their email with a code.</p>
+    <div class="summary-grid leads-summary" id="leadsSummary"></div>
+
+    <div class="toolbar leads-toolbar">
+      <input type="search" id="leadSearch" class="search-input" placeholder="Search by name, email or mobile..." />
+      <select id="leadStatusFilter" class="leads-filter" aria-label="Filter by status">
+        <option value="">All statuses</option>
+      </select>
+      <select id="leadSourceFilter" class="leads-filter" aria-label="Filter by form">
+        <option value="">All forms</option>
+        {Object.entries(LEAD_SOURCES).map(([key, s]) => <option value={key}>{s.label}</option>)}
+      </select>
+      <select id="leadDateFilter" class="leads-filter" aria-label="Filter by date">
+        <option value="all">All time</option>
+        <option value="today">Today</option>
+        <option value="7">Last 7 days</option>
+        <option value="30">Last 30 days</option>
+      </select>
+      <label class="toggle-label">
+        <input type="checkbox" id="leadFollowUpToggle" />
+        Follow-ups due
+      </label>
+      <Button variant="accent" id="downloadLeadsBtn">Download Excel</Button>
+    </div>
+
+    <div class="table-scroll">
+      <table class="data-table leads-table" id="leadsTable">
+        <thead>
+          <tr>
+            <th>Received</th>
+            <th>Name</th>
+            <th>Contact</th>
+            <th>Program / Form</th>
+            <th>Status</th>
+            <th>Follow-up</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="leadsTableBody">
+          <tr><td colspan="7" class="empty-state">Loading leads...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="leads-footer">
+      <span class="dash-muted" id="leadsCount"></span>
+      <button type="button" class="leads-more" id="leadsLoadMore" hidden>Load more</button>
+    </div>
   </section>
 
   <section class="dash-panel" id="fee-receipts">
@@ -114,6 +167,33 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
   </section>
 
   <Fragment slot="modals">
+    <!-- Lead Details Modal -->
+    <div class="modal-backdrop" id="leadModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h2 id="leadModalTitle">Lead</h2>
+          <button class="modal-close" data-close="leadModal" aria-label="Close">&times;</button>
+        </div>
+        <div id="leadModalInfo" style="margin-bottom:20px;"></div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="leadModalStatus">Status</label>
+            <select id="leadModalStatus"></select>
+          </div>
+          <div class="form-group">
+            <label for="leadModalFollowUp">Follow-up date</label>
+            <input type="date" id="leadModalFollowUp" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="leadModalNotes">Notes</label>
+          <textarea id="leadModalNotes" rows="4" maxlength="2000" placeholder="e.g. Called on 6 Oct, asked to call back after exams"></textarea>
+        </div>
+        <div class="alert alert-error" id="leadModalError"></div>
+        <Button variant="accent" id="leadModalSave">Save</Button>
+      </div>
+    </div>
+
     <!-- Add Student Modal -->
     <div class="modal-backdrop" id="addStudentModal">
       <div class="modal">
@@ -547,10 +627,12 @@ const comingSoon = ['Leads', 'Communication Tools', 'Analytics'];
   import { supabase, requireRole, createEphemeralClient } from '../lib/supabase';
   import { downloadReceipt, viewReceipt, printReceipt } from '../lib/receipt';
   import { amountToWords } from '../lib/numberToWords';
+  import { initLeadsPanel } from '../lib/leads/leadsPanel';
 
   async function init() {
     const result = await requireRole('assistant');
     if (!result) return;
+    void initLeadsPanel(supabase);
     await loadCourseOptions();
     await loadStudents();
     await loadPrograms();
