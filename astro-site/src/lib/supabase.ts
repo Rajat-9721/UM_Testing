@@ -9,9 +9,9 @@
 // SECURITY DEFINER RPCs). See phase1_student_assistant.sql.
 
 import { createClient } from '@supabase/supabase-js';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabaseConfig';
 
-export const SUPABASE_URL = 'https://ohytjcwcmzalftmsdvbq.supabase.co';
-export const SUPABASE_ANON_KEY = 'sb_publishable_ApiQJQ2W-sfMo7i3jl_NSw_0eWMvVmF';
+export { SUPABASE_URL, SUPABASE_ANON_KEY };
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 

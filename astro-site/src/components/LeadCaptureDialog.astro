@@ -1,0 +1,473 @@
+---
+/**
+ * One enquiry form, used for every lead-capture popup on the site
+ * (brochure download, demo lecture request, next-batch alert).
+ *
+ * Opens when any element matching `trigger` is clicked. Forms whose
+ * source requires it (see LEAD_SOURCES in lib/leads/rules.ts) verify the
+ * visitor's email with a 6-digit code before the lead is saved.
+ * Behaviour: lib/leads/dialog.ts. Server: supabase/functions/lead-otp.
+ *
+ * Slot "after-form": extra content under the details form (e.g. a
+ * WhatsApp alternative).
+ */
+import Button from './Button.astro';
+import { EDUCATION_OPTIONS, LEAD_SOURCES, NAME_MAX, EMAIL_MAX, OTP_LENGTH, type LeadSource } from '../lib/leads/rules';
+
+interface Props {
+  id: string;
+  source: LeadSource;
+  program: string;
+  trigger: string;
+  title: string;
+  subtitle: string;
+  submitLabel: string;
+  verifyLabel?: string;
+  successTitle: string;
+  successMessage: string;
+  downloadUrl?: string;
+  downloadLabel?: string;
+  askEducation?: boolean;
+}
+
+const {
+  id,
+  source,
+  program,
+  trigger,
+  title,
+  subtitle,
+  submitLabel,
+  verifyLabel = 'Verify',
+  successTitle,
+  successMessage,
+  downloadUrl,
+  downloadLabel = 'Download again',
+  askEducation = false,
+} = Astro.props;
+
+const requiresOtp = LEAD_SOURCES[source].requiresOtp;
+const f = (name: string) => `${id}-${name}`;
+---
+
+<dialog
+  class="lead-dialog"
+  id={f('dialog')}
+  aria-labelledby={f('title')}
+  data-lead-dialog
+  data-source={source}
+  data-program={program}
+  data-trigger={trigger}
+  data-requires-otp={String(requiresOtp)}
+  data-download-url={downloadUrl}
+>
+  <form class="lead-form" novalidate>
+    <button type="button" class="lead-close" data-close aria-label="Close">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+    </button>
+
+    <div class="lead-step" data-step="details">
+      <h3 class="lead-title" id={f('title')}>{title}</h3>
+      <p class="lead-subtitle">{subtitle}</p>
+
+      <div class="lead-field">
+        <label for={f('name')}>Full name</label>
+        <input id={f('name')} name="name" type="text" autocomplete="name" maxlength={NAME_MAX} aria-describedby={f('name-error')} required />
+        <span class="lead-error" id={f('name-error')} data-error-for="name"></span>
+      </div>
+
+      <div class="lead-field">
+        <label for={f('email')}>Email</label>
+        <input id={f('email')} name="email" type="email" autocomplete="email" inputmode="email" maxlength={EMAIL_MAX} spellcheck="false" aria-describedby={f('email-error')} required />
+        <button type="button" class="lead-suggest" data-email-suggestion hidden></button>
+        <span class="lead-error" id={f('email-error')} data-error-for="email"></span>
+      </div>
+
+      <div class="lead-field">
+        <label for={f('mobile')}>Mobile number</label>
+        <input id={f('mobile')} name="mobile" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="98765 43210" aria-describedby={f('mobile-error')} required />
+        <span class="lead-error" id={f('mobile-error')} data-error-for="mobile"></span>
+      </div>
+
+      {
+        askEducation && (
+          <div class="lead-field">
+            <label for={f('education')}>
+              Current education / status <span class="lead-optional">(optional)</span>
+            </label>
+            <select id={f('education')} name="education" aria-describedby={f('education-error')}>
+              <option value="">Select an option</option>
+              {EDUCATION_OPTIONS.map((option) => (
+                <option value={option}>{option}</option>
+              ))}
+            </select>
+            <span class="lead-error" id={f('education-error')} data-error-for="education"></span>
+          </div>
+        )
+      }
+
+      <div class="lead-field lead-field--check">
+        <label class="lead-check">
+          <input name="consent" type="checkbox" aria-describedby={f('consent-error')} required />
+          <span>I agree to be contacted by Utkarsh Minds about this program by phone, WhatsApp or email.</span>
+        </label>
+        <span class="lead-error" id={f('consent-error')} data-error-for="consent"></span>
+      </div>
+
+      <div class="lead-captcha" data-captcha></div>
+      <p class="lead-form-error" data-form-error role="alert" hidden></p>
+
+      <div class="lead-actions">
+        <button type="button" class="lead-link" data-close>Cancel</button>
+        <Button type="submit" variant="primary" class="lead-submit" data-submit>{submitLabel}</Button>
+      </div>
+
+      <slot name="after-form" />
+    </div>
+
+    {
+      requiresOtp && (
+        <div class="lead-step" data-step="verify" hidden>
+          <h3 class="lead-title">Check your email</h3>
+          <p class="lead-subtitle">
+            We sent a {OTP_LENGTH}-digit code to <strong data-sent-to></strong>. It expires in 10 minutes. Can't see
+            it? Check your spam or promotions folder.
+          </p>
+
+          <div class="lead-field">
+            <label for={f('otp')}>Verification code</label>
+            <input
+              id={f('otp')}
+              class="lead-otp"
+              name="otp"
+              type="text"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              maxlength="20"
+              placeholder={'•'.repeat(OTP_LENGTH)}
+              aria-describedby={f('otp-error')}
+            />
+            <span class="lead-error" id={f('otp-error')} data-error-for="otp"></span>
+          </div>
+
+          <p class="lead-status" data-verify-status role="status" hidden></p>
+          <p class="lead-form-error" data-verify-error role="alert" hidden></p>
+
+          <div class="lead-actions lead-actions--verify">
+            <div class="lead-secondary">
+              <button type="button" class="lead-link" data-change-details>
+                Change details
+              </button>
+              <button type="button" class="lead-link" data-resend>
+                Resend code
+              </button>
+            </div>
+            <Button type="submit" variant="primary" class="lead-submit" data-verify-submit>
+              {verifyLabel}
+            </Button>
+          </div>
+        </div>
+      )
+    }
+
+    <div class="lead-step lead-success" data-step="success" hidden>
+      <svg class="lead-success-icon" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="m8 12 3 3 5-6" /></svg>
+      <h3 class="lead-title" tabindex="-1" data-focus>{successTitle}</h3>
+      <p class="lead-subtitle">{successMessage}</p>
+      {downloadUrl && <a href={downloadUrl} download class="lead-download">{downloadLabel}</a>}
+      <button type="button" class="lead-link" data-close>Close</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+  import { initLeadDialogs } from '../lib/leads/dialog';
+  initLeadDialogs();
+</script>
+
+<style>
+  .lead-dialog {
+    padding: 0;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    width: min(440px, 92vw);
+    max-height: min(720px, 90vh);
+    overflow: hidden auto;
+    background: var(--color-bg);
+    color: var(--color-text);
+  }
+
+  .lead-dialog::backdrop {
+    background: rgba(22, 34, 28, 0.55);
+  }
+
+  .lead-form {
+    position: relative;
+    padding: var(--space-8) var(--space-6) var(--space-6);
+  }
+
+  .lead-close {
+    position: absolute;
+    top: var(--space-4);
+    right: var(--space-4);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-full);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: var(--transition-fast);
+  }
+
+  .lead-close:hover {
+    background: var(--color-bg-subtle);
+    color: var(--color-primary);
+  }
+
+  .lead-title {
+    font-size: var(--text-xl);
+    color: var(--color-primary);
+    margin-bottom: var(--space-2);
+    padding-right: var(--space-8);
+  }
+
+  .lead-title:focus {
+    outline: none;
+  }
+
+  .lead-subtitle {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-6);
+  }
+
+  .lead-subtitle strong {
+    color: var(--color-text);
+    overflow-wrap: anywhere;
+  }
+
+  .lead-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    margin-bottom: var(--space-4);
+  }
+
+  .lead-field label {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+  }
+
+  .lead-optional {
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  .lead-field input:not([type='checkbox']),
+  .lead-field select {
+    font-family: inherit;
+    font-size: var(--text-base);
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: #fff;
+    color: var(--color-text);
+    width: 100%;
+  }
+
+  .lead-field input:focus-visible,
+  .lead-field select:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
+  }
+
+  .lead-field [aria-invalid='true'] {
+    border-color: var(--color-danger);
+  }
+
+  .lead-otp {
+    font-size: var(--text-2xl) !important;
+    letter-spacing: 0.4em;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .lead-field--check {
+    margin-bottom: var(--space-3);
+  }
+
+  .lead-field .lead-check {
+    display: flex;
+    gap: var(--space-2);
+    align-items: flex-start;
+    font-size: var(--text-sm);
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--color-text);
+    cursor: pointer;
+  }
+
+  .lead-check input {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    flex-shrink: 0;
+    accent-color: var(--color-primary);
+  }
+
+  .lead-check input[aria-invalid='true'] {
+    outline: 2px solid var(--color-danger);
+    outline-offset: 1px;
+  }
+
+  .lead-error {
+    font-size: var(--text-xs);
+    color: var(--color-danger);
+    min-height: 1em;
+  }
+
+  .lead-suggest {
+    align-self: flex-start;
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    font-size: var(--text-xs);
+    color: var(--color-primary);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  .lead-captcha:empty {
+    display: none;
+  }
+
+  .lead-captcha {
+    margin-bottom: var(--space-3);
+  }
+
+  .lead-form-error,
+  .lead-status {
+    font-size: var(--text-sm);
+    margin-bottom: var(--space-4);
+  }
+
+  .lead-form-error {
+    color: var(--color-danger);
+  }
+
+  .lead-status {
+    color: var(--color-success);
+  }
+
+  .lead-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
+    flex-wrap: wrap;
+  }
+
+  /* Code step: full-width Verify button, with the two small links under it. */
+  .lead-actions--verify {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .lead-actions--verify :global(.lead-submit) {
+    width: 100%;
+  }
+
+  .lead-secondary {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-1);
+  }
+
+  .lead-link {
+    font-family: inherit;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    background: transparent;
+    border: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    padding: var(--space-3) var(--space-2);
+  }
+
+  .lead-link:hover:not(:disabled) {
+    color: var(--color-primary);
+  }
+
+  .lead-link:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .lead-form :global(.lead-submit) {
+    min-width: 150px;
+  }
+
+  .lead-form :global(.lead-submit[disabled]) {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .lead-success {
+    padding-top: var(--space-2);
+    text-align: center;
+  }
+
+  .lead-success .lead-title {
+    padding-right: 0;
+  }
+
+  .lead-success-icon {
+    color: var(--color-success);
+    margin: 0 auto var(--space-3);
+    display: block;
+  }
+
+  .lead-download {
+    display: inline-block;
+    margin-bottom: var(--space-4);
+    color: var(--color-primary);
+    font-weight: 600;
+    text-decoration: underline;
+  }
+
+  .lead-success .lead-link {
+    display: block;
+    margin: 0 auto;
+  }
+
+  @media (max-width: 480px) {
+    .lead-form {
+      padding: var(--space-6) var(--space-5) var(--space-5);
+    }
+
+    /* Main button first and full width; Cancel underneath. */
+    .lead-actions {
+      flex-direction: column-reverse;
+      align-items: stretch;
+      gap: 0;
+    }
+
+    .lead-form :global(.lead-submit) {
+      width: 100%;
+    }
+  }
+</style>
